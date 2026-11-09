@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.2.1-alpha-calibrated",
+  "revision": "arangplanner-v1.2.2-alpha-version-fix",
   "updatedAt": "2026-11-09",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "실제 WoW v1.2 화면을 기준으로 게임용 글꼴 크기, 오른쪽 패널 줄 간격 및 웹 CSS를 보정. 게임/웹 공통 TGA-PNG 생성기 및 docs/design.json 좌표 사용. 실제 아이템 데이터는 게임에서만 확인 가능.",
+  "notes": "설치된 TOC의 버전을 게임 UI에 자동 반영. 기존 v1.2.1 타이포그래피/배치 유지.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -53,7 +53,7 @@
     "row",
     "row-hover"
   ],
-  "gameVersion": "1.2.1-alpha",
+  "gameVersion": "1.2.2-alpha",
   "typography": {
     "normal": 13,
     "small": 12,
