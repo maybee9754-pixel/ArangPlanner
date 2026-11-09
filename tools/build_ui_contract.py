@@ -183,5 +183,13 @@ css.extend([
 ".center .tableline .name{font-size:12px !important;font-weight:400 !important}",
 ])
 
+# R6: the game uses one turquoise FontString for the complete status line.
+# The browser's legacy .rose style must not override its actual game color.
+css.extend([
+".panel.left .stat .rose{color:%s !important;font-weight:400 !important}"%tc["progressDetail"],
+".panel.left .stat strong{color:%s !important;font-weight:400 !important}"%tc["progressNumbers"],
+".center .tableline .owned{color:%s !important}"%tc["itemState"],
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
