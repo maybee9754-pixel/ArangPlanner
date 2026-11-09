@@ -5,9 +5,9 @@
     "width": 1440,
     "height": 810
   },
-  "revision": "studio-bridge-v0.6.0-demo",
+  "revision": "studio-bridge-v0.7.0-demo",
   "updatedAt": "2026-11-09",
-  "notes": "개선된 다크 판타지 UI 외형 미리보기. 파밍 수치/전리품은 예시이며 실제 WoW 연결 기능을 의미하지 않습니다.",
+  "notes": "웹과 게임에서 동일한 생성 규칙으로 만든 이미지 자산 사용. 모든 파밍 수치와 전리품은 예시 데이터.",
   "panels": {
     "header": {
       "label": "상단 메뉴",
