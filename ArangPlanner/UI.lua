@@ -107,7 +107,7 @@ for i=1,12 do
         self:SetBackdropBorderColor(.73,.50,1,.95)
         if self.itemID then
             GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
-            GameTooltip:SetItemByID(self.itemID)
+            GameTooltip:SetHyperlink("item:"..self.itemID)
             GameTooltip:Show()
         end
     end)
