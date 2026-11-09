@@ -94,3 +94,11 @@
 .head .tab:not(.active),.center .mini,.pagination .mini{background-image:linear-gradient(rgba(0,0,0,0.03),rgba(0,0,0,0.03)),url('assets/button-idle.png') !important;background-size:100% 100%,100% 100% !important}
 .head .tab.active{background-image:url('assets/button-active.png') !important}
 .head .tab:hover,.center .mini:hover,.pagination .mini:hover{background-image:url('assets/button-hover.png') !important}
+.section{position:relative !important;top:1px !important;margin:0 1px !important;width:calc(100% - 2px) !important;height:33px !important;padding:0 12px !important;display:flex !important;align-items:center !important;font-size:13px !important}
+.head .tab,.center .mini,.pagination .mini{line-height:normal !important;letter-spacing:0 !important}
+.panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .missing,.panel.right h4,.panel.right .muted,.center .specrow,.center .hint{letter-spacing:0px !important}
+.panel.left .stat{white-space:pre !important}
+.panel.left .stat .rose{white-space:pre !important}
+.canvas .footer-game{bottom:1px !important;line-height:14px !important;letter-spacing:0 !important;white-space:pre !important}
+.right .game-help{font-weight:400 !important}
+.center .tableline .name,.center .tableline .id,.center .tableline .owned{letter-spacing:0 !important}
