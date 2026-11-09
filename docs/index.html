@@ -1,116 +1,127 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Arang Planner Studio | 웹 미리보기</title>
+<title>ArangPlanner Studio | v1.2 인게임 UI 미리보기</title>
 <style>
-:root{font-family:system-ui,"Malgun Gothic",sans-serif;color:#f2eafa;background:#0b0913}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -10%,#2b1943,#0b0913 60%);min-height:100vh}
-button{cursor:pointer;border:1px solid #634c8e;color:#ede2ff;border-radius:6px;padding:10px 16px;background:#221833;font-weight:700}
-button:hover{background:#452967}button:disabled{opacity:.6;cursor:wait}
-.top{height:70px;border-bottom:1px solid #3e2b5d;display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:14px;background:#110d1d}
-.brand{display:flex;align-items:center;gap:11px;font-weight:850;font-size:22px;letter-spacing:.7px}.mark{width:38px;height:38px;border:1px solid #bd8dff;border-radius:11px;display:grid;place-items:center;background:#452574;box-shadow:0 0 15px #9555d673}
-.brand small{display:block;color:#a898c0;font-weight:500;font-size:10px;letter-spacing:2px}
-.right{display:flex;align-items:center;gap:12px}.right button{background:linear-gradient(#8457bf,#512881);box-shadow:0 0 12px #9352cc65}.status{color:#c7b3da;font-size:12px}
-.wrap{max-width:1800px;margin:auto;padding:16px 20px}
-.intro{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;color:#b8a5ce;font-size:12px;flex-wrap:wrap}
-.intro b{color:#e8dbff}
-.viewport{width:100%;overflow:hidden;position:relative;border:1px solid #3d2a5b;background:#080710;box-shadow:0 8px 40px #0008;min-height:550px}
-.scaler{position:relative;transform-origin:top left}
-.stage{width:1440px;height:810px;position:relative;background:linear-gradient(120deg,#0d0b18,#150d23 48%,#0d0918);overflow:hidden}
-.stage:before{content:"";position:absolute;inset:3px;border:1px solid #41295f;pointer-events:none}
-.stage:after{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,#201036,#9e59e9,#211038)}
-.panel{position:absolute;overflow:hidden;border:1px solid var(--line,#7851a9);border-radius:var(--radius,8px);background:var(--bg,#161225);color:var(--txt,#f3ebff);box-shadow:0 0 var(--glow,10px) #9258d126;opacity:var(--op,1)}
-.header{display:flex;align-items:center;padding:0 18px;justify-content:space-between;background:linear-gradient(90deg,#271a3b,#1b112b)}
-.header .brandmark{width:42px;height:42px;border-radius:10px;border:1px solid #8d60bd;display:grid;place-items:center;font-size:24px;color:#efb8ff;box-shadow:0 0 16px #ae62e255;margin-right:13px}
-.header .heading{display:flex;align-items:center}.header strong{font-size:24px}.header small{display:block;color:#ba9aaa;letter-spacing:1.4px;font-size:9px}
-.tabs{display:flex;gap:10px}.tabs span{padding:12px 19px;border:1px solid #5a417d;border-radius:6px;background:#261a36;font-size:13px}.tabs .active{background:linear-gradient(#9262d3,#512c81);border-color:#b994f1;box-shadow:0 0 14px #9160d970}
-.x{font-size:18px;color:#bda0d3;margin-left:18px}
-.section-title{height:40px;border-bottom:1px solid #65478b;background:linear-gradient(90deg,var(--acc,#623b99),#241734);display:flex;align-items:center;padding:0 15px;gap:11px;font-weight:750;font-size:15px}
-.section-title .icon{font-size:19px;color:#f2c56a}
-.farm{padding:22px 14px;display:flex;gap:25px;align-items:center}
-.donut{width:130px;height:130px;flex:0 0 130px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(#9d62fc 0 72%,#38244d 72%);box-shadow:0 0 17px #9d52ff44}
-.donut:before{content:"";width:98px;height:98px;background:#100a1e;border-radius:50%;position:absolute}
-.donut-content{z-index:1;text-align:center}.donut-content small{font-size:12px;display:block}.donut-content strong{font-size:28px}
-.counts{display:grid;gap:14px;flex:1}.counts div{display:flex;justify-content:space-between;gap:15px;font-size:13px}.counts b{font-size:17px}.good{color:#66e1b1}.bad{color:#ff84bc}
-.stats{padding:16px 14px;font-size:12px}.stats .statrow{display:grid;grid-template-columns:1.2fr .9fr .9fr;gap:7px;padding:13px 0;border-bottom:1px solid #ffffff13;align-items:center}.stats .statrow:first-child{color:#a99bbb;font-size:10px}.stats .statrow span:not(:first-child),.stats .statrow b{text-align:right}
-.missing-val{padding:20px;font-size:41px;font-weight:800;color:#b57bff}.missing-val span{color:#a99ab9;font-size:22px}.missing-info{padding:0 20px;color:#b7a5cb;font-size:12px}
-.character-label{font-size:12px;padding:12px 22px;color:#c6acd6}.character-label small{color:#8d839d}
-.arcane{position:absolute;width:330px;height:330px;border:1px solid #563a85;border-radius:50%;top:183px;left:200px;box-shadow:0 0 26px #713cb833,inset 0 0 35px #7a40c222;display:grid;place-items:center}
-.arcane:after{content:"✧ ᚠ ✦ ᚨ ✧";position:absolute;bottom:-40px;color:#ad91df;letter-spacing:14px;font-size:12px}
-.circle-inner{position:absolute;inset:13px;border:1px dotted #7956aa;border-radius:50%}
-.person{position:relative;width:145px;height:315px;filter:drop-shadow(0 0 22px #8c56cd66)}
-.person .head{position:absolute;left:55px;top:11px;width:48px;height:67px;border-radius:50% 50% 44% 44%;background:linear-gradient(#f0e4fa,#a48bc9)}
-.person .shoulders{position:absolute;left:20px;top:94px;width:124px;height:29px;border-radius:26px;background:linear-gradient(90deg,#4a2868,#9868cb,#4a2868)}
-.person .robe{position:absolute;left:31px;top:81px;width:102px;height:245px;background:linear-gradient(90deg,#241334,#64448e 50%,#211231);clip-path:polygon(25% 0,75% 0,100% 94%,0 94%)}
-.person .legs{position:absolute;left:53px;top:256px;width:12px;height:48px;background:#130e21;box-shadow:51px 0 #130e21}
-.gear-col{position:absolute;top:91px;display:grid;gap:13px}.gear-col.left{left:14px}.gear-col.right{right:14px}
-.gear-slot{width:230px;height:58px;border:1px solid #70538d;border-radius:6px;background:linear-gradient(#251936,#171020);display:flex;gap:11px;align-items:center;padding:8px;font-size:12px}
-.gear-slot .gem{width:41px;height:41px;border:1px solid #ad8b53;background:linear-gradient(135deg,#38244a,#1a1732);color:#f2c96b;display:grid;place-items:center;font-size:22px;border-radius:4px;flex-shrink:0}
-.gear-slot .gear-text b{display:block;font-size:11px}.gear-slot .gear-text small{display:block;color:#998eac;margin-top:3px}
-.gear-slot .tick{color:#71e5ae;margin-left:auto;font-size:18px}
-.trinkets{position:absolute;bottom:17px;left:50%;transform:translateX(-50%);display:flex;gap:14px}.trinkets .gear-slot{width:215px}
-.loot-tabs{padding:13px;display:flex;gap:7px}.loot-tabs span{border:1px solid #584171;padding:9px 10px;border-radius:4px;font-size:12px}.loot-tabs .sel{background:#6745a6}
-.selects{display:flex;gap:8px;padding:0 13px}.selects span{flex:1;border:1px solid #614a76;border-radius:4px;padding:12px 7px;font-size:11px;white-space:nowrap}
-.boss-head{margin:16px 13px;font-size:13px;font-weight:700}.boss-head small{float:right;font-weight:400;color:#b6a4cd;font-size:10px}
-.boss{margin:0 12px 5px;border:1px solid #665083;border-radius:5px;padding:11px 12px;font-size:12px;background:#1b152a;font-weight:650;display:flex;justify-content:space-between}
-.boss.open{height:117px;display:block}.boss.open .boss-name{display:flex;justify-content:space-between}.boss .list{margin:13px 0 0 0;color:#aa9fc0;font-weight:400;font-size:11px;line-height:21px}.boss .list i{color:#62dda5;font-style:normal;float:right}.boss .list i.no{color:#fa82b2}
-.footer{position:absolute;bottom:7px;text-align:center;width:100%;font-size:9px;color:#766a8c;letter-spacing:1px;pointer-events:none}
-.note{color:#aea1c0;text-align:center;font-size:12px;margin-top:14px}
-a{color:#cba8ff}.link{font-size:12px}
-@media(max-width:700px){.brand{font-size:16px}.top{padding:0 10px}.status{display:none}.right button{padding:8px 9px;font-size:11px}.wrap{padding:10px}.intro{font-size:10px}.viewport{min-height:260px}}
-
-/* Shared v0.7 art generated from tools/render_textures.py */
-.panel[data-id="header"] {background-image:url("assets/panel-header.png");background-size:100% 100%;}
-.panel:not([data-id="header"]) {background-image:url("assets/panel-body.png");background-size:100% 100%;}
-.section-title {background-image:url("assets/panel-header.png");background-size:100% 100%;}
-.donut {background:url("assets/progress-ring.png") center / contain no-repeat;box-shadow:none;}
-.donut:before {width:85px;height:85px;background:#100a1e;}
-.arcane {background:url("assets/arcane-circle.png") center / contain no-repeat;border:0;box-shadow:none;}
-.arcane .circle-inner {display:none;}
-
-/* v0.8 unified style system */
-.panel[data-id="header"] { background-image:url("assets/title-bar.png") !important; background-size:100% 100%; box-shadow:0 0 22px #8753bf2b; }
-.section-title { background-image:url("assets/section-bar.png") !important; background-size:100% 100%; text-shadow:0 0 8px #ae82ff70; }
-.tabs span,.loot-tabs span {background-image:url("assets/button-idle.png");background-size:100% 100%;border-color:#604678;box-shadow:inset 0 1px #ffffff18;transition:filter .15s,box-shadow .15s;}
-.tabs .active,.loot-tabs .sel {background-image:url("assets/button-active.png");background-size:100% 100%;box-shadow:0 0 12px #a56aff55,inset 0 1px #ffffff30;border-color:#a679d2;}
-.tabs span:hover,.loot-tabs span:hover {filter:brightness(1.27);box-shadow:0 0 13px #af7afe65;}
-.gear-slot,.boss {background-image:url("assets/slot-surface.png");background-size:100% 100%;border-color:#665080;}
-.gear-slot:hover,.boss:hover {box-shadow:0 0 12px #a47dca3f;filter:brightness(1.12);}
-.gear-col {gap:11px;top:92px}.gear-col.left{left:19px}.gear-col.right{right:19px}
-.arcane {transform:translateY(8px);}.trinkets {bottom:19px;}
-/* v0.9: align interactive surfaces and character artwork with game build */
-.gear-slot {transition:filter .16s ease, box-shadow .16s ease, border-color .16s ease;}
-.gear-slot:hover {border-color:#d0a3ff;box-shadow:0 0 17px #bb7dfb80,inset 0 0 12px #a875e055;filter:brightness(1.20);}
-.arcane {transform:translateY(14px) scale(.986);}
-.person {transform:translateY(2px);}
-.boss.open {height:117px;}
-</style></head><body>
-<header class="top"><div class="brand"><span class="mark">✦</span><div>ARANG PLANNER<small>WEB STUDIO · VIEW ONLY</small></div></div><div class="right"><span class="status" id="status">디자인 확인 준비됨</span><button id="update">↻ 최신 디자인 업데이트</button></div></header>
-<div class="wrap"><div class="intro"><span><b>아랑플래너 디자인 미리보기</b> · 게임 실행 / Python 설치 불필요 · 내용은 예시 데이터</span><span id="revision">디자인 불러오는 중...</span></div><div id="viewport" class="viewport"><div id="scaler" class="scaler"><div id="stage" class="stage">
-<div class="panel header" data-id="header"><div class="heading"><span class="brandmark">✦</span><div><strong id="title">아랑플래너</strong><small>ARANG PLANNER UI PREVIEW</small></div></div><div class="tabs"><span class="active">장비 세팅</span><span>파밍 계획</span><span>드랍 정보</span></div><span class="x">×</span></div>
-<div class="panel" data-id="farming"><div class="section-title"><span class="icon">✧</span><span data-label="farming">파밍 현황</span></div><div class="farm"><div class="donut"><div class="donut-content"><small>달성률</small><strong>72%</strong></div></div><div class="counts"><div><span>▣ 등록</span><b>25</b></div><div class="good"><span>✓ 보유</span><b>18</b></div><div class="bad"><span>◇ 미보유</span><b>7</b></div></div></div></div>
-<div class="panel" data-id="compare"><div class="section-title"><span class="icon">✣</span><span data-label="compare">능력치 비교</span></div><div class="stats"><div class="statrow"><span>능력치</span><span>현재 장비</span><span>목표 세팅</span></div><div class="statrow"><span>지능</span><span>54,781</span><b class="good">56,812</b></div><div class="statrow"><span>치명타</span><span>32.4%</span><b class="good">34.1%</b></div><div class="statrow"><span>가속</span><span>27.1%</span><b>25.8%</b></div><div class="statrow"><span>특화</span><span>41.8%</span><b class="good">43.6%</b></div><div class="statrow"><span>유연성</span><span>9.6%</span><b>9.2%</b></div></div></div>
-<div class="panel" data-id="missing"><div class="section-title"><span class="icon">✦</span><span data-label="missing">미획득 아이템</span></div><div class="missing-val">7 <span>/ 25</span></div><div class="missing-info">목표로 등록한 장비 중 미보유</div></div>
-<div class="panel" data-id="equipment"><div class="section-title"><span class="icon">⚔</span><span data-label="equipment">장비 세팅</span></div><div class="character-label">✧ 비전 마법사　<small>Lv.90 · 예시 캐릭터</small></div><div class="arcane"><div class="circle-inner"></div><div class="person"><div class="robe"></div><div class="head"></div><div class="shoulders"></div><div class="legs"></div></div></div><div class="gear-col left" id="gearLeft"></div><div class="gear-col right" id="gearRight"></div><div class="trinkets" id="trinkets"></div></div>
-<div class="panel" data-id="loot"><div class="section-title"><span class="icon">◇</span><span data-label="loot">전리품 목록</span></div><div class="loot-tabs"><span class="sel">전리품 목록</span><span>등록 장비</span><span>추천 장비</span></div><div class="selects"><span>공격대 (신화) ▾</span><span>똬리의 제단 ▾</span></div><div class="boss-head">공격대 보스 <small>공허핵 획득 추적</small></div><div id="bosses"></div></div>
-<div class="footer">ARANG PLANNER STUDIO · DEMO CONTENT ONLY · NOT THE WOW ENGINE</div>
-</div></div></div><div class="note">이 화면은 게임 UI의 외형을 미리 보는 웹 시뮬레이터입니다. 실제 장비, 캐릭터 3D 모델, 게임 기능을 직접 실행하지는 않습니다.</div></div>
+:root{font-family:"Malgun Gothic",system-ui,sans-serif;color:#eae7ef;background:#101018}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#242031,#0e0e17 65%);min-height:100vh}
+button,input{font:inherit}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:70px;padding:12px 22px;background:#16151f;border-bottom:1px solid #393343}
+.brand{font-size:21px;font-weight:800;letter-spacing:.4px;display:flex;align-items:center;gap:12px}
+.mark{width:37px;height:37px;border:1px solid #8c72a6;display:grid;place-items:center;transform:rotate(45deg);background:#413451;border-radius:5px;color:#d5bdea}
+.mark span{transform:rotate(-45deg)}
+.brand small{display:block;font-size:10px;letter-spacing:2px;color:#a9a1b7;font-weight:400}
+button{cursor:pointer;color:#eae7ef;border:1px solid #6e587e;border-radius:5px;background:#30293e;padding:10px 15px;font-weight:650}
+button:hover{filter:brightness(1.18)}
+button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offset:2px}
+#update{background:linear-gradient(180deg,#786095,#49385e)}
+.meta{padding:13px 18px;display:flex;justify-content:space-between;gap:15px;color:#b3abbf;font-size:12px;max-width:1350px;margin:auto}
+.viewport{overflow:auto;padding:0 18px 25px}
+.canvas{position:relative;width:1270px;height:725px;margin:0 auto;background:#0f0e17;border:1px solid #494252;box-shadow:0 8px 48px #0008;transform-origin:top center}
+.surface{position:absolute;background-size:100% 100%;border:1px solid #4c435c;color:#eae7ef}
+.bar{position:absolute;inset:0;background-size:100% 100%;pointer-events:none}
+.head{left:12px;top:12px;width:1246px;height:72px;display:flex;align-items:center;padding:0 18px;gap:10px}
+.head .identity{display:flex;align-items:center;gap:11px;min-width:410px}
+.diamond{width:25px;height:25px;background:#a68bc4;transform:rotate(45deg);border:4px solid #473754;flex:none}
+.identity b{font-size:21px}.identity small{font-size:11px;color:#afa8b8}
+.nav{display:flex;gap:8px}
+.tab,.mini{border-radius:2px;background-image:url("assets/button-idle.png");background-size:100% 100%;border:0;box-shadow:none}
+.tab{min-width:110px;height:42px;padding:0 16px;white-space:nowrap;font-size:12px}
+.tab.active{background-image:url("assets/button-active.png");color:#fff}
+.tab:hover,.mini:hover{background-image:url("assets/button-hover.png")}
+.close{margin-left:auto;min-width:42px}
+.panel{top:97px;height:608px;background-image:url("assets/panel-body.png");background-size:100% 100%;border-color:#504858}
+.left{left:12px;width:258px}.center{left:281px;width:697px}.right{left:989px;width:269px}
+.section{height:34px;padding:9px 12px;background-image:url("assets/panel-header.png");background-size:100% 100%;font-size:12px;font-weight:750}
+.body{padding:14px}
+.eyebrow{color:#a9a1b7;font-size:12px;margin-bottom:6px}.spec{font-weight:800;font-size:15px;color:#decbea}
+.stat{margin-top:32px;font-size:14px;line-height:1.8}.stat strong{color:#bda2d3}.stat .green{color:#7fd3ae}.stat .rose{color:#e39eac}
+.rule{height:1px;background:#443c4f;margin:24px 0 17px}
+.missing{font-size:12px;color:#b6a6c4;margin-bottom:18px}.muted{font-size:12px;color:#928c9f}
+.center .body{padding:12px 13px}
+.specrow{font-size:13px;font-weight:700;color:#c6b2d6;margin-bottom:14px}
+.controls{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.controls input{min-width:0;width:306px;height:32px;background:#11101a;color:#f4eefa;padding:6px 10px;border:1px solid #63566e}
+.mini{padding:0 12px;height:32px;font-size:12px}
+.hint{font-size:11px;color:#a49cad;margin-bottom:13px}
+.tablehead,.tableline{display:grid;grid-template-columns:minmax(0,1fr) 95px 93px;align-items:center;gap:5px;padding:0 10px}
+.tablehead{height:30px;background-image:url("assets/panel-header.png");background-size:100% 100%;font-size:11px;color:#ece4f2;font-weight:700}
+.tableline{height:33px;margin-top:2px;background-image:url("assets/row.png");background-size:100% 100%;border:1px solid #413a4d;font-size:12px}
+.tableline:hover{background-image:url("assets/row-hover.png")}
+.name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.id{color:#bbb6c3}.owned{color:#7dd2ab}.unknown{color:#e6b1bd}
+.pagination{position:absolute;bottom:13px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;color:#aaa2b4;font-size:12px}
+.placeholder{text-align:center;color:#b8a9c5;font-size:15px;margin:125px auto;line-height:2}
+.right .body{font-size:12px;color:#c8c2d0;line-height:1.7}
+.right h4{color:#dacbe8;font-size:13px;margin:7px 0 13px}
+.disclaimer{text-align:center;color:#8f899a;font-size:12px;padding:4px 10px 30px}
+@media(max-width:1306px){.canvas{margin-left:0;margin-right:0}}
+</style></head>
+<body>
+<div class="top"><div class="brand"><div class="mark"><span>✦</span></div><div>ARANG PLANNER<small>WEB STUDIO · CURRENT GAME UI PREVIEW</small></div></div><div><span id="state" style="font-size:12px;color:#b4adb9;margin-right:12px">불러오는 중</span><button id="update">⟳ 최신 디자인 업데이트</button></div></div>
+<div class="meta"><span>아랑플래너 UI 미리보기 · 실제 WoW 데이터와 연결되지 않는 시각·조작 테스트</span><span id="revision">게시 버전 확인 중</span></div>
+<div class="viewport"><main class="canvas">
+<header class="surface head" style="background-image:url('assets/header.png')">
+<div class="identity"><div class="diamond"></div><b>아랑플래너</b><small>ArangPlanner v1.2.0-alpha</small></div>
+<div class="nav" id="nav"><button class="tab active" data-index="0">장비 세팅</button><button class="tab" data-index="1">공격대</button><button class="tab" data-index="2">쐐기돌</button><button class="tab" data-index="3">획득 추적기</button><button class="tab" data-index="4">설정</button></div>
+<button class="tab close" title="브라우저에서는 화면을 숨기지 않습니다">×</button></header>
+<section class="surface panel left"><div class="section">진행 현황</div><div class="body">
+<div class="eyebrow">현재 전문화</div><div class="spec">잠행 (261)</div>
+<div class="stat">목표 등록 <strong id="total">2</strong>　보유 확인 <strong class="green" id="owned">2</strong><div class="rose">미확인 <span id="missing">0</span>개 · 미획득 확정 아님</div></div>
+<div class="rule"></div><div class="missing">미확인 목표 아이템</div><div class="muted" id="missingList">표시할 항목 없음</div>
+</div></section>
+<section class="surface panel center"><div class="section">목표 장비 관리</div><div class="body">
+<div class="specrow">현재 전문화　|　잠행 (261)</div>
+<div class="controls"><input id="itemInput" aria-label="아이템 ID" placeholder="아이템 ID를 입력하세요"><button class="mini" id="add">등록</button><button class="mini" id="remove">제거</button><button class="mini" id="reset">새로고침</button></div>
+<div class="hint">아이템 ID 직접 입력 · 가방 Shift+클릭은 WoW 게임에서만 작동</div>
+<div id="table"><div class="tablehead"><span>목표 아이템</span><span>아이템 ID</span><span>상태</span></div><div id="rows"></div></div>
+<div id="placeholder" class="placeholder" hidden></div></div>
+<div class="pagination"><button class="mini" id="prev">이전</button><span id="pages">1 / 1 페이지</span><button class="mini" id="next">다음</button></div>
+</section>
+<section class="surface panel right"><div class="section">전리품 목록</div><div class="body"><h4>공격대·쐐기돌 획득 추적</h4><div class="muted">데이터 연동 준비 중</div><p style="margin-top:25px">현재 버전은 전문화별 목표 등록과 착용/가방 확인을 지원합니다.</p><p>공허핵, 티어 변환, 보스 전리품은 확인되지 않은 수치를 표시하지 않도록 비워 두었습니다.</p></div></section>
+</main></div><div class="disclaimer">웹의 장비 데이터는 시연용 예시이며 저장되지 않습니다. 실제 캐릭터 및 저장 데이터는 게임 애드온에서만 확인할 수 있습니다.</div>
 <script>
 (()=>{'use strict';
-const D='design.json',P=['header','farming','compare','missing','equipment','loot'],ui={viewport:document.getElementById('viewport'),scaler:document.getElementById('scaler'),stage:document.getElementById('stage'),status:document.getElementById('status'),revision:document.getElementById('revision'),update:document.getElementById('update')};
-const slot=(name,sym)=>'<div class="gear-slot"><div class="gem">'+sym+'</div><div class="gear-text"><b>'+name+'</b><small>723 · 6/6</small></div><span class="tick">✓</span></div>';
-document.getElementById('gearLeft').innerHTML=[['머리','♛'],['어깨','♞'],['가슴','✥'],['손목','♢'],['망토','❖'],['무기','⚔']].map(v=>slot(...v)).join('');
-document.getElementById('gearRight').innerHTML=[['손','✣'],['허리','♙'],['다리','◇'],['발','☼'],['반지 1','◎'],['반지 2','◯']].map(v=>slot(...v)).join('');
-document.getElementById('trinkets').innerHTML=slot('장신구 1','◇')+slot('장신구 2','✦');
-document.getElementById('bosses').innerHTML=['네크잘리','매장된 파수꾼','길 잃은 탐험가','바쉬니크','스조라크','쌍둥이 송곳니','줄잔','울라텍','키식스'].map((x,i)=>i===0?'<div class="boss open"><div class="boss-name">1. '+x+' <span>5 / 7 ▾</span></div><div class="list">▣ 군주의 로드 <i>보유</i><br>▣ 눈안광한 허리띠 <i class="no">미보유</i><br>▣ 오메가의 반지 <i>보유</i></div></div>':'<div class="boss">'+(i+1)+'. '+x+' <span>'+ (i===1?'4':'0')+' / 6 ▾</span></div>').join('');
-function fit(){const w=ui.viewport.clientWidth;if(!w)return;const scale=Math.min(1,w/1440);ui.scaler.style.width=(1440*scale)+'px';ui.scaler.style.height=(810*scale)+'px';ui.stage.style.transform='scale('+scale+')';ui.stage.style.transformOrigin='top left';ui.viewport.style.height=(810*scale+2)+'px'}
-function isColor(v){return typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v)}
-function validate(o){if(!o||o.format!=='ArangPlannerStudioLayout'||o.version!==1||!o.panels)throw Error('지원되지 않는 디자인 형식');
-for(const id of P){let p=o.panels[id];if(!p||!['x','y','w','h'].every(k=>Number.isFinite(p[k])))throw Error('패널 좌표 오류: '+id);
-if(p.w<100||p.h<50||p.w>3000||p.h>3000)throw Error('패널 크기 오류: '+id);}}
-function apply(o){validate(o);for(const id of P){const s=o.panels[id],p=document.querySelector('[data-id="'+id+'"]');p.style.left=s.x+'px';p.style.top=s.y+'px';p.style.width=s.w+'px';p.style.height=s.h+'px';if(isColor(s.bg))p.style.setProperty('--bg',s.bg);if(isColor(s.border))p.style.setProperty('--line',s.border);if(isColor(s.accent))p.style.setProperty('--acc',s.accent);if(isColor(s.text))p.style.setProperty('--txt',s.text);if(Number.isFinite(s.glow))p.style.setProperty('--glow',Math.max(0,Math.min(100,s.glow))+'px');if(Number.isFinite(s.radius))p.style.setProperty('--radius',Math.max(0,Math.min(40,s.radius))+'px');if(Number.isFinite(s.opacity))p.style.setProperty('--op',Math.max(.1,Math.min(1,s.opacity/100)));const t=document.querySelector('[data-label="'+id+'"]');if(t&&typeof s.label==='string')t.textContent=s.label.slice(0,40);if(id==='header'&&typeof s.label==='string')document.getElementById('title').textContent=s.label==='상단 메뉴'?'아랑플래너':s.label;
-if(typeof s.asset==='string' && /^assets\/[a-zA-Z0-9_.-]+\.(png|jpg|jpeg|webp)$/.test(s.asset)){p.style.backgroundImage='linear-gradient(#0d071455,#0d071488),url("'+s.asset+'")';p.style.backgroundSize='cover'}else {p.style.backgroundImage='url("assets/'+(id==='header'?'title-bar':'panel-body')+'.png")';p.style.backgroundSize='100% 100%';}}
-ui.revision.textContent='게시 버전: '+(o.revision||'미지정')+' · '+(o.updatedAt||'');}
-async function load(){ui.update.disabled=true;ui.status.textContent='GitHub 디자인 확인 중…';try{const r=await fetch(D+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const o=await r.json();apply(o);ui.status.textContent='✓ 최신 디자인 적용됨';}catch(e){ui.status.textContent='⚠ 업데이트 확인 실패';alert('최신 디자인을 불러오지 못했습니다: '+e.message+'\n잠시 후 다시 시도하세요.')}finally{ui.update.disabled=false}}
-ui.update.onclick=load;window.addEventListener('resize',fit);fit();load();
+const $=id=>document.getElementById(id);
+const sample=[{id:271510,name:"아이템 ID 271510",status:"착용"},{id:271511,name:"아이템 ID 271511",status:"착용"}];
+let targets=sample.map(o=>({...o})),tab=0,page=1;
+const tabs=[...document.querySelectorAll('.tab[data-index]')];
+function render(){
+tabs.forEach((b,i)=>b.classList.toggle('active',i===tab));
+$('table').hidden=tab!==0;$('placeholder').hidden=tab===0;
+$('placeholder').textContent=['','공격대','쐐기돌','획득 추적기','설정'][tab]+'\\n\\n독립 구현 예정 기능입니다.\\n확인되지 않은 획득 정보는 표시하지 않습니다.';
+$('placeholder').style.whiteSpace='pre-line';
+const owned=targets.filter(x=>x.status!=='미확인').length;
+$('total').textContent=targets.length;$('owned').textContent=owned;$('missing').textContent=targets.length-owned;
+$('missingList').textContent=targets.filter(x=>x.status==='미확인').map(x=>x.name).join(' · ')||'표시할 항목 없음';
+const max=Math.max(1,Math.ceil(targets.length/12));page=Math.min(page,max);
+$('rows').replaceChildren();
+for(const item of targets.slice((page-1)*12,page*12)){
+const row=document.createElement('div');row.className='tableline';
+for(const [value,cls] of [[item.name,'name'],[item.id,'id'],[item.status,item.status==='미확인'?'unknown':'owned']]){
+const span=document.createElement('span');span.className=cls;span.textContent=value;row.append(span);
+}
+row.title='Shift+클릭: ID 입력, Ctrl+클릭: 제거';row.addEventListener('click',e=>{if(e.ctrlKey){targets=targets.filter(x=>x.id!==item.id);render()}else if(e.shiftKey){$('itemInput').value=item.id;$('itemInput').focus()}});$('rows').append(row)
+}
+$('pages').textContent=page+' / '+max+' 페이지';$('prev').disabled=page===1;$('next').disabled=page===max;
+}
+tabs.forEach((b,i)=>b.addEventListener('click',()=>{tab=i;page=1;render()}));
+$('add').onclick=()=>{const id=Number($('itemInput').value.trim());if(!Number.isSafeInteger(id)||id<=0){alert('유효한 아이템 ID 숫자를 입력하세요.');return}if(!targets.some(x=>x.id===id))targets.push({id,name:'아이템 ID '+id,status:'미확인'});$('itemInput').value='';render()};
+$('remove').onclick=()=>{const id=Number($('itemInput').value.trim());targets=targets.filter(x=>x.id!==id);$('itemInput').value='';render()};
+$('reset').onclick=()=>{targets=sample.map(o=>({...o}));tab=0;page=1;render()};
+$('itemInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('add').click()});
+$('prev').onclick=()=>{page--;render()};$('next').onclick=()=>{page++;render()};
+async function update(){
+$('state').textContent='최신 디자인 확인 중…';
+try{
+const res=await fetch('design.json?t='+Date.now(),{cache:'no-store'});
+if(!res.ok)throw Error('HTTP '+res.status);
+const data=await res.json();
+if(data.format!=='ArangPlannerLivePreview')throw Error('새 버전 디자인 데이터가 아닙니다.');
+$('revision').textContent='게시 버전: '+data.revision+' · '+data.updatedAt;
+$('state').textContent='✓ 최신 디자인 적용됨';
+}catch(e){$('state').textContent='디자인 확인 오류';$('revision').textContent=String(e)}
+}
+$('update').onclick=update;render();update();
 })();
 </script></body></html>
