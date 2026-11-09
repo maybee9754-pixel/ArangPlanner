@@ -1,4 +1,4 @@
-name: Build and publish ArangPlanner v0.8.0-demo
+name: Build and publish ArangPlanner v0.9.0-demo
 
 on:
   push:
@@ -36,14 +36,14 @@ jobs:
           import hashlib, pathlib, re, zipfile
           root=pathlib.Path("ArangPlanner")
           toc=(root/"ArangPlanner.toc").read_text(encoding="utf-8")
-          assert re.search(r"(?m)^## Version: 0\.8\.0-demo$",toc)
+          assert re.search(r"(?m)^## Version: 0\.9\.0-demo$",toc)
           assert [x.strip() for x in toc.splitlines() if x.strip().endswith(".lua")] == ["Layout.lua", "ArangPlanner.lua"]
           names={"panel-body","panel-header","arcane-circle","progress-ring","title-bar","section-bar","button-active","button-idle","button-hover","slot-surface"}
           for stem in names:
               p=root/"Textures"/(stem+".tga")
               assert p.is_file() and p.stat().st_size > 1024, p
           assert not (root/"WTF").exists() and not (root/"SavedVariables").exists()
-          target=pathlib.Path("ArangPlanner_v0.8.0-demo.zip")
+          target=pathlib.Path("ArangPlanner_v0.9.0-demo.zip")
           with zipfile.ZipFile(target,"w",zipfile.ZIP_DEFLATED) as z:
               for p in sorted(root.rglob("*")):
                   if p.is_file() and p.suffix.lower() != ".png":
@@ -60,26 +60,26 @@ jobs:
       - name: Upload Actions build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v0.8.0-demo
+          name: ArangPlanner-v0.9.0-demo
           path: |
-            ArangPlanner_v0.8.0-demo.zip
-            ArangPlanner_v0.8.0-demo.zip.sha256
+            ArangPlanner_v0.9.0-demo.zip
+            ArangPlanner_v0.9.0-demo.zip.sha256
           retention-days: 30
 
       - name: Publish downloadable GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.8.0-demo
-          name: "ArangPlanner v0.8.0-demo | UI 시험판"
+          tag_name: v0.9.0-demo
+          name: "ArangPlanner v0.9.0-demo | UI 시험판"
           prerelease: false
           draft: false
           body: |
-            v0.8 외형 미리보기 **데모 버전**입니다. 타이틀바/버튼/패널 헤더 그라데이션과 발광, 장비 슬롯·배치 수정이 포함됩니다. 기존 GearPlanner 애드온과 별개입니다.
+            v0.9 외형 미리보기 **데모 버전**입니다. 장비 슬롯 발광, 상황별 툴팁 방향, 캐릭터 위치 조정, 첫 보스 펼침 상태가 포함됩니다. 기존 GearPlanner 애드온과 별개입니다.
             웹 스튜디오와 공통 규칙으로 만든 텍스처(원형 게이지, 마법진, 패널)를 포함합니다.
             실제 파밍 수치 / 공허핵 획득 / 보스 전리품 정보는 연결되지 않았습니다.
             게임을 완전히 종료한 후 설치하고 WoW에서 `/arang`을 입력하세요.
             설치 전 기존 ArangPlanner 폴더 백업을 권장합니다.
             ※ 업데이터의 releases/latest API에 데모를 노출하기 위해 사전 출시 태그이지만 GitHub prerelease 표시는 사용하지 않습니다.
           files: |
-            ArangPlanner_v0.8.0-demo.zip
-            ArangPlanner_v0.8.0-demo.zip.sha256
+            ArangPlanner_v0.9.0-demo.zip
+            ArangPlanner_v0.9.0-demo.zip.sha256
