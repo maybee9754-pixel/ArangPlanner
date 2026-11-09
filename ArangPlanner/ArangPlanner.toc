@@ -1,8 +1,8 @@
 ## Interface: 120105
 ## Title: ArangPlanner | Studio Bridge Demo
-## Notes: Shared art assets visual demo; farming figures are placeholders
+## Notes: Gradient and glow visual demo; farming figures are placeholders
 ## Author: Arang Planner Studio
-## Version: 0.7.0-demo
+## Version: 0.8.0-demo
 ## SavedVariables: ArangPlannerBridgeDB
 
 Layout.lua
