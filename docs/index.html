@@ -77,6 +77,12 @@ a{color:#cba8ff}.link{font-size:12px}
 .gear-slot:hover,.boss:hover {box-shadow:0 0 12px #a47dca3f;filter:brightness(1.12);}
 .gear-col {gap:11px;top:92px}.gear-col.left{left:19px}.gear-col.right{right:19px}
 .arcane {transform:translateY(8px);}.trinkets {bottom:19px;}
+/* v0.9: align interactive surfaces and character artwork with game build */
+.gear-slot {transition:filter .16s ease, box-shadow .16s ease, border-color .16s ease;}
+.gear-slot:hover {border-color:#d0a3ff;box-shadow:0 0 17px #bb7dfb80,inset 0 0 12px #a875e055;filter:brightness(1.20);}
+.arcane {transform:translateY(14px) scale(.986);}
+.person {transform:translateY(2px);}
+.boss.open {height:117px;}
 </style></head><body>
 <header class="top"><div class="brand"><span class="mark">✦</span><div>ARANG PLANNER<small>WEB STUDIO · VIEW ONLY</small></div></div><div class="right"><span class="status" id="status">디자인 확인 준비됨</span><button id="update">↻ 최신 디자인 업데이트</button></div></header>
 <div class="wrap"><div class="intro"><span><b>아랑플래너 디자인 미리보기</b> · 게임 실행 / Python 설치 불필요 · 내용은 예시 데이터</span><span id="revision">디자인 불러오는 중...</span></div><div id="viewport" class="viewport"><div id="scaler" class="scaler"><div id="stage" class="stage">
