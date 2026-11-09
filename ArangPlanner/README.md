@@ -1,4 +1,4 @@
-# 아랑플래너 v1.2.0-alpha
+# 아랑플래너 v1.2.1-alpha
 
 기존 GearPlanner의 저작권 보호 소스 또는 미디어를 사용하지 않고 독립 작성한 UI 및 장비 등록 기능입니다.
 
@@ -22,7 +22,7 @@
 - `/arang debug` 전문화별 아이템 진단
 
 ## 배포와 설치
-- 배포 ZIP `ArangPlanner_v1.2.0-alpha.zip`
+- 배포 ZIP `ArangPlanner_v1.2.1-alpha.zip`
 - 기존 Windows 업데이터에 맞춰 `ArangPlanner/ArangPlanner.toc` 및 `ArangPlanner/ArangPlanner.lua`를 포함
 - `ArangPlanner/Textures/` 아래 8종 TGA 텍스처 포함
 - GitHub Actions가 `tools/render_v12_skin.py`로 PNG/TGA를 같은 규칙에서 생성
@@ -34,3 +34,13 @@
 웹에서 만든 시안과 최대한 비슷한 조명/그라데이션/톤으로 제작했지만, 웹 렌더러와 WoW UI는 다른 환경이라 픽셀 단위로 완전히 동일하지 않을 수 있습니다.
 정식 획득 추적/공허핵/티어 변환 기능은 아직 구현되지 않았습니다.
 Lua 구문 및 ZIP 구성은 자동 검사할 수 있지만 실제 WoW 클라이언트의 그래픽/인터랙션 테스트는 게임 내 확인이 필요합니다.
+
+## v1.2.1 게임·웹 표시 보정
+- 게임용 FontString에 12/13/18의 명시적 폰트 크기 적용
+- 우측 전리품 안내를 고정 높이 21px 단위의 개별 줄로 구성해 한글 겹침 방지
+- 웹 미리보기 글꼴과 안내 문구, 입력란 표시를 게임 UI에 맞춤
+- 웹에서 `docs/design.json`의 1270×725 공통 프레임 좌표를 실제 레이아웃에 적용
+- 게임/웹 버튼 및 패널은 동일한 생성기로 제작한 TGA/PNG 자산 유지
+- 아이템 등록 데이터 `ArangPlannerDB` 스키마 및 애드온 명령어 변경 없음
+
+실제 게임 스크린샷을 기준으로 조정했지만, 서로 다른 렌더러의 글꼴 래스터와 UI 배율에 따른 미세한 차이는 남을 수 있습니다.
