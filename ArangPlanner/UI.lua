@@ -1,4 +1,4 @@
--- ArangPlanner v1.2.0-alpha: independently designed charcoal/muted-purple UI.
+-- ArangPlanner v1.2.1-alpha: in-game/web typography and spacing calibration.
 -- All interactive labels are Blizzard Lua frames; art is generated from
 -- tools/render_v12_skin.py, not copied from another addon.
 local AP=_G.ArangPlanner
@@ -27,7 +27,17 @@ local function art(parent,filename,layer,alpha)
     return t
 end
 local function text(parent,s,template)
-    local f=parent:CreateFontString(nil,"OVERLAY",template or "GameFontHighlight")
+    local fontObject=template or "GameFontHighlight"
+    local f=parent:CreateFontString(nil,"OVERLAY",fontObject)
+    -- Both frontends use the same numeric font sizes. Use the localized
+    -- Blizzard font file so Korean glyph support remains intact.
+    local sizes={GameFontHighlightSmall=12,GameFontNormalSmall=12,
+        GameFontHighlight=13,GameFontNormal=13,GameFontNormalLarge=18}
+    local wanted=sizes[fontObject]
+    if wanted then
+        local path,_,flags=f:GetFont()
+        if path then f:SetFont(path,wanted,flags) end
+    end
     f:SetText(s or "")
     return f
 end
@@ -312,11 +322,25 @@ rightInfo:SetTextColor(.88,.81,.95)
 local rightNote=text(right,"데이터 연동 준비 중","GameFontHighlightSmall")
 rightNote:SetPoint("TOPLEFT",14,-86)
 rightNote:SetTextColor(.66,.64,.74)
-local rightHelp=text(right,"현재 버전은 전문화별 목표 등록과\n착용/가방 확인을 지원합니다.\n\n공허핵, 티어 변환, 보스 전리품은\n확정되지 않은 수치를 표시하지\n않도록 비워 두었습니다.","GameFontHighlightSmall")
-rightHelp:SetPoint("TOPLEFT",14,-128)
-rightHelp:SetWidth(235)
-rightHelp:SetJustifyH("LEFT")
-rightHelp:SetTextColor(.72,.70,.79)
+-- Explicit line frames prevent font ascent differences and automatic wrapping
+-- from stacking Korean text on top of adjacent lines in WoW.
+local helpLines={
+    "현재 버전은 전문화별 목표",
+    "등록과 착용/가방 확인을",
+    "지원합니다.",
+    "",
+    "공허핵, 티어 변환, 보스",
+    "전리품은 확인되지 않은",
+    "수치를 표시하지 않습니다."
+}
+for i,line in ipairs(helpLines) do
+    local fs=text(right,line,"GameFontHighlightSmall")
+    fs:SetPoint("TOPLEFT",14,-126-(i-1)*21)
+    fs:SetSize(237,18)
+    fs:SetJustifyH("LEFT")
+    fs:SetJustifyV("MIDDLE")
+    fs:SetTextColor(.72,.70,.79)
+end
 
 local footer=text(root,"목표 목록: Ctrl+클릭 제거  ·  Shift+클릭 ID 입력  |  획득 상태는 현재 착용/가방 기준","GameFontHighlightSmall")
 footer:SetPoint("BOTTOM",root,"BOTTOM",0,6)
