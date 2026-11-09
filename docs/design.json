@@ -5,9 +5,9 @@
     "width": 1440,
     "height": 810
   },
-  "revision": "studio-bridge-v0.8.0-demo",
+  "revision": "studio-bridge-v0.9.0-demo",
   "updatedAt": "2026-11-09",
-  "notes": "v0.8 시각 스타일 통일: 발광, 타이틀 바 그라데이션, 선택/마우스오버 버튼, 헤더, 슬롯 간격. 수치/전리품은 예시.",
+  "notes": "v0.9: 강화된 장비 슬롯 마우스오버, 슬롯별 툴팁 방향, 캐릭터 마법진 정렬, 첫 보스 확장 상태. 수치/전리품은 예시.",
   "panels": {
     "header": {
       "label": "상단 메뉴",
