@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r3",
-  "updatedAt": "2026-11-09",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r4",
+  "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "스크린샷 같은 상대 좌표의 RGB 비교를 통한 웹 배경 밝기 보정. 원본 패널·버튼 크기/폰트/게임 저장 데이터 불변.",
+  "notes": "인게임 v1.3 기준 웹 타이포그래피·하단 문구·목록 정렬 4차 보정. 인게임 addon 및 저장 데이터는 변경하지 않음.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 2,
+    "revision": 4,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -200,7 +200,7 @@
       "pageLabelBottom": 15
     },
     "footer": {
-      "bottom": 6,
+      "bottom": 1,
       "fontSize": 12
     },
     "colorMatch": {
@@ -210,6 +210,13 @@
       "headerOverlayAlpha": 0.1,
       "rowOverlayAlpha": 0.08,
       "buttonOverlayAlpha": 0.03
+    },
+    "fontMatch": {
+      "letterSpacing": "0px",
+      "standardLineHeight": 17,
+      "titleOffsetY": 0,
+      "headingFontSize": 13,
+      "statusFontSize": 12
     }
   }
 }
