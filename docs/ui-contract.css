@@ -48,3 +48,42 @@
 .canvas .footer-game{position:absolute;bottom:6px;left:0;width:100%;text-align:center;font-size:12px;font-weight:400;color:#9996ad;line-height:14px;pointer-events:none}
 .center .hint{font-weight:400 !important}
 .center .tableline .name .item-icon{font-size:14px !important}
+.canvas{border:1px solid #494252;overflow:hidden}
+.panel.left .body,.panel.right .body{padding:0 !important}
+.panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .rule,.panel.left .missing,.panel.left #missingList{position:absolute !important;margin:0 !important}
+.panel.left .eyebrow{left:14px;top:48px;line-height:15px}
+.panel.left .spec{left:14px;top:70px;line-height:17px}
+.panel.left .stat{left:14px;top:117px;line-height:17px}
+.panel.left .stat .rose{position:absolute;left:0;top:26px;width:238px;white-space:nowrap;line-height:18px}
+.panel.left .rule{left:14px;top:177px;width:228px;height:1px}
+.panel.left .missing{left:14px;top:195px;line-height:17px}
+.panel.left #missingList{left:17px;top:226px;line-height:18px;max-width:221px}
+.panel.right h4,.panel.right .muted,.panel.right .game-help{position:absolute !important;margin:0 !important;left:14px}
+.panel.right h4{top:55px;line-height:18px;white-space:nowrap}
+.panel.right .muted{top:86px;line-height:18px}
+.panel.right .game-help{top:126px;line-height:18px}
+.center .specrow{top:47px !important;line-height:18px}
+.center .hint{top:115px !important;line-height:17px}
+.center .tablehead{display:block !important;gap:0 !important;padding:0 !important;border:0}
+.center .tablehead>span{position:absolute;top:0;line-height:29px;white-space:nowrap}
+.center .tablehead>span:nth-child(1){left:39px}
+.center .tablehead>span:nth-child(2){left:474px}
+.center .tablehead>span:nth-child(3){left:577px}
+.center .tableline{position:relative !important;display:block !important;gap:0 !important;padding:0 !important}
+.center .tableline>span{position:absolute;top:0;line-height:31px;white-space:nowrap}
+.center .tableline .name{left:5px;display:flex;align-items:center;top:3px !important;line-height:24px !important;height:24px}
+.center .tableline .id{left:472px}
+.center .tableline .owned,.center .tableline .unknown{left:575px}
+.center .tableline .item-icon{border-radius:0;line-height:24px !important}
+.center .pagination{position:absolute;inset:0 !important;display:block !important;pointer-events:none}
+.center .pagination button{position:absolute;top:580px;height:27px;width:72px;pointer-events:auto;padding:0 !important}
+.center #prev{left:15px}
+.center #next{left:607px}
+.center #pages{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);white-space:nowrap;line-height:15px}
+.canvas .footer-game{bottom:6px !important;line-height:13px;font-size:12px !important;white-space:nowrap}
+.head .identity{position:absolute;left:17px;top:0;height:100%;display:flex;align-items:center;gap:10px;min-width:0}
+.head .diamond{width:26px;height:26px;margin:0 4px 0 4px;border:0;background:#c7abe4;box-shadow:inset 0 0 0 5px #76508c}
+.head .identity b{margin-top:-9px}
+.head .identity small{margin-left:12px;margin-top:1px}
+.center #itemInput{padding:0 8px !important;border-radius:0 !important;font-weight:400 !important}
+.head .tab,.center .mini,.pagination .mini{border-radius:0 !important;box-shadow:none !important;text-shadow:none !important}
