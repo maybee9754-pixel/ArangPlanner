@@ -5,6 +5,7 @@ on:
     paths:
       - 'docs/**'
       - 'tools/render_v12_skin.py'
+      - 'tools/check_studio_contract.py'
       - 'ArangPlanner/UI.lua'
       - 'ArangPlanner/ArangPlanner.toc'
       - '.github/workflows/pages.yml'
@@ -31,6 +32,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Validate shared WoW and Web layout
+        run: python tools/check_studio_contract.py
       - name: Generate current v1.2 UI PNG assets
         run: |
           python -m pip install Pillow==11.3.0
