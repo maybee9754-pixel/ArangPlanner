@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.2.0-alpha-dark-charcoal",
+  "revision": "arangplanner-v1.2.1-alpha-calibrated",
   "updatedAt": "2026-11-09",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "현재 ArangPlanner v1.2.0-alpha의 게임용 3단 레이아웃과 같은 TGA/PNG 생성기를 사용. 브라우저는 실제 WoW 데이터에 접근하지 않으며 예시 데이터만 표시.",
+  "notes": "실제 WoW v1.2 화면을 기준으로 게임용 글꼴 크기, 오른쪽 패널 줄 간격 및 웹 CSS를 보정. 게임/웹 공통 TGA-PNG 생성기 및 docs/design.json 좌표 사용. 실제 아이템 데이터는 게임에서만 확인 가능.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -53,5 +53,22 @@
     "row",
     "row-hover"
   ],
-  "gameVersion": "1.2.0-alpha"
+  "gameVersion": "1.2.1-alpha",
+  "typography": {
+    "normal": 13,
+    "small": 12,
+    "large": 18,
+    "rightHelp": 12,
+    "rightHelpLineHeight": 21
+  },
+  "skin": {
+    "header": "header",
+    "panel": "panel-body",
+    "section": "panel-header",
+    "buttonIdle": "button-idle",
+    "buttonActive": "button-active",
+    "buttonHover": "button-hover",
+    "row": "row",
+    "rowHover": "row-hover"
+  }
 }
