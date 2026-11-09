@@ -154,7 +154,7 @@ css.extend([
 # R4: browser text baselines and section header geometry follow game FontStrings.
 fm=cal["fontMatch"]
 css.extend([
-".section{position:relative !important;top:1px !important;margin:0 1px !important;width:calc(100% - 2px) !important;height:33px !important;padding:0 12px !important;display:flex !important;align-items:center !important;font-size:%dpx !important}"%fm["headingFontSize"],
+".section{position:relative !important;top:1px !important;margin:0 1px !important;width:calc(100%% - 2px) !important;height:33px !important;padding:0 12px !important;display:flex !important;align-items:center !important;font-size:%dpx !important}"%fm["headingFontSize"],
 ".head .tab,.center .mini,.pagination .mini{line-height:normal !important;letter-spacing:0 !important}",
 ".panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .missing,.panel.right h4,.panel.right .muted,.center .specrow,.center .hint{letter-spacing:%s !important}"%fm["letterSpacing"],
 ".panel.left .stat{white-space:pre !important}",
