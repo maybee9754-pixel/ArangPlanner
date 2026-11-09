@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArangPlanner Studio | R4 fresh preview</title>
+<style>
+:root{font-family:"Malgun Gothic",system-ui,sans-serif;color:#eae7ef;background:#0f0e17;font-size:12px}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#242031,#0e0e17 65%);min-height:100vh}
+button,input{font:inherit}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:70px;padding:12px 22px;background:#16151f;border-bottom:1px solid #393343}
+.brand{font-size:21px;font-weight:800;letter-spacing:.4px;display:flex;align-items:center;gap:12px}
+.mark{width:37px;height:37px;border:1px solid #8c72a6;display:grid;place-items:center;transform:rotate(45deg);background:#413451;border-radius:5px;color:#d5bdea}
+.mark span{transform:rotate(-45deg)}
+.brand small{display:block;font-size:10px;letter-spacing:2px;color:#a9a1b7;font-weight:400}
+button{cursor:pointer;color:#eae7ef;border:1px solid #6e587e;border-radius:5px;background:#30293e;padding:10px 15px;font-weight:650}
+button:hover{filter:brightness(1.18)}
+button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offset:2px}
+#update{background:linear-gradient(180deg,#786095,#49385e)}
+.meta{padding:13px 18px;display:flex;justify-content:space-between;gap:15px;color:#b3abbf;font-size:12px;max-width:1350px;margin:auto}
+.viewport{overflow:auto;padding:0 18px 25px}
+.canvas{position:relative;width:1270px;height:725px;margin:0 auto;background:#0f0e17;border:1px solid #494252;box-shadow:0 8px 48px #0008;transform-origin:top center}
+.surface{position:absolute;background-size:100% 100%;border:1px solid #4c435c;color:#eae7ef}
+.bar{position:absolute;inset:0;background-size:100% 100%;pointer-events:none}
+.head{left:12px;top:12px;width:1246px;height:72px;display:flex;align-items:center;padding:0 18px;gap:10px}
+.head .identity{display:flex;align-items:center;gap:11px;min-width:410px}
+.diamond{width:25px;height:25px;background:#a68bc4;transform:rotate(45deg);border:4px solid #473754;flex:none}
+.identity b{font-size:18px}.identity small{font-size:12px;color:#afa8b8}
+.nav{display:flex;gap:8px}
+.tab,.mini{border-radius:2px;background-image:url("assets/button-idle.png");background-size:100% 100%;border:0;box-shadow:none}
+.tab{min-width:110px;height:42px;padding:0 16px;white-space:nowrap;font-size:12px}
+.tab.active{background-image:url("assets/button-active.png");color:#fff}
+.tab:hover,.mini:hover{background-image:url("assets/button-hover.png")}
+.close{margin-left:auto;min-width:42px}
+.panel{top:97px;height:608px;background-image:url("assets/panel-body.png");background-size:100% 100%;border-color:#504858}
+.left{left:12px;width:258px}.center{left:281px;width:697px}.right{left:989px;width:269px}
+.section{height:34px;padding:9px 12px;background-image:url("assets/panel-header.png");background-size:100% 100%;font-size:12px;font-weight:750}
+.body{padding:14px}
+.eyebrow{color:#a9a1b7;font-size:12px;margin-bottom:6px}.spec{font-weight:800;font-size:13px;color:#decbea}
+.stat{margin-top:32px;font-size:13px;line-height:1.9}.stat strong{color:#bda2d3}.stat .green{color:#7fd3ae}.stat .rose{color:#e39eac}
+.rule{height:1px;background:#443c4f;margin:24px 0 17px}
+.missing{font-size:12px;color:#b6a6c4;margin-bottom:18px}.muted{font-size:12px;color:#928c9f}
+.center .body{padding:12px 13px}
+.specrow{font-size:13px;font-weight:700;color:#c6b2d6;margin-bottom:14px}
+.controls{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.controls input{min-width:0;width:306px;height:32px;background:#11101a;color:#f4eefa;padding:6px 10px;border:1px solid #63566e}
+.mini{padding:0 12px;height:32px;font-size:12px}
+.hint{font-size:11px;color:#a49cad;margin-bottom:13px}
+.tablehead,.tableline{display:grid;grid-template-columns:minmax(0,1fr) 95px 93px;align-items:center;gap:5px;padding:0 10px}
+.tablehead{height:30px;background-image:url("assets/panel-header.png");background-size:100% 100%;font-size:11px;color:#ece4f2;font-weight:700}
+.tableline{height:33px;margin-top:2px;background-image:url("assets/row.png");background-size:100% 100%;border:1px solid #413a4d;font-size:12px}
+.tableline:hover{background-image:url("assets/row-hover.png")}
+.name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.id{color:#bbb6c3}.owned{color:#7dd2ab}.unknown{color:#e6b1bd}
+.pagination{position:absolute;bottom:13px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;color:#aaa2b4;font-size:12px}
+.placeholder{text-align:center;color:#b8a9c5;font-size:15px;margin:125px auto;line-height:2}
+.right .body{font-size:12px;color:#c8c2d0;line-height:1.3}
+.right h4{color:#dacbe8;font-size:13px;margin:7px 0 13px}
+.disclaimer{text-align:center;color:#8f899a;font-size:12px;padding:4px 10px 30px}
+.game-help{margin-top:25px;color:#b8b4c9;font-size:12px}
+.game-help>div{height:21px;line-height:21px;white-space:nowrap}
+.item-icon{width:24px;height:24px;flex:0 0 24px;border:1px solid #675477;background:linear-gradient(135deg,#493157,#261e33);display:inline-flex;justify-content:center;align-items:center;color:#baa2cd;font-size:14px}
+.item-name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block}
+.tableline .name{display:flex;align-items:center;gap:8px;min-width:0}
+.name,.id,.owned,.unknown{font-size:12px}
+.top,.meta{font-size:12px}
+@media(max-width:1306px){.canvas{margin-left:0;margin-right:0}}
+</style>
+<link id="uiContractStyles" rel="stylesheet" href="ui-contract.css?v=r4-new-path-20261110"></head>
+<body>
+<div class="top"><div class="brand"><div class="mark"><span>✦</span></div><div>ARANG PLANNER<small>WEB STUDIO · CURRENT GAME UI PREVIEW</small></div></div><div><span id="state" style="font-size:12px;color:#b4adb9;margin-right:12px">R4 새 페이지 로드됨</span><button id="update">⟳ 최신 디자인 업데이트</button></div></div>
+<div class="meta"><span>아랑플래너 UI 미리보기 · 실제 WoW 데이터와 연결되지 않는 시각·조작 테스트</span><span id="revision">R4 HTML · 게시 버전 확인 중</span></div>
+<div class="viewport"><main class="canvas">
+<header class="surface head" style="background-image:url('assets/header.png')">
+<div class="identity"><div class="diamond"></div><b>아랑플래너</b><small>ArangPlanner v1.3.0-alpha</small></div>
+<div class="nav" id="nav"><button class="tab active" data-index="0">장비 세팅</button><button class="tab" data-index="1">공격대</button><button class="tab" data-index="2">쐐기돌</button><button class="tab" data-index="3">획득 추적기</button><button class="tab" data-index="4">설정</button></div>
+<button class="tab close" title="브라우저에서는 화면을 숨기지 않습니다">×</button></header>
+<section class="surface panel left"><div class="section">진행 현황</div><div class="body">
+<div class="eyebrow">현재 전문화</div><div class="spec">잠행 (261)</div>
+<div class="stat">목표 등록 <strong id="total">2</strong>　보유 확인 <strong class="green" id="owned">2</strong><div class="rose">미확인 <span id="missing">0</span>개 · 미획득 확정 아님</div></div>
+<div class="rule"></div><div class="missing">미확인 목표 아이템</div><div class="muted" id="missingList"></div>
+</div></section>
+<section class="surface panel center"><div class="section">목표 장비 관리</div><div class="body">
+<div class="specrow">현재 전문화　|　잠행 (261)</div>
+<div class="controls"><input id="itemInput" aria-label="아이템 ID" placeholder=""><button class="mini" id="add">등록</button><button class="mini" id="remove">제거</button><button class="mini" id="reset">새로고침</button></div>
+<div class="hint">아이템 ID 직접 입력 · 가방 Shift+클릭은 WoW 게임에서만 작동</div>
+<div id="table"><div class="tablehead"><span>목표 아이템</span><span>아이템 ID</span><span>상태</span></div><div id="rows"></div></div>
+<div id="placeholder" class="placeholder" hidden></div></div>
+<div class="pagination"><button class="mini" id="prev">이전</button><span id="pages">1 / 1 페이지</span><button class="mini" id="next">다음</button></div>
+</section>
+<section class="surface panel right"><div class="section">전리품 목록</div><div class="body"><h4>공격대·쐐기돌 획득 추적</h4><div class="muted">데이터 연동 준비 중</div><div class="game-help" aria-label="전리품 기능 안내"><div>현재 버전은 전문화별 목표</div><div>등록과 착용/가방 확인을</div><div>지원합니다.</div><div>&nbsp;</div><div>공허핵, 티어 변환, 보스</div><div>전리품은 확인되지 않은</div><div>수치를 표시하지 않습니다.</div></div></div></section>
+<div class="footer-game">목표 목록: Ctrl+클릭 제거 · Shift+클릭 ID 입력 | 획득 상태는 현재 착용/가방 기준</div></main></div><div class="disclaimer">웹의 장비 데이터는 시연용 예시이며 저장되지 않습니다. 실제 캐릭터 및 저장 데이터는 게임 애드온에서만 확인할 수 있습니다.</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const sample=[{id:271510,name:"아이템 ID 271510",status:"착용"},{id:271511,name:"아이템 ID 271511",status:"착용"}];
+let targets=sample.map(o=>({...o})),tab=0,page=1;
+const tabs=[...document.querySelectorAll('.tab[data-index]')];
+function render(){
+tabs.forEach((b,i)=>b.classList.toggle('active',i===tab));
+$('table').hidden=tab!==0;$('placeholder').hidden=tab===0;
+$('placeholder').textContent=['','공격대','쐐기돌','획득 추적기','설정'][tab]+'\\n\\n독립 구현 예정 기능입니다.\\n확인되지 않은 획득 정보는 표시하지 않습니다.';
+$('placeholder').style.whiteSpace='pre-line';
+const owned=targets.filter(x=>x.status!=='미확인').length;
+$('total').textContent=targets.length;$('owned').textContent=owned;$('missing').textContent=targets.length-owned;
+$('missingList').textContent=targets.filter(x=>x.status==='미확인').map(x=>x.name).join(' · ')||'';
+const max=Math.max(1,Math.ceil(targets.length/12));page=Math.min(page,max);
+$('rows').replaceChildren();
+for(const item of targets.slice((page-1)*12,page*12)){
+const row=document.createElement('div');row.className='tableline';
+for(const [value,cls] of [[item.name,'name'],[item.id,'id'],[item.status,item.status==='미확인'?'unknown':'owned']]){
+const span=document.createElement('span');span.className=cls;
+if(cls==='name'){
+  const icon=document.createElement('span');icon.className='item-icon';icon.textContent='◆';
+  const label=document.createElement('span');label.className='item-name';label.textContent=value;
+  span.append(icon,label);
+}else span.textContent=value;
+row.append(span);
+}
+row.title='Shift+클릭: ID 입력, Ctrl+클릭: 제거';row.addEventListener('click',e=>{if(e.ctrlKey){targets=targets.filter(x=>x.id!==item.id);render()}else if(e.shiftKey){$('itemInput').value=item.id;$('itemInput').focus()}});$('rows').append(row)
+}
+$('pages').textContent=page+' / '+max+' 페이지';$('prev').disabled=page===1;$('next').disabled=page===max;
+}
+tabs.forEach((b,i)=>b.addEventListener('click',()=>{tab=i;page=1;render()}));
+$('add').onclick=()=>{const id=Number($('itemInput').value.trim());if(!Number.isSafeInteger(id)||id<=0){alert('유효한 아이템 ID 숫자를 입력하세요.');return}if(!targets.some(x=>x.id===id))targets.push({id,name:'아이템 ID '+id,status:'미확인'});$('itemInput').value='';render()};
+$('remove').onclick=()=>{const id=Number($('itemInput').value.trim());targets=targets.filter(x=>x.id!==id);$('itemInput').value='';render()};
+$('reset').onclick=()=>{targets=sample.map(o=>({...o}));tab=0;page=1;render()};
+$('itemInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('add').click()});
+$('prev').onclick=()=>{page--;render()};$('next').onclick=()=>{page++;render()};
+function applyLayout(data){
+  if(!data.panels)return;
+  const mapping={header:document.querySelector('.head'),left:document.querySelector('.panel.left'),middle:document.querySelector('.panel.center'),right:document.querySelector('.panel.right')};
+  for(const [key,node] of Object.entries(mapping)){
+    const p=data.panels[key];
+    if(!node||!p)continue;
+    node.style.left=p.x+'px';node.style.top=p.y+'px';
+    node.style.width=p.w+'px';node.style.height=p.h+'px';
+  }
+  const resolution=data.designResolution;
+  if(resolution){const canvas=document.querySelector('.canvas');canvas.style.width=resolution.width+'px';canvas.style.height=resolution.height+'px'}
+}
+async function update(){
+  $('state').textContent='R4 디자인 파일 확인 중…';
+  const button=$('update');
+  button.disabled=true;
+  try{
+    const token=Date.now();
+    const [designResponse,cssResponse]=await Promise.all([
+      fetch('design.json?refresh='+token,{cache:'no-store'}),
+      fetch('ui-contract.css?refresh='+token,{cache:'no-store'})
+    ]);
+    if(!designResponse.ok)throw Error('design.json HTTP '+designResponse.status);
+    if(!cssResponse.ok)throw Error('ui-contract.css HTTP '+cssResponse.status);
+    const data=await designResponse.json();
+    const css=await cssResponse.text();
+    if(data.format!=='ArangPlannerLivePreview')throw Error('디자인 데이터 형식 오류');
+    if(!css.includes('ArangNanum')||!css.includes('.panel'))
+      throw Error('공통 CSS 파일 검증 실패');
+    // Apply CSS text directly. This avoids waiting indefinitely for a
+    // dynamically replaced <link> element's onload event.
+    let live=document.getElementById('latestDesignRules');
+    if(!live){
+      live=document.createElement('style');
+      live.id='latestDesignRules';
+      document.head.append(live);
+    }
+    live.textContent=css;
+    applyLayout(data);
+    $('revision').textContent='게시 버전: '+data.revision+' · '+data.updatedAt;
+    $('state').textContent='✓ '+data.revision.split('-').slice(-2).join('-')+' 스타일 적용 완료';
+  }catch(error){
+    $('state').textContent='스타일 확인 오류';
+    $('revision').textContent='업데이트 오류: '+String(error.message||error);
+  }finally{
+    button.disabled=false;
+  }
+}
+$('update').onclick=update;render();update();
+})();
+</script></body></html>
