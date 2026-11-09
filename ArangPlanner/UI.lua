@@ -23,7 +23,7 @@ header:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
 header:SetBackdropColor(.16,.09,.27,.93)
 local title=header:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
 title:SetPoint("TOPLEFT",19,-13)
-title:SetText("|cffdbb8ff아랑플래너|r  |cffaaaaaa1.1 알파|r")
+title:SetText("|cffdbb8ff아랑플래너|r  |cffaaaaaa1.1.2 알파|r")
 local subtitle=header:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
 subtitle:SetPoint("TOPLEFT",20,-38)
 subtitle:SetText("독립 구현 · 전문화별 장비 목표 테이블")
@@ -99,6 +99,7 @@ local function insertTarget()
     if AP.AddTarget(raw) then
         entry:SetText("")
         refresh()
+        if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffb68bff아랑플래너|r 아이템 등록 후 테이블 갱신 완료") end
     else
         UIErrorsFrame:AddMessage("아이템 ID 또는 링크를 입력하세요. 입력값: "..tostring(raw):sub(1,50),1,.35,.45)
     end
@@ -176,8 +177,15 @@ footer:SetWidth(550)
 
 function AP.RefreshUI()
     if not root:IsShown() then return end
-    local spec,total,owned=AP.Info()
-    local displayName=AP.GetSpecName()
+    -- Never leave the entire list blank silently when an API call fails.
+    local okInfo,spec,total,owned=pcall(AP.Info)
+    if not okInfo then
+        info:SetText("|cffff7777장비 테이블 진단 필요|r")
+        summary:SetText("오류: "..tostring(spec):sub(1,180))
+        return
+    end
+    local okName,displayName=pcall(AP.GetSpecName)
+    if not okName then displayName="알 수 없음" end
     local key=spec..":"..displayName
     if root.lastSpec ~= key then
         page=1
@@ -185,7 +193,11 @@ function AP.RefreshUI()
     end
     info:SetText("현재 전문화: "..displayName.." ("..spec..")")
     summary:SetText("등록 "..total.."개  |  착용 또는 가방 확인 "..owned.."개  |  미확인 "..(total-owned).."개")
-    local targets=AP.GetTargetRows()
+    local okRows,targets=pcall(AP.GetTargetRows)
+    if not okRows then
+        summary:SetText("|cffff7777목표 목록 오류: "..tostring(targets):sub(1,150).."|r")
+        return
+    end
     local pageMax=math.max(1,math.ceil(#targets/#viewRows))
     if page>pageMax then page=pageMax end
     for i,row in ipairs(viewRows) do
