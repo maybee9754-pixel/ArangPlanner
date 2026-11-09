@@ -1,228 +1,381 @@
--- ArangPlanner independent target table UI (v1.1 alpha).
--- Uses Blizzard game API only. No GearPlanner source or third-party art.
-local AP = _G.ArangPlanner
-local root = CreateFrame("Frame", "ArangPlannerWindow", UIParent, "BackdropTemplate")
-root:SetSize(720, 625)
+-- ArangPlanner v1.2.0-alpha: independently designed charcoal/muted-purple UI.
+-- All interactive labels are Blizzard Lua frames; art is generated from
+-- tools/render_v12_skin.py, not copied from another addon.
+local AP=_G.ArangPlanner
+local TX="Interface\\AddOns\\ArangPlanner\\Textures\\"
+
+local root=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
+root:SetSize(1270,725)
 root:SetPoint("CENTER")
-root:SetFrameStrata("DIALOG")
 root:SetClampedToScreen(true)
+root:SetFrameStrata("DIALOG")
 root:SetMovable(true)
 root:EnableMouse(true)
 root:RegisterForDrag("LeftButton")
-root:SetScript("OnDragStart", root.StartMoving)
-root:SetScript("OnDragStop", root.StopMovingOrSizing)
-root:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-root:SetBackdropColor(.045,.035,.09,.98)
-root:SetBackdropBorderColor(.49,.32,.68,1)
+root:SetScript("OnDragStart",root.StartMoving)
+root:SetScript("OnDragStop",root.StopMovingOrSizing)
+root:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
+                  edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+root:SetBackdropColor(.055,.054,.078,.99)
+root:SetBackdropBorderColor(.30,.27,.36,1)
 
-local header=CreateFrame("Frame",nil,root,"BackdropTemplate")
-header:SetPoint("TOPLEFT",1,-1)
-header:SetPoint("TOPRIGHT",-1,-1)
-header:SetHeight(65)
-header:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
-header:SetBackdropColor(.16,.09,.27,.93)
-local title=header:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
-title:SetPoint("TOPLEFT",19,-13)
-title:SetText("|cffdbb8ff아랑플래너|r  |cffaaaaaa1.1.2 알파|r")
-local subtitle=header:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-subtitle:SetPoint("TOPLEFT",20,-38)
-subtitle:SetText("독립 구현 · 전문화별 장비 목표 테이블")
-subtitle:SetTextColor(.71,.65,.80)
-local close=CreateFrame("Button",nil,root,"UIPanelCloseButton")
-close:SetPoint("TOPRIGHT",-2,-2)
-close:SetScript("OnClick",function()root:Hide()end)
-
-local function label(parent,text,size,x,y,color)
-    local fs=parent:CreateFontString(nil,"OVERLAY",size or "GameFontHighlight")
-    fs:SetPoint("TOPLEFT",x,y)
-    fs:SetText(text)
-    if color then fs:SetTextColor(unpack(color)) end
-    return fs
+local function art(parent,filename,layer,alpha)
+    local t=parent:CreateTexture(nil,layer or "BACKGROUND")
+    t:SetAllPoints(parent)
+    t:SetTexture(TX..filename..".tga")
+    t:SetAlpha(alpha or 1)
+    return t
+end
+local function text(parent,s,template)
+    local f=parent:CreateFontString(nil,"OVERLAY",template or "GameFontHighlight")
+    f:SetText(s or "")
+    return f
+end
+local function frame(parent,x,y,w,h,texture)
+    local f=CreateFrame("Frame",nil,parent,"BackdropTemplate")
+    f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,-y)
+    f:SetSize(w,h)
+    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
+                    edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    f:SetBackdropColor(.065,.063,.09,.97)
+    f:SetBackdropBorderColor(.28,.25,.34,.85)
+    if texture then art(f,texture,"BACKGROUND",.98) end
+    return f
+end
+local function heading(parent,label)
+    local bar=CreateFrame("Frame",nil,parent)
+    bar:SetPoint("TOPLEFT",parent,"TOPLEFT",1,-1)
+    bar:SetPoint("TOPRIGHT",parent,"TOPRIGHT",-1,-1)
+    bar:SetHeight(33)
+    art(bar,"panel-header")
+    local t=text(bar,label,"GameFontNormal")
+    t:SetPoint("LEFT",12,0)
+    t:SetTextColor(.91,.88,.96)
+    return bar
+end
+local function button(parent,caption,x,y,w,h,callback,active)
+    local b=CreateFrame("Button",nil,parent,"BackdropTemplate")
+    b:SetSize(w,h)
+    b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,-y)
+    b:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    b:SetBackdropBorderColor(.32,.29,.38,.8)
+    local idle=art(b,"button-idle","BACKGROUND")
+    local on=art(b,"button-active","ARTWORK")
+    local over=art(b,"button-hover","ARTWORK")
+    over:SetAlpha(0)
+    local label=text(b,caption,"GameFontHighlight")
+    label:SetPoint("CENTER")
+    label:SetTextColor(.94,.91,.97)
+    b.activeTexture=on
+    function b:SetVisualActive(yes)
+        self.isActive=not not yes
+        on:SetAlpha(self.isActive and 1 or 0)
+        b:SetBackdropBorderColor(self.isActive and .57 or .32,self.isActive and .41 or .29,self.isActive and .69 or .38,.9)
+    end
+    b:SetVisualActive(active)
+    b:SetScript("OnEnter",function()
+        over:SetAlpha(b.isActive and .28 or .67)
+    end)
+    b:SetScript("OnLeave",function()over:SetAlpha(0)end)
+    b:SetScript("OnClick",function()
+        if callback then callback(b) end
+    end)
+    return b
 end
 
-local info=label(root,"", "GameFontNormal",19,-82)
-local summary=label(root,"", "GameFontHighlightSmall",19,-104,{.77,.72,.84})
+-- Design-faithful title bar. Dragging only starts on non-button header area.
+local header=frame(root,12,12,1246,72,"header")
+header:EnableMouse(true)
+header:RegisterForDrag("LeftButton")
+header:SetScript("OnDragStart",function()root:StartMoving()end)
+header:SetScript("OnDragStop",function()root:StopMovingOrSizing()end)
+local logo=text(header,"✦","GameFontNormalHuge")
+logo:SetPoint("LEFT",21,0)
+logo:SetTextColor(.70,.60,.83)
+local brand=text(header,"아랑플래너","GameFontNormalLarge")
+brand:SetPoint("LEFT",logo,"RIGHT",10,9)
+brand:SetTextColor(.96,.94,.98)
+local ver=text(header,"ArangPlanner v1.2.0-alpha","GameFontHighlightSmall")
+ver:SetPoint("LEFT",brand,"RIGHT",12,-1)
+ver:SetTextColor(.66,.64,.72)
+local tabs={}
+local currentTab=1
+local tabNames={"장비 세팅","공격대","쐐기돌","획득 추적기","설정"}
+local function setTab(n)
+    currentTab=n
+    for i,b in ipairs(tabs) do b:SetVisualActive(i==n) end
+    if AP.RefreshUI then AP.RefreshUI() end
+end
+local tabX={432,562,692,822,994}
+local tabW={121,121,121,163,116}
+for i,name in ipairs(tabNames) do
+    tabs[i]=button(header,name,tabX[i],15,tabW[i],42,function()setTab(i)end,i==1)
+end
+button(header,"×",1177,17,45,38,function()root:Hide()end,false)
 
--- Use an explicit keyboard-enabled EditBox so focus is not dependent on
--- the current Blizzard InputBoxTemplate or default text-color settings.
-local entry=CreateFrame("EditBox","ArangPlannerItemEntry",root,"BackdropTemplate")
-entry:SetSize(190,27)
-entry:SetPoint("TOPLEFT",28,-137)
-entry:SetFrameLevel(root:GetFrameLevel()+10)
-entry:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-entry:SetBackdropColor(.07,.055,.13,.98)
-entry:SetBackdropBorderColor(.57,.45,.78,1)
-entry:SetFontObject("ChatFontNormal")
-entry:SetTextColor(1,.94,1,1)
-entry:SetTextInsets(8,8,0,0)
-entry:SetJustifyH("LEFT")
-entry:EnableMouse(true)
-entry:EnableKeyboard(true)
-entry:SetAutoFocus(false)
-entry:SetMaxLetters(1024)
-entry:SetText("")
-entry:SetScript("OnMouseDown",function(self)self:SetFocus()end)
-entry:SetScript("OnEditFocusGained",function(self)
-    self:SetBackdropBorderColor(.89,.69,1,1)
-end)
-entry:SetScript("OnEditFocusLost",function(self)
-    self:SetBackdropBorderColor(.57,.45,.78,1)
-end)
-local hint=label(root,"아이템 ID 입력 또는 가방 아이템 Shift+클릭","GameFontHighlightSmall",29,-169,{.60,.57,.69})
+local left=frame(root,12,97,258,608,"panel-body")
+local middle=frame(root,281,97,697,608,"panel-body")
+local right=frame(root,989,97,269,608,"panel-body")
+heading(left,"진행 현황")
+heading(middle,"목표 장비 관리")
+heading(right,"전리품 목록")
 
--- Blizzard normally routes shift-click links into the chat edit box.
--- While our window is visible, also put an item link into our own input.
--- Do not replace or override Blizzard's ChatEdit_InsertLink function.
+local summaryTitle=text(left,"현재 전문화","GameFontHighlightSmall")
+summaryTitle:SetPoint("TOPLEFT",14,-48)
+summaryTitle:SetTextColor(.67,.66,.74)
+local specLabel=text(left,"","GameFontNormal")
+specLabel:SetPoint("TOPLEFT",14,-70)
+specLabel:SetTextColor(.94,.89,1)
+local progress=text(left,"","GameFontHighlight")
+progress:SetPoint("TOPLEFT",14,-117)
+progress:SetWidth(225)
+progress:SetJustifyH("LEFT")
+progress:SetTextColor(.81,.74,.89)
+local progressDetail=text(left,"","GameFontHighlightSmall")
+progressDetail:SetPoint("TOPLEFT",14,-143)
+progressDetail:SetWidth(228)
+progressDetail:SetJustifyH("LEFT")
+progressDetail:SetTextColor(.61,.79,.77)
+local divider=left:CreateTexture(nil,"ARTWORK")
+divider:SetPoint("TOPLEFT",14,-177)
+divider:SetSize(228,1)
+divider:SetColorTexture(.28,.26,.34,.76)
+local missingTitle=text(left,"미확인 목표 아이템","GameFontNormal")
+missingTitle:SetPoint("TOPLEFT",14,-195)
+missingTitle:SetTextColor(.83,.77,.92)
+local missingRows={}
+for i=1,10 do
+    local row=text(left,"","GameFontHighlightSmall")
+    row:SetPoint("TOPLEFT",17,-226-(i-1)*28)
+    row:SetWidth(221)
+    row:SetJustifyH("LEFT")
+    row:SetTextColor(.76,.71,.85)
+    missingRows[i]=row
+end
+
+-- Input and registration controls remain fully independent of the screenshot.
+local specLine=text(middle,"","GameFontNormal")
+specLine:SetPoint("TOPLEFT",14,-47)
+specLine:SetTextColor(.90,.82,.97)
+local input=CreateFrame("EditBox","ArangPlannerItemEntry",middle,"BackdropTemplate")
+input:SetSize(305,31)
+input:SetPoint("TOPLEFT",14,-75)
+input:SetFrameLevel(middle:GetFrameLevel()+8)
+input:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+input:SetBackdropColor(.045,.045,.07,1)
+input:SetBackdropBorderColor(.37,.34,.45,1)
+input:SetTextInsets(8,8,0,0)
+input:SetFontObject("ChatFontNormal")
+input:SetTextColor(1,.94,1,1)
+input:SetAutoFocus(false)
+input:SetMaxLetters(1024)
+input:EnableMouse(true)
+input:EnableKeyboard(true)
+input:SetScript("OnMouseDown",function(self)self:SetFocus()end)
+input:SetScript("OnEditFocusGained",function(self)self:SetBackdropBorderColor(.71,.53,.83,1)end)
+input:SetScript("OnEditFocusLost",function(self)self:SetBackdropBorderColor(.37,.34,.45,1)end)
+
+local function notify(message)
+    if DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffb78cce아랑플래너|r "..message)
+    end
+end
+local function add()
+    local raw=input:GetText()
+    if AP.AddTarget(raw) then
+        input:SetText("")
+        notify("목표 아이템 등록 완료")
+        if AP.RefreshUI then AP.RefreshUI() end
+    else
+        notify("유효한 아이템 ID 또는 링크를 입력하세요.")
+    end
+end
+button(middle,"등록",331,75,72,31,add,false)
+button(middle,"제거",409,75,72,31,function()
+    if AP.RemoveTarget(input:GetText()) then
+        notify("목표 아이템 제거 완료")
+        input:SetText("")
+        if AP.RefreshUI then AP.RefreshUI() end
+    else notify("제거할 아이템 ID 또는 링크를 입력하세요.") end
+end,false)
+button(middle,"새로고침",487,75,94,31,function()
+    AP.ScanEquipped()
+    if AP.RefreshUI then AP.RefreshUI() end
+end,false)
+input:SetScript("OnEnterPressed",function(self)add();self:ClearFocus()end)
+input:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
     hooksecurefunc("ChatEdit_InsertLink",function(link)
-        if not root:IsShown() or not IsShiftKeyDown() or type(link)~="string" then return end
-        local itemId=AP.GetItemIDFromText(link)
-        if itemId then
-            entry:SetText(link)
-            entry:HighlightText(0,0)
-            entry:SetFocus()
+        if not root:IsShown() or currentTab~=1 or not IsShiftKeyDown() or type(link)~="string" then return end
+        if AP.GetItemIDFromText(link) then
+            input:SetText(link)
+            input:SetFocus()
         end
     end)
 end
+local hint=text(middle,"아이템 ID 직접 입력 · 가방 아이템 Shift+클릭","GameFontHighlightSmall")
+hint:SetPoint("TOPLEFT",16,-115)
+hint:SetTextColor(.64,.62,.70)
 
-local function actionButton(text,x,width,callback)
-    local b=CreateFrame("Button",nil,root,"UIPanelButtonTemplate")
-    b:SetSize(width,25)
-    b:SetPoint("TOPLEFT",x,-137)
-    b:SetText(text)
-    b:SetScript("OnClick",callback)
-    return b
+local headRow=frame(middle,10,137,678,29,"panel-header")
+for _,v in ipairs({{"목표 아이템",39},{"아이템 ID",474},{"상태",575}}) do
+    local t=text(headRow,v[1],"GameFontNormalSmall")
+    t:SetPoint("LEFT",v[2],0)
 end
-local function refresh() if AP.RefreshUI then AP.RefreshUI() end end
-local function insertTarget()
-    local raw=entry:GetText()
-    if AP.AddTarget(raw) then
-        entry:SetText("")
-        refresh()
-        if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffb68bff아랑플래너|r 아이템 등록 후 테이블 갱신 완료") end
-    else
-        UIErrorsFrame:AddMessage("아이템 ID 또는 링크를 입력하세요. 입력값: "..tostring(raw):sub(1,50),1,.35,.45)
-    end
-end
-actionButton("등록",237,80,insertTarget)
-actionButton("제거",325,80,function()
-    if AP.RemoveTarget(entry:GetText()) then entry:SetText("");refresh()
-    else UIErrorsFrame:AddMessage("제거할 아이템 ID 또는 링크를 입력하세요.",1,.35,.45) end
-end)
-actionButton("새로고침",413,100,function()AP.ScanEquipped();refresh()end)
-entry:SetScript("OnEnterPressed",function(self)insertTarget();self:ClearFocus()end)
-entry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
-
-local tableHeader=CreateFrame("Frame",nil,root,"BackdropTemplate")
-tableHeader:SetPoint("TOPLEFT",18,-194)
-tableHeader:SetSize(683,27)
-tableHeader:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
-tableHeader:SetBackdropColor(.23,.14,.36,.96)
-label(tableHeader,"목표 아이템","GameFontNormalSmall",39,-8)
-label(tableHeader,"아이템 ID","GameFontNormalSmall",455,-8)
-label(tableHeader,"보유 확인","GameFontNormalSmall",548,-8)
 
 local viewRows={}
 for i=1,12 do
-    local b=CreateFrame("Button",nil,root,"BackdropTemplate")
-    b:SetSize(683,28)
-    b:SetPoint("TOPLEFT",18,-225-(i-1)*30)
-    b:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    b:SetBackdropColor(.105,.083,.17,i%2==0 and .73 or .93)
-    b:SetBackdropBorderColor(.26,.20,.35,.60)
-    local icon=b:CreateTexture(nil,"ARTWORK")
-    icon:SetSize(23,23);icon:SetPoint("LEFT",5,0)
-    local itemName=b:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-    itemName:SetPoint("LEFT",icon,"RIGHT",10,0)
-    itemName:SetWidth(405);itemName:SetJustifyH("LEFT")
-    local idText=b:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-    idText:SetPoint("LEFT",454,0);idText:SetWidth(92);idText:SetJustifyH("LEFT")
-    local status=b:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-    status:SetPoint("LEFT",547,0);status:SetWidth(128);status:SetJustifyH("LEFT")
-    b:SetScript("OnEnter",function(self)
-        self:SetBackdropBorderColor(.73,.50,1,.95)
-        if self.itemID then
+    local itemFrame=CreateFrame("Button",nil,middle,"BackdropTemplate")
+    itemFrame:SetSize(678,31)
+    itemFrame:SetPoint("TOPLEFT",middle,"TOPLEFT",10,-171-(i-1)*33)
+    itemFrame:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    itemFrame:SetBackdropBorderColor(.22,.21,.29,.5)
+    art(itemFrame,"row","BACKGROUND")
+    local hover=art(itemFrame,"row-hover","ARTWORK")
+    hover:SetAlpha(0)
+    local icon=itemFrame:CreateTexture(nil,"ARTWORK",nil,1)
+    icon:SetSize(24,24)
+    icon:SetPoint("LEFT",5,0)
+    local n=text(itemFrame,"","GameFontHighlightSmall")
+    n:SetPoint("LEFT",icon,"RIGHT",8,0)
+    n:SetWidth(423)
+    n:SetJustifyH("LEFT")
+    local id=text(itemFrame,"","GameFontHighlightSmall")
+    id:SetPoint("LEFT",472,0)
+    id:SetWidth(94)
+    id:SetJustifyH("LEFT")
+    id:SetTextColor(.70,.68,.77)
+    local status=text(itemFrame,"","GameFontHighlightSmall")
+    status:SetPoint("LEFT",575,0)
+    status:SetWidth(96)
+    status:SetJustifyH("LEFT")
+    itemFrame:SetScript("OnEnter",function(self)
+        hover:SetAlpha(.57)
+        if self.itemId then
             GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
-            GameTooltip:SetHyperlink("item:"..self.itemID)
-            GameTooltip:Show()
+            local ok=pcall(GameTooltip.SetHyperlink,GameTooltip,"item:"..self.itemId)
+            if ok then GameTooltip:Show() end
         end
     end)
-    b:SetScript("OnLeave",function(self)
-        self:SetBackdropBorderColor(.26,.20,.35,.60)
+    itemFrame:SetScript("OnLeave",function()
+        hover:SetAlpha(0)
         GameTooltip:Hide()
     end)
-    b:SetScript("OnClick",function(self,button)
-        if self.itemID then
-            if IsShiftKeyDown() then
-                entry:SetText(tostring(self.itemID))
-                entry:SetFocus()
-            elseif IsControlKeyDown() then
-                AP.RemoveTarget(self.itemID)
-                refresh()
-            end
+    itemFrame:SetScript("OnClick",function(self)
+        if not self.itemId then return end
+        if IsControlKeyDown() then
+            AP.RemoveTarget(self.itemId)
+            if AP.RefreshUI then AP.RefreshUI() end
+        elseif IsShiftKeyDown() then
+            input:SetText(tostring(self.itemId))
+            input:SetFocus()
         end
     end)
-    viewRows[i]={button=b,icon=icon,name=itemName,id=idText,status=status}
+    viewRows[i]={frame=itemFrame,icon=icon,name=n,id=id,status=status}
 end
 
 local page=1
-local previous=CreateFrame("Button",nil,root,"UIPanelButtonTemplate")
-previous:SetSize(68,24);previous:SetPoint("BOTTOMLEFT",19,24);previous:SetText("이전")
-local nextButton=CreateFrame("Button",nil,root,"UIPanelButtonTemplate")
-nextButton:SetSize(68,24);nextButton:SetPoint("BOTTOMRIGHT",-18,24);nextButton:SetText("다음")
-local pageInfo=root:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-pageInfo:SetPoint("BOTTOM",0,31)
-local footer=label(root,"가방 Shift+클릭: 링크 입력   |   테이블 Shift+클릭: ID 입력   |   Ctrl+클릭: 목표 제거","GameFontHighlightSmall",93,-593,{.60,.58,.70})
-footer:SetWidth(550)
+local prev=button(middle,"이전",15,580,72,27,function()
+    page=math.max(1,page-1)
+    if AP.RefreshUI then AP.RefreshUI() end
+end,false)
+local next=button(middle,"다음",607,580,72,27,function()
+    page=page+1
+    if AP.RefreshUI then AP.RefreshUI() end
+end,false)
+local pageLabel=text(middle,"","GameFontHighlightSmall")
+pageLabel:SetPoint("BOTTOM",0,15)
+pageLabel:SetTextColor(.72,.71,.79)
+local placeholder=text(middle,"","GameFontNormalLarge")
+placeholder:SetPoint("CENTER",0,40)
+placeholder:SetWidth(610)
+placeholder:SetJustifyH("CENTER")
+placeholder:SetTextColor(.76,.70,.84)
+placeholder:Hide()
+
+local rightInfo=text(right,"공격대·쐐기돌 획득 추적","GameFontHighlight")
+rightInfo:SetPoint("TOPLEFT",14,-55)
+rightInfo:SetTextColor(.88,.81,.95)
+local rightNote=text(right,"데이터 연동 준비 중","GameFontHighlightSmall")
+rightNote:SetPoint("TOPLEFT",14,-86)
+rightNote:SetTextColor(.66,.64,.74)
+local rightHelp=text(right,"현재 버전은 전문화별 목표 등록과\n착용/가방 확인을 지원합니다.\n\n공허핵, 티어 변환, 보스 전리품은\n확정되지 않은 수치를 표시하지\n않도록 비워 두었습니다.","GameFontHighlightSmall")
+rightHelp:SetPoint("TOPLEFT",14,-128)
+rightHelp:SetWidth(235)
+rightHelp:SetJustifyH("LEFT")
+rightHelp:SetTextColor(.72,.70,.79)
+
+local footer=text(root,"목표 목록: Ctrl+클릭 제거  ·  Shift+클릭 ID 입력  |  획득 상태는 현재 착용/가방 기준","GameFontHighlightSmall")
+footer:SetPoint("BOTTOM",root,"BOTTOM",0,6)
+footer:SetTextColor(.60,.59,.68)
 
 function AP.RefreshUI()
     if not root:IsShown() then return end
-    -- Never leave the entire list blank silently when an API call fails.
-    local okInfo,spec,total,owned=pcall(AP.Info)
-    if not okInfo then
-        info:SetText("|cffff7777장비 테이블 진단 필요|r")
-        summary:SetText("오류: "..tostring(spec):sub(1,180))
+    local ok, spec,total,owned=pcall(AP.Info)
+    if not ok then
+        specLine:SetText("장비 데이터 오류")
+        notify("상태 갱신 오류: "..tostring(spec))
         return
     end
-    local okName,displayName=pcall(AP.GetSpecName)
-    if not okName then displayName="알 수 없음" end
-    local key=spec..":"..displayName
-    if root.lastSpec ~= key then
+    local okName,specName=pcall(AP.GetSpecName)
+    if not okName then specName="알 수 없음" end
+    local signature=tostring(spec)..":"..specName
+    if root.lastSpec~=signature then
+        root.lastSpec=signature
         page=1
-        root.lastSpec=key
     end
-    info:SetText("현재 전문화: "..displayName.." ("..spec..")")
-    summary:SetText("등록 "..total.."개  |  착용 또는 가방 확인 "..owned.."개  |  미확인 "..(total-owned).."개")
-    local okRows,targets=pcall(AP.GetTargetRows)
-    if not okRows then
-        summary:SetText("|cffff7777목표 목록 오류: "..tostring(targets):sub(1,150).."|r")
+    specLabel:SetText(specName.." ("..tostring(spec)..")")
+    specLine:SetText("현재 전문화  |  "..specName.." ("..tostring(spec)..")")
+    progress:SetText("목표 등록  "..total.."    보유 확인  "..owned)
+    progressDetail:SetText("미확인  "..(total-owned).."개  ·  미획득 확정 아님")
+    local success,targets=pcall(AP.GetTargetRows)
+    if not success then
+        notify("목표 테이블 오류: "..tostring(targets))
         return
     end
-    local pageMax=math.max(1,math.ceil(#targets/#viewRows))
-    if page>pageMax then page=pageMax end
-    for i,row in ipairs(viewRows) do
-        local item=targets[(page-1)*#viewRows+i]
-        row.button.itemID=item and item.id or nil
-        if item then
-            row.button:Show()
-            row.icon:SetTexture(item.icon)
-            row.name:SetText(item.link or item.name)
-            row.id:SetText(tostring(item.id))
-            row.status:SetText(item.status)
-            if item.status=="착용" then row.status:SetTextColor(.31,1,.67)
-            elseif item.status=="가방 보유" then row.status:SetTextColor(.60,.92,1)
-            else row.status:SetTextColor(.95,.66,.68) end
-        else
-            row.button:Hide()
+    for i=1,#missingRows do missingRows[i]:SetText("") end
+    local m=1
+    for _,v in ipairs(targets) do
+        if v.status=="미확인" and m<=#missingRows then
+            missingRows[m]:SetText("• "..(v.name or ("아이템 "..v.id)))
+            m=m+1
         end
     end
-    previous:SetEnabled(page>1)
-    nextButton:SetEnabled(page<pageMax)
-    pageInfo:SetText(page.." / "..pageMax.." 페이지")
+    local showTable=currentTab==1
+    input:SetShown(showTable)
+    hint:SetShown(showTable)
+    headRow:SetShown(showTable)
+    prev:SetShown(showTable)
+    next:SetShown(showTable)
+    pageLabel:SetShown(showTable)
+    -- All actual controls in the tab remain clickable, not image-only mockups.
+    if showTable then
+        placeholder:Hide()
+        local pageCount=math.max(1,math.ceil(#targets/#viewRows))
+        page=math.min(page,pageCount)
+        for i,r in ipairs(viewRows) do
+            local item=targets[(page-1)*#viewRows+i]
+            r.frame.itemId=item and item.id or nil
+            if item then
+                r.frame:Show()
+                r.icon:SetTexture(item.icon or 134400)
+                r.name:SetText(item.link or item.name or tostring(item.id))
+                r.id:SetText(tostring(item.id))
+                r.status:SetText(item.status)
+                if item.status=="착용" then r.status:SetTextColor(.42,.89,.69)
+                elseif item.status=="가방 보유" then r.status:SetTextColor(.55,.80,.91)
+                else r.status:SetTextColor(.90,.66,.75) end
+            else r.frame:Hide() end
+        end
+        prev:SetEnabled(page>1)
+        next:SetEnabled(page<pageCount)
+        pageLabel:SetText(page.." / "..pageCount.." 페이지")
+    else
+        for _,r in ipairs(viewRows) do r.frame:Hide() end
+        placeholder:Show()
+        placeholder:SetText(tabNames[currentTab].."\n\n독립 구현 예정 기능입니다.\n실제 확인되지 않은 획득 정보는 표시하지 않습니다.")
+    end
 end
-previous:SetScript("OnClick",function()page=math.max(1,page-1);refresh()end)
-nextButton:SetScript("OnClick",function()page=page+1;refresh()end)
-
 function AP.ToggleUI()
     if root:IsShown() then root:Hide()
     else root:Show();AP.RefreshUI() end
