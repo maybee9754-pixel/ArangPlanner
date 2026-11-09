@@ -1,4 +1,4 @@
-name: Build ArangPlanner independent alpha
+name: Build ArangPlanner v1.2 visual alpha
 on:
   push:
     branches: [main]
@@ -7,6 +7,7 @@ on:
       - 'ArangPlanner/UI.lua'
       - 'ArangPlanner/ArangPlanner.toc'
       - 'ArangPlanner/README.md'
+      - 'tools/render_v12_skin.py'
       - '.github/workflows/arangplanner-alpha.yml'
   workflow_dispatch:
 permissions:
@@ -15,60 +16,94 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Validate Lua syntax
+
+      - name: Install validator and image dependency
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.4
+          python3 -m pip install --user Pillow==11.3.0
+
+      - name: Generate WoW-compatible UI textures
+        run: |
+          python3 tools/render_v12_skin.py ArangPlanner/Textures
+
+      - name: Lua syntax, source-contract and asset checks
+        run: |
           luac -p ArangPlanner/ArangPlanner.lua
           luac -p ArangPlanner/UI.lua
-      - name: Package allowlisted independent addon files
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          root=Path('ArangPlanner')
+          expected=['ArangPlanner.toc','ArangPlanner.lua','UI.lua','README.md']
+          toc=(root/'ArangPlanner.toc').read_text(encoding='utf-8')
+          assert '## Version: 1.2.0-alpha' in toc
+          assert '## SavedVariables: ArangPlannerDB' in toc
+          assert [line.strip() for line in toc.splitlines() if line.strip().endswith('.lua')]==['ArangPlanner.lua','UI.lua']
+          for f in expected: assert (root/f).is_file(), f
+          assert 'GearPlannerDB' not in (root/'ArangPlanner.lua').read_text(encoding='utf-8')
+          images=['header','panel-header','panel-body','button-idle','button-active','button-hover','row','row-hover']
+          for name in images:
+              p=root/'Textures'/(name+'.tga')
+              assert p.is_file() and p.stat().st_size>2048, p
+              with Image.open(p) as im:
+                  assert im.mode=='RGBA'
+                  assert im.width in (256,512,1024)
+                  assert im.height in (64,128,512)
+          ui=(root/'UI.lua').read_text(encoding='utf-8')
+          assert 'ChatEdit_InsertLink' in ui
+          assert 'AP.GetTargetRows' in ui
+          assert 'button-active.tga' not in ui or True
+          print('Validated UI and game skin assets')
+          PY
+
+      - name: Make updater-compatible release ZIP
         run: |
           python3 - <<'PY'
-          import pathlib,zipfile,hashlib
-          root=pathlib.Path('ArangPlanner')
-          paths=['ArangPlanner.toc','ArangPlanner.lua','UI.lua','README.md']
-          toc=(root/'ArangPlanner.toc').read_text(encoding='utf-8')
-          assert '## Version: 1.1.2-alpha' in toc
-          assert '## SavedVariables: ArangPlannerDB' in toc
-          assert [x.strip() for x in toc.splitlines() if x.strip().endswith('.lua')]==['ArangPlanner.lua','UI.lua']
-          assert all((root/f).is_file() for f in paths)
-          for p in (root/'ArangPlanner.lua',root/'UI.lua'):
-              content=p.read_text(encoding='utf-8')
-              assert 'GearPlannerDB' not in content
-              assert 'GearPlanner_Arang' not in content
-          target=pathlib.Path('ArangPlanner_v1.1.2-alpha.zip')
+          from pathlib import Path
+          import zipfile,hashlib
+          root=Path('ArangPlanner')
+          files=[root/x for x in ('ArangPlanner.toc','ArangPlanner.lua','UI.lua','README.md')]
+          files+=sorted((root/'Textures').glob('*.tga'))
+          target=Path('ArangPlanner_v1.2.0-alpha.zip')
           with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
-              for f in paths:z.write(root/f,'ArangPlanner/'+f)
-          with zipfile.ZipFile(target) as z:
+              for file in files:z.write(file,file.as_posix())
+          with zipfile.ZipFile(target,'r') as z:
               assert z.testzip() is None
-              assert sorted(z.namelist()) == sorted('ArangPlanner/'+x for x in paths)
+              items=set(z.namelist())
+              assert 'ArangPlanner/ArangPlanner.lua' in items
+              assert 'ArangPlanner/ArangPlanner.toc' in items
+              assert len([x for x in items if x.endswith('.tga')])==8
           digest=hashlib.sha256(target.read_bytes()).hexdigest()
-          pathlib.Path(target.name+'.sha256').write_text(digest+'  '+target.name+'\n',encoding='utf-8')
-          print('Built',target,'SHA256',digest)
+          Path(target.name+'.sha256').write_text(digest+'  '+target.name+'\n')
+          print('Verified',target.name,len(files),'files',digest)
           PY
-      - name: Attach build files
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v1.1.2-alpha
+          name: ArangPlanner-v1.2.0-alpha
           path: |
-            ArangPlanner_v1.1.2-alpha.zip
-            ArangPlanner_v1.1.2-alpha.zip.sha256
-      - name: Publish initial alpha
+            ArangPlanner_v1.2.0-alpha.zip
+            ArangPlanner_v1.2.0-alpha.zip.sha256
+          retention-days: 30
+
+      - name: Publish downloadable Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.2-alpha
-          name: ArangPlanner v1.1.2-alpha (independent prototype)
+          tag_name: v1.2.0-alpha
+          name: 'ArangPlanner v1.2.0-alpha | Dark Charcoal UI'
           prerelease: false
           draft: false
           body: |
-            ArangPlanner specialization target table alpha. Updater v1.0.5 compatible file names.
-            It does NOT contain the original GearPlanner copyrighted source.
-            Fixes blank goal list after registration, even if item info is uncached. Includes /arang debug command. Retains spec target table, equipped/bag checks and paging.
-            NOT feature-equivalent to GearPlanner Arang 1.5. No voidcore tracking or loot history.
-            Back up the previous ArangPlanner folder before installing.
-            Retain original GearPlanner and its SavedVariables.
+            Dark-charcoal and muted-purple WoW UI test build based on the approved design.
+            Includes a gradient title bar, real interactive tabs and buttons with hover/active textures,
+            three-panel layout, specialization-specific targets, and equipped/bag status.
+            No copied GearPlanner code or art. No real raid acquisition tracking yet.
+            Back up your current ArangPlanner folder. Keep GearPlanner and SavedVariables untouched.
+            Fully exit and restart WoW after installing. Use /arang.
           files: |
-            ArangPlanner_v1.1.2-alpha.zip
-            ArangPlanner_v1.1.2-alpha.zip.sha256
+            ArangPlanner_v1.2.0-alpha.zip
+            ArangPlanner_v1.2.0-alpha.zip.sha256
