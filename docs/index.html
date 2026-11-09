@@ -57,6 +57,15 @@ button:hover{background:#452967}button:disabled{opacity:.6;cursor:wait}
 .note{color:#aea1c0;text-align:center;font-size:12px;margin-top:14px}
 a{color:#cba8ff}.link{font-size:12px}
 @media(max-width:700px){.brand{font-size:16px}.top{padding:0 10px}.status{display:none}.right button{padding:8px 9px;font-size:11px}.wrap{padding:10px}.intro{font-size:10px}.viewport{min-height:260px}}
+
+/* Shared v0.7 art generated from tools/render_textures.py */
+.panel[data-id="header"] {background-image:url("assets/panel-header.png");background-size:100% 100%;}
+.panel:not([data-id="header"]) {background-image:url("assets/panel-body.png");background-size:100% 100%;}
+.section-title {background-image:url("assets/panel-header.png");background-size:100% 100%;}
+.donut {background:url("assets/progress-ring.png") center / contain no-repeat;box-shadow:none;}
+.donut:before {width:85px;height:85px;background:#100a1e;}
+.arcane {background:url("assets/arcane-circle.png") center / contain no-repeat;border:0;box-shadow:none;}
+.arcane .circle-inner {display:none;}
 </style></head><body>
 <header class="top"><div class="brand"><span class="mark">✦</span><div>ARANG PLANNER<small>WEB STUDIO · VIEW ONLY</small></div></div><div class="right"><span class="status" id="status">디자인 확인 준비됨</span><button id="update">↻ 최신 디자인 업데이트</button></div></header>
 <div class="wrap"><div class="intro"><span><b>아랑플래너 디자인 미리보기</b> · 게임 실행 / Python 설치 불필요 · 내용은 예시 데이터</span><span id="revision">디자인 불러오는 중...</span></div><div id="viewport" class="viewport"><div id="scaler" class="scaler"><div id="stage" class="stage">
@@ -82,7 +91,7 @@ function validate(o){if(!o||o.format!=='ArangPlannerStudioLayout'||o.version!==1
 for(const id of P){let p=o.panels[id];if(!p||!['x','y','w','h'].every(k=>Number.isFinite(p[k])))throw Error('패널 좌표 오류: '+id);
 if(p.w<100||p.h<50||p.w>3000||p.h>3000)throw Error('패널 크기 오류: '+id);}}
 function apply(o){validate(o);for(const id of P){const s=o.panels[id],p=document.querySelector('[data-id="'+id+'"]');p.style.left=s.x+'px';p.style.top=s.y+'px';p.style.width=s.w+'px';p.style.height=s.h+'px';if(isColor(s.bg))p.style.setProperty('--bg',s.bg);if(isColor(s.border))p.style.setProperty('--line',s.border);if(isColor(s.accent))p.style.setProperty('--acc',s.accent);if(isColor(s.text))p.style.setProperty('--txt',s.text);if(Number.isFinite(s.glow))p.style.setProperty('--glow',Math.max(0,Math.min(100,s.glow))+'px');if(Number.isFinite(s.radius))p.style.setProperty('--radius',Math.max(0,Math.min(40,s.radius))+'px');if(Number.isFinite(s.opacity))p.style.setProperty('--op',Math.max(.1,Math.min(1,s.opacity/100)));const t=document.querySelector('[data-label="'+id+'"]');if(t&&typeof s.label==='string')t.textContent=s.label.slice(0,40);if(id==='header'&&typeof s.label==='string')document.getElementById('title').textContent=s.label==='상단 메뉴'?'아랑플래너':s.label;
-if(typeof s.asset==='string' && /^assets\/[a-zA-Z0-9_.-]+\.(png|jpg|jpeg|webp)$/.test(s.asset)){p.style.backgroundImage='linear-gradient(#0d071455,#0d071488),url("'+s.asset+'")';p.style.backgroundSize='cover'}else p.style.backgroundImage='';}
+if(typeof s.asset==='string' && /^assets\/[a-zA-Z0-9_.-]+\.(png|jpg|jpeg|webp)$/.test(s.asset)){p.style.backgroundImage='linear-gradient(#0d071455,#0d071488),url("'+s.asset+'")';p.style.backgroundSize='cover'}else {p.style.backgroundImage='url("assets/'+(id==='header'?'panel-header':'panel-body')+'.png")';p.style.backgroundSize='100% 100%';}}
 ui.revision.textContent='게시 버전: '+(o.revision||'미지정')+' · '+(o.updatedAt||'');}
 async function load(){ui.update.disabled=true;ui.status.textContent='GitHub 디자인 확인 중…';try{const r=await fetch(D+'?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const o=await r.json();apply(o);ui.status.textContent='✓ 최신 디자인 적용됨';}catch(e){ui.status.textContent='⚠ 업데이트 확인 실패';alert('최신 디자인을 불러오지 못했습니다: '+e.message+'\n잠시 후 다시 시도하세요.')}finally{ui.update.disabled=false}}
 ui.update.onclick=load;window.addEventListener('resize',fit);fit();load();
