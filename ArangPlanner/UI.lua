@@ -1,11 +1,19 @@
--- ArangPlanner v1.2.2-alpha: TOC-driven version display; in-game/web typography and spacing calibration.
+-- ArangPlanner v1.3.0-alpha: shared TTF and generated layout contract.
 -- All interactive labels are Blizzard Lua frames; art is generated from
 -- tools/render_v12_skin.py, not copied from another addon.
 local AP=_G.ArangPlanner
 local TX="Interface\\AddOns\\ArangPlanner\\Textures\\"
+-- Generated from docs/design.json. Keep all geometry in the common contract.
+local U=_G.ArangPlannerUIContract
+assert(type(U)=="table","ArangPlanner: missing generated UIContract.lua")
+local FONT_ROOT="Interface\\AddOns\\ArangPlanner\\Fonts\\"
+local FONT_REGULAR=FONT_ROOT..U.typeface.regular
+local FONT_BOLD=FONT_ROOT..U.typeface.bold
+local FONT_EXTRA=FONT_ROOT..U.typeface.extraBold
+
 
 local root=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
-root:SetSize(1270,725)
+root:SetSize(U.designResolution.width,U.designResolution.height)
 root:SetPoint("CENTER")
 root:SetClampedToScreen(true)
 root:SetFrameStrata("DIALOG")
@@ -29,15 +37,18 @@ end
 local function text(parent,s,template)
     local fontObject=template or "GameFontHighlight"
     local f=parent:CreateFontString(nil,"OVERLAY",fontObject)
-    -- Both frontends use the same numeric font sizes. Use the localized
-    -- Blizzard font file so Korean glyph support remains intact.
-    local sizes={GameFontHighlightSmall=12,GameFontNormalSmall=12,
-        GameFontHighlight=13,GameFontNormal=13,GameFontNormalLarge=18}
-    local wanted=sizes[fontObject]
-    if wanted then
-        local path,_,flags=f:GetFont()
-        if path then f:SetFont(path,wanted,flags) end
-    end
+    -- Same OFL Nanum Gothic TTF files and point sizes in WoW and the website.
+    local sizes={GameFontHighlightSmall=U.typography.small,
+        GameFontNormalSmall=U.typography.small,
+        GameFontHighlight=U.typography.normal,
+        GameFontNormal=U.typography.normal,
+        GameFontNormalLarge=U.typography.large}
+    local wanted=sizes[fontObject] or U.typography.normal
+    local file=(fontObject=="GameFontNormalLarge") and FONT_EXTRA
+        or ((fontObject=="GameFontNormal" or fontObject=="GameFontNormalSmall") and FONT_BOLD or FONT_REGULAR)
+    f:SetFont(file,wanted,"")
+    f:SetShadowOffset(0,0)
+    f:SetShadowColor(0,0,0,0)
     f:SetText(s or "")
     return f
 end
@@ -94,7 +105,7 @@ local function button(parent,caption,x,y,w,h,callback,active)
 end
 
 -- Design-faithful title bar. Dragging only starts on non-button header area.
-local header=frame(root,12,12,1246,72,"header")
+local header=frame(root,U.panels.header.x,U.panels.header.y,U.panels.header.w,U.panels.header.h,"header")
 header:EnableMouse(true)
 header:RegisterForDrag("LeftButton")
 header:SetScript("OnDragStart",function()root:StartMoving()end)
@@ -139,16 +150,20 @@ local function setTab(n)
     for i,b in ipairs(tabs) do b:SetVisualActive(i==n) end
     if AP.RefreshUI then AP.RefreshUI() end
 end
-local tabX={432,562,692,822,994}
-local tabW={121,121,121,163,116}
 for i,name in ipairs(tabNames) do
-    tabs[i]=button(header,name,tabX[i],15,tabW[i],42,function()setTab(i)end,i==1)
+    local p=U.tabs[i]
+    tabs[i]=button(header,name,p.x,p.y,p.w,p.h,function()setTab(i)end,i==1)
 end
-button(header,"×",1177,17,45,38,function()root:Hide()end,false)
+local closePos=U.close
+button(header,"×",closePos.x,closePos.y,closePos.w,closePos.h,function()root:Hide()end,false)
 
-local left=frame(root,12,97,258,608,"panel-body")
-local middle=frame(root,281,97,697,608,"panel-body")
-local right=frame(root,989,97,269,608,"panel-body")
+local function panel(name)
+    local p=U.panels[name]
+    return frame(root,p.x,p.y,p.w,p.h,"panel-body")
+end
+local left=panel("left")
+local middle=panel("middle")
+local right=panel("right")
 heading(left,"진행 현황")
 heading(middle,"목표 장비 관리")
 heading(right,"전리품 목록")
@@ -191,14 +206,15 @@ local specLine=text(middle,"","GameFontNormal")
 specLine:SetPoint("TOPLEFT",14,-47)
 specLine:SetTextColor(.90,.82,.97)
 local input=CreateFrame("EditBox","ArangPlannerItemEntry",middle,"BackdropTemplate")
-input:SetSize(305,31)
-input:SetPoint("TOPLEFT",14,-75)
+input:SetSize(U.controls.input.w,U.controls.input.h)
+input:SetPoint("TOPLEFT",U.controls.input.x,-U.controls.input.y)
 input:SetFrameLevel(middle:GetFrameLevel()+8)
 input:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
 input:SetBackdropColor(.045,.045,.07,1)
 input:SetBackdropBorderColor(.37,.34,.45,1)
 input:SetTextInsets(8,8,0,0)
 input:SetFontObject("ChatFontNormal")
+input:SetFont(FONT_REGULAR,U.typography.normal,"")
 input:SetTextColor(1,.94,1,1)
 input:SetAutoFocus(false)
 input:SetMaxLetters(1024)
@@ -223,15 +239,15 @@ local function add()
         notify("유효한 아이템 ID 또는 링크를 입력하세요.")
     end
 end
-button(middle,"등록",331,75,72,31,add,false)
-button(middle,"제거",409,75,72,31,function()
+button(middle,"등록",U.controls.add.x,U.controls.add.y,U.controls.add.w,U.controls.add.h,add,false)
+button(middle,"제거",U.controls.remove.x,U.controls.remove.y,U.controls.remove.w,U.controls.remove.h,function()
     if AP.RemoveTarget(input:GetText()) then
         notify("목표 아이템 제거 완료")
         input:SetText("")
         if AP.RefreshUI then AP.RefreshUI() end
     else notify("제거할 아이템 ID 또는 링크를 입력하세요.") end
 end,false)
-button(middle,"새로고침",487,75,94,31,function()
+button(middle,"새로고침",U.controls.refresh.x,U.controls.refresh.y,U.controls.refresh.w,U.controls.refresh.h,function()
     AP.ScanEquipped()
     if AP.RefreshUI then AP.RefreshUI() end
 end,false)
@@ -250,36 +266,37 @@ local hint=text(middle,"아이템 ID 직접 입력 · 가방 아이템 Shift+클
 hint:SetPoint("TOPLEFT",16,-115)
 hint:SetTextColor(.64,.62,.70)
 
-local headRow=frame(middle,10,137,678,29,"panel-header")
-for _,v in ipairs({{"목표 아이템",39},{"아이템 ID",474},{"상태",575}}) do
+local th=U.table.header
+local headRow=frame(middle,th.x,th.y,th.w,th.h,"panel-header")
+for _,v in ipairs({{"목표 아이템",U.table.columns.name+2},{"아이템 ID",U.table.columns.id+2},{"상태",U.table.columns.status+2}}) do
     local t=text(headRow,v[1],"GameFontNormalSmall")
     t:SetPoint("LEFT",v[2],0)
 end
 
 local viewRows={}
-for i=1,12 do
+for i=1,U.table.rows.count do
     local itemFrame=CreateFrame("Button",nil,middle,"BackdropTemplate")
-    itemFrame:SetSize(678,31)
-    itemFrame:SetPoint("TOPLEFT",middle,"TOPLEFT",10,-171-(i-1)*33)
+    itemFrame:SetSize(U.table.rows.w,U.table.rows.h)
+    itemFrame:SetPoint("TOPLEFT",middle,"TOPLEFT",U.table.rows.x,-U.table.rows.y-(i-1)*(U.table.rows.h+U.table.rows.gap))
     itemFrame:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     itemFrame:SetBackdropBorderColor(.22,.21,.29,.5)
     art(itemFrame,"row","BACKGROUND")
     local hover=art(itemFrame,"row-hover","ARTWORK")
     hover:SetAlpha(0)
     local icon=itemFrame:CreateTexture(nil,"ARTWORK",nil,1)
-    icon:SetSize(24,24)
+    icon:SetSize(U.table.iconSize,U.table.iconSize)
     icon:SetPoint("LEFT",5,0)
     local n=text(itemFrame,"","GameFontHighlightSmall")
     n:SetPoint("LEFT",icon,"RIGHT",8,0)
     n:SetWidth(423)
     n:SetJustifyH("LEFT")
     local id=text(itemFrame,"","GameFontHighlightSmall")
-    id:SetPoint("LEFT",472,0)
+    id:SetPoint("LEFT",U.table.columns.id,0)
     id:SetWidth(94)
     id:SetJustifyH("LEFT")
     id:SetTextColor(.70,.68,.77)
     local status=text(itemFrame,"","GameFontHighlightSmall")
-    status:SetPoint("LEFT",575,0)
+    status:SetPoint("LEFT",U.table.columns.status,0)
     status:SetWidth(96)
     status:SetJustifyH("LEFT")
     itemFrame:SetScript("OnEnter",function(self)
@@ -345,7 +362,7 @@ local helpLines={
 }
 for i,line in ipairs(helpLines) do
     local fs=text(right,line,"GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT",14,-126-(i-1)*21)
+    fs:SetPoint("TOPLEFT",14,-126-(i-1)*U.typography.rightHelpLineHeight)
     fs:SetSize(237,18)
     fs:SetJustifyH("LEFT")
     fs:SetJustifyV("MIDDLE")
