@@ -87,11 +87,11 @@
 .head .identity small{margin-left:2px;margin-top:1px}
 .center #itemInput{padding:0 8px !important;border-radius:0 !important;font-weight:400 !important}
 .head .tab,.center .mini,.pagination .mini{border-radius:0 !important;box-shadow:none !important;text-shadow:none !important}
-.panel{background-image:linear-gradient(rgba(0,0,0,0.18),rgba(0,0,0,0.18)),url('assets/panel-body.png') !important;background-size:100% 100%,100% 100% !important}
-.head{background-image:linear-gradient(rgba(0,0,0,0.10),rgba(0,0,0,0.10)),url('assets/header.png') !important;background-size:100% 100%,100% 100% !important}
-.section,.center .tablehead{background-image:linear-gradient(rgba(0,0,0,0.10),rgba(0,0,0,0.10)),url('assets/panel-header.png') !important;background-size:100% 100%,100% 100% !important}
-.center .tableline{background-image:linear-gradient(rgba(0,0,0,0.08),rgba(0,0,0,0.08)),url('assets/row.png') !important;background-size:100% 100%,100% 100% !important}
-.head .tab:not(.active),.center .mini,.pagination .mini{background-image:linear-gradient(rgba(0,0,0,0.03),rgba(0,0,0,0.03)),url('assets/button-idle.png') !important;background-size:100% 100%,100% 100% !important}
+.panel{background-image:linear-gradient(rgba(0,0,0,0.21),rgba(0,0,0,0.21)),url('assets/panel-body.png') !important;background-size:100% 100%,100% 100% !important}
+.head{background-image:linear-gradient(rgba(0,0,0,0.13),rgba(0,0,0,0.13)),url('assets/header.png') !important;background-size:100% 100%,100% 100% !important}
+.section,.center .tablehead{background-image:linear-gradient(rgba(0,0,0,0.14),rgba(0,0,0,0.14)),url('assets/panel-header.png') !important;background-size:100% 100%,100% 100% !important}
+.center .tableline{background-image:linear-gradient(rgba(0,0,0,0.16),rgba(0,0,0,0.16)),url('assets/row.png') !important;background-size:100% 100%,100% 100% !important}
+.head .tab:not(.active),.center .mini,.pagination .mini{background-image:linear-gradient(rgba(0,0,0,0.04),rgba(0,0,0,0.04)),url('assets/button-idle.png') !important;background-size:100% 100%,100% 100% !important}
 .head .tab.active{background-image:url('assets/button-active.png') !important}
 .head .tab:hover,.center .mini:hover,.pagination .mini:hover{background-image:url('assets/button-hover.png') !important}
 .section{position:relative !important;top:1px !important;margin:0 1px !important;width:calc(100% - 2px) !important;height:33px !important;padding:0 12px !important;display:flex !important;align-items:center !important;font-size:13px !important}
