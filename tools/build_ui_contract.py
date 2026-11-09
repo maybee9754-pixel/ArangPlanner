@@ -115,7 +115,7 @@ css.extend([
 ".head .identity{position:absolute;left:%dpx;top:0;height:100%%;display:flex;align-items:center;gap:%dpx;min-width:0}"%(head["markLeft"],head["brandGap"]),
 ".head .diamond{width:26px;height:26px;margin:0 4px 0 4px;border:0;background:#c7abe4;box-shadow:inset 0 0 0 5px #76508c}",
 ".head .identity b{margin-top:%dpx}"%head["brandOffsetY"],
-".head .identity small{margin-left:%dpx;margin-top:1px}"%head["versionGap"],
+".head .identity small{margin-left:%dpx;margin-top:1px}"%max(0,head["versionGap"]-head["brandGap"]),
 ".center #itemInput{padding:0 8px !important;border-radius:0 !important;font-weight:400 !important}",
 ".head .tab,.center .mini,.pagination .mini{border-radius:0 !important;box-shadow:none !important;text-shadow:none !important}",
 ])
