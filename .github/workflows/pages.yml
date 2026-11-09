@@ -55,7 +55,9 @@ jobs:
           html=(root/"index.html").read_text(encoding="utf-8")
           assert design["revision"]=="arangplanner-v1.3.0-alpha-web-calibration-r3", design["revision"]
           assert "linear-gradient(rgba(0,0,0,0.18)" in css, "r3 panel darkening absent from generated CSS"
-          assert "sheet.href='ui-contract.css?revision='" in html
+          assert "live.textContent=css" in html, "Live CSS application missing"
+          assert "latestDesignRules" in html, "CSS style element missing"
+          assert "r3-static" in html, "Static preview stylesheet version not bumped"
           for key in ("header","panel-body","panel-header","row","row-hover","button-idle","button-active","button-hover"):
               assert (root/"assets"/(key+".png")).stat().st_size>0, key
           for name in ("NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf"):
