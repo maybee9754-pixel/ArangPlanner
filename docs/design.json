@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r4",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r5",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "인게임 v1.3 기준 웹 타이포그래피·하단 문구·목록 정렬 4차 보정. 인게임 addon 및 저장 데이터는 변경하지 않음.",
+  "notes": "실제 게임 v1.3 UI 기준 웹 텍스트 색상과 크기, 좌우 패널과 하단 안내의 좌표 보정. 웹 수정이며 게임 파일 불변.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 4,
+    "revision": 5,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -200,7 +200,7 @@
       "pageLabelBottom": 15
     },
     "footer": {
-      "bottom": 1,
+      "bottom": 6,
       "fontSize": 12
     },
     "colorMatch": {
@@ -215,8 +215,25 @@
       "letterSpacing": "0px",
       "standardLineHeight": 17,
       "titleOffsetY": 0,
-      "headingFontSize": 13,
-      "statusFontSize": 12
+      "headingFontSize": 12,
+      "statusFontSize": 12,
+      "textBaseline": "top",
+      "bodySize": 12,
+      "headerBrandSize": 18
+    },
+    "textColors": {
+      "title": "#F5F0FA",
+      "version": "#A8A3B8",
+      "summary": "#ABA8BD",
+      "spec": "#F0E3FF",
+      "progress": "#CFBDE3",
+      "acquired": "#9BC9C4",
+      "missing": "#D4C5EB",
+      "hint": "#A39EB3",
+      "rightTitle": "#E0CFF2",
+      "rightNote": "#A8A3BD",
+      "rightHelp": "#B8B3C9",
+      "footer": "#9996AD"
     }
   }
 }
