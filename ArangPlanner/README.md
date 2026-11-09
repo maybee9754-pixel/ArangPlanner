@@ -1,22 +1,21 @@
-# 아랑플래너 v1.0.1-alpha
+# 아랑플래너 v1.1.0-alpha
 
-기존 GearPlanner Arang의 사용 목적을 바탕으로 **별도 작성한 독립 개발 초기버전**입니다. 기존 GearPlanner의 All Rights Reserved 소스, 리소스, 프리셋, 기록은 포함하지 않습니다.
+독립 작성한 WoW 장비 목표 관리 애드온입니다. 원본 GearPlanner Arang의 소스·미디어·프리셋·획득 기록은 포함하지 않습니다. 원본 GearPlanner의 모든 기능을 복제한 버전은 아닙니다.
 
-## 현재 가능한 작업
-- `/arang` 창 열기/닫기
-- 실제 장착 장비 16개 슬롯의 링크·아이콘 표시
-- 캐릭터 GUID 및 전문화 ID별 목표 아이템 ID 저장
-- `/arang add 12345`, `/arang remove 12345` 목표 등록·해제
-- `/arang scan` 실제 착용 스캔, `/arang status` 착용 목표 통계
+## 구현
+- `/arang`: 전문화별 목표 장비 테이블 열기/닫기
+- 게임 UI에서 아이템 **ID 또는 아이템 링크**를 붙여넣어 등록/제거
+- 전문화 전환 시 해당 전문화 목표 테이블을 자동 표시, 캐릭터별 분리 보관
+- 목표 아이템의 상태: **착용**, **가방 보유**, **미확인** (과거 획득/은행 데이터는 보유로 간주하지 않음)
+- 12개씩 페이지 이동. Shift+행 클릭으로 ID 입력, Ctrl+행 클릭으로 목표 제거
+- 기존 `/arang add 아이템ID`, `/arang remove 아이템ID`, `/arang scan`, `/arang status` 유지
+- 기존 v1.0.1의 `ArangPlannerDB.characters` 전문화별 목표 목록 호환
 
-## 현재 불가능한 작업
-- 기존 GearPlanner Arang v1.5 획득 추적, 공허핵/티어 원본 판정, 공격대/쐐기, 가방·은행 스캔, 주사위 하이라이트
-- 기존 GearPlanner 데이터 자동 이전
-- 완성된 GearPlanner급 UI. 현재 창은 최소 기능 검증용
+## 제한
+현재 장비 및 가방에서 동일 **아이템 ID**가 확인되는지만 판정합니다. 아이템 변형/강화 수준 비교, 티어 변환 원본, 은행, 위대한 금고, 공격대/쐐기 공허핵 획득 증빙, 다른 전문화 아이템 반투명 표시는 아직 구현되지 않았습니다. `미확인`은 미획득 확정이 아닙니다.
 
-**저장 키:** `ArangPlannerDB` (기존 GearPlanner 데이터에는 접근하지 않음). 이전 v0.9 UI 데모는 GitHub 이력에 남지만 해당 데모의 기능과 텍스처는 새 버전에 포함되지 않습니다.
+## 설치
+GitHub Release `ArangPlanner_v1.1.0-alpha.zip`을 다운로드하거나 기존 업데이트 매니저에서 설치합니다. ZIP 내부에 업데이트 매니저가 요구하는 `ArangPlanner/ArangPlanner.toc`와 `ArangPlanner/ArangPlanner.lua`가 포함됩니다. 이전 아랑플래너 폴더를 백업하고 설치 후 WoW 재시작. 기존 `GearPlanner` 폴더 및 그 SavedVariables는 변경하지 마세요.
 
-설치: `_retail_/Interface/AddOns/ArangPlanner`에 폴더를 넣습니다. 기존 ArangPlanner가 있다면 **별도 백업** 후 교체하고 게임을 재시작합니다. 기존 GearPlanner 폴더는 삭제하지 마세요. WoW 클라이언트 실제 검증 전의 시험판입니다.
-
-## v1.0.1 수정
-기존 Windows 업데이터 v1.0.5가 요구하는 `ArangPlanner.toc`와 `ArangPlanner.lua`를 ZIP 최상위 애드온 폴더에 포함하도록 고쳤습니다.
+## 독립 개발
+Blizzard 게임 API만 사용하며 원본 GearPlanner의 All Rights Reserved 코드를 재배포하지 않습니다. 실제 WoW 클라이언트 전체 회귀 테스트는 별도로 필요합니다.
