@@ -1,33 +1,36 @@
-# 아랑플래너 v1.1.2-alpha
+# 아랑플래너 v1.2.0-alpha
 
-독립 작성한 WoW 장비 목표 관리 애드온입니다. 원본 GearPlanner Arang의 소스·미디어·프리셋·획득 기록은 포함하지 않습니다. 원본 GearPlanner의 모든 기능을 복제한 버전은 아닙니다.
+기존 GearPlanner의 저작권 보호 소스 또는 미디어를 사용하지 않고 독립 작성한 UI 및 장비 등록 기능입니다.
 
-## 구현
-- `/arang`: 전문화별 목표 장비 테이블 열기/닫기
-- 게임 UI에서 아이템 **ID 또는 아이템 링크**를 붙여넣어 등록/제거
-- 전문화 전환 시 해당 전문화 목표 테이블을 자동 표시, 캐릭터별 분리 보관
-- 목표 아이템의 상태: **착용**, **가방 보유**, **미확인** (과거 획득/은행 데이터는 보유로 간주하지 않음)
-- 12개씩 페이지 이동. Shift+행 클릭으로 ID 입력, Ctrl+행 클릭으로 목표 제거
-- 기존 `/arang add 아이템ID`, `/arang remove 아이템ID`, `/arang scan`, `/arang status` 유지
-- 기존 v1.0.1의 `ArangPlannerDB.characters` 전문화별 목표 목록 호환
+## v1.2.0 새로운 인게임 UI
 
-## 제한
-현재 장비 및 가방에서 동일 **아이템 ID**가 확인되는지만 판정합니다. 아이템 변형/강화 수준 비교, 티어 변환 원본, 은행, 위대한 금고, 공격대/쐐기 공허핵 획득 증빙, 다른 전문화 아이템 반투명 표시는 아직 구현되지 않았습니다. `미확인`은 미획득 확정이 아닙니다.
+- 사용자가 확정한 **다크 차콜 / 톤 다운된 보라색 시안**을 게임용 TGA 텍스처와 실제 Lua UI 프레임으로 구현
+- 광택이 있는 72px 상단 타이틀 바, 기본/활성/마우스오버 상태를 구분한 버튼
+- 왼쪽: 전문화 및 목표 장비 통계, 미확인 목표 목록
+- 중앙: 실제 장비 등록/제거/새로고침, 12개 단위 테이블, 페이지 이동
+- 오른쪽: 전리품 추적 준비 상태 (획득 수치는 아직 계산하지 않으므로 임의 표시하지 않음)
+- 상단 '장비 세팅 / 공격대 / 쐐기돌 / 획득 추적기 / 설정' 탭 전환. 미구현 탭에는 준비 중 안내가 나옴
+- 아이템 ID 직접 입력, 가방 Shift+클릭, Ctrl+목표 클릭 제거 등 기존 동작 유지
+- 실제 착용·가방 보유만 확인하며 미확인은 미획득 확정이 아님
 
-## 설치
-GitHub Release `ArangPlanner_v1.1.2-alpha.zip`을 다운로드하거나 기존 업데이트 매니저에서 설치합니다. ZIP 내부에 업데이트 매니저가 요구하는 `ArangPlanner/ArangPlanner.toc`와 `ArangPlanner/ArangPlanner.lua`가 포함됩니다. 이전 아랑플래너 폴더를 백업하고 설치 후 WoW 재시작. 기존 `GearPlanner` 폴더 및 그 SavedVariables는 변경하지 마세요.
+## 게임 내 명령
+- `/arang` 창 열기/닫기
+- `/arang add 12345` 목표 등록
+- `/arang remove 12345` 목표 제거
+- `/arang scan` 장비 스캔
+- `/arang status` 목표 통계
+- `/arang debug` 전문화별 아이템 진단
 
-## 독립 개발
-Blizzard 게임 API만 사용하며 원본 GearPlanner의 All Rights Reserved 코드를 재배포하지 않습니다. 실제 WoW 클라이언트 전체 회귀 테스트는 별도로 필요합니다.
+## 배포와 설치
+- 배포 ZIP `ArangPlanner_v1.2.0-alpha.zip`
+- 기존 Windows 업데이터에 맞춰 `ArangPlanner/ArangPlanner.toc` 및 `ArangPlanner/ArangPlanner.lua`를 포함
+- `ArangPlanner/Textures/` 아래 8종 TGA 텍스처 포함
+- GitHub Actions가 `tools/render_v12_skin.py`로 PNG/TGA를 같은 규칙에서 생성
+- WoW 완전 종료 → 기존 `ArangPlanner` 폴더 백업 → ZIP 설치 → 재시작 후 `/arang`
+- 원본 `GearPlanner` 폴더와 `GearPlanner` SavedVariables는 절대 변경하지 않음
+- 이전 `ArangPlannerDB` 구조를 유지하여 등록한 목표를 이어서 사용할 수 있게 설계
 
-## v1.1.1 입력 오류 수정
-- 기본 템플릿 입력칸을 글씨색과 포커스를 명시한 독립 EditBox로 교체
-- 입력창 클릭 시 키보드 포커스 강제, 테두리 강조
-- 가방 아이템 Shift+클릭 시 `ChatEdit_InsertLink` 후킹으로 입력란 자동 채움
-- 실패 시 입력값 일부를 메시지로 출력하여 진단 가능
-- 문제가 지속되면 `/arang add 12345` 명령으로 등록 가능
-
-## v1.1.2 목록 표시 오류 수정
-- 이미 등록된 목표는 아이템 정보 로딩이나 가방 API가 실패해도 숫자 ID로 표시
-- UI 갱신 실패를 화면에 오류 메시지로 출력
-- `/arang debug` 명령으로 현재 전문화에 등록된 아이템 ID와 오류 진단
+## 주의
+웹에서 만든 시안과 최대한 비슷한 조명/그라데이션/톤으로 제작했지만, 웹 렌더러와 WoW UI는 다른 환경이라 픽셀 단위로 완전히 동일하지 않을 수 있습니다.
+정식 획득 추적/공허핵/티어 변환 기능은 아직 구현되지 않았습니다.
+Lua 구문 및 ZIP 구성은 자동 검사할 수 있지만 실제 WoW 클라이언트의 그래픽/인터랙션 테스트는 게임 내 확인이 필요합니다.
