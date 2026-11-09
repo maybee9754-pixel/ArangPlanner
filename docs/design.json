@@ -1,117 +1,57 @@
 {
-  "format": "ArangPlannerStudioLayout",
-  "version": 1,
-  "designResolution": {
-    "width": 1440,
-    "height": 810
-  },
-  "revision": "studio-bridge-v0.9.0-demo",
+  "format": "ArangPlannerLivePreview",
+  "version": 2,
+  "revision": "arangplanner-v1.2.0-alpha-dark-charcoal",
   "updatedAt": "2026-11-09",
-  "notes": "v0.9: 강화된 장비 슬롯 마우스오버, 슬롯별 툴팁 방향, 캐릭터 마법진 정렬, 첫 보스 확장 상태. 수치/전리품은 예시.",
+  "designResolution": {
+    "width": 1270,
+    "height": 725
+  },
+  "notes": "현재 ArangPlanner v1.2.0-alpha의 게임용 3단 레이아웃과 같은 TGA/PNG 생성기를 사용. 브라우저는 실제 WoW 데이터에 접근하지 않으며 예시 데이터만 표시.",
+  "palette": {
+    "base": "#0f0e17",
+    "panel": "#171722",
+    "panelHeader": "#2e293a",
+    "accent": "#76558f",
+    "outline": "#50475e",
+    "text": "#eae7ef",
+    "muted": "#aaa4b5"
+  },
   "panels": {
     "header": {
-      "label": "상단 메뉴",
-      "x": 22,
-      "y": 17,
-      "w": 1396,
-      "h": 80,
-      "bg": "#20162e",
-      "border": "#7650a3",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
+      "x": 12,
+      "y": 12,
+      "w": 1246,
+      "h": 72
     },
-    "farming": {
-      "label": "파밍 현황",
-      "x": 22,
-      "y": 110,
-      "w": 304,
-      "h": 234,
-      "bg": "#131021",
-      "border": "#6f5292",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
+    "left": {
+      "x": 12,
+      "y": 97,
+      "w": 258,
+      "h": 608
     },
-    "compare": {
-      "label": "능력치 비교",
-      "x": 22,
-      "y": 356,
-      "w": 304,
-      "h": 275,
-      "bg": "#131021",
-      "border": "#6f5292",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
+    "middle": {
+      "x": 281,
+      "y": 97,
+      "w": 697,
+      "h": 608
     },
-    "missing": {
-      "label": "미획득 아이템",
-      "x": 22,
-      "y": 643,
-      "w": 304,
-      "h": 140,
-      "bg": "#131021",
-      "border": "#6f5292",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
-    },
-    "equipment": {
-      "label": "장비 세팅",
-      "x": 337,
-      "y": 110,
-      "w": 730,
-      "h": 673,
-      "bg": "#131021",
-      "border": "#6f5292",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
-    },
-    "loot": {
-      "label": "전리품 목록",
-      "x": 1078,
-      "y": 110,
-      "w": 340,
-      "h": 673,
-      "bg": "#131021",
-      "border": "#6f5292",
-      "accent": "#5d348d",
-      "text": "#f3ebff",
-      "opacity": 100,
-      "glow": 16,
-      "radius": 8,
-      "asset": null,
-      "assetName": null
+    "right": {
+      "x": 989,
+      "y": 97,
+      "w": 269,
+      "h": 608
     }
   },
-  "style": {
-    "titleTexture": "title-bar.png",
-    "headerTexture": "section-bar.png",
-    "buttonActive": "button-active.png",
-    "buttonIdle": "button-idle.png",
-    "buttonHover": "button-hover.png",
-    "slotTexture": "slot-surface.png"
-  }
+  "assets": [
+    "header",
+    "panel-header",
+    "panel-body",
+    "button-idle",
+    "button-active",
+    "button-hover",
+    "row",
+    "row-hover"
+  ],
+  "gameVersion": "1.2.0-alpha"
 }
