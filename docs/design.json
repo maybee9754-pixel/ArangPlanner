@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.2.2-alpha-version-fix",
+  "revision": "arangplanner-v1.3.0-alpha-shared-font-layout",
   "updatedAt": "2026-11-09",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "설치된 TOC의 버전을 게임 UI에 자동 반영. 기존 v1.2.1 타이포그래피/배치 유지.",
+  "notes": "웹과 WoW 모두 나눔고딕 같은 OFL TTF 파일, 같은 패널·탭·입력·테이블 좌표, 같은 PNG/TGA 텍스처 원본을 사용합니다. 실제 게임 아이템 데이터는 웹에서 볼 수 없습니다.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -53,7 +53,7 @@
     "row",
     "row-hover"
   ],
-  "gameVersion": "1.2.2-alpha",
+  "gameVersion": "1.3.0-alpha",
   "typography": {
     "normal": 13,
     "small": 12,
@@ -70,5 +70,99 @@
     "buttonHover": "button-hover",
     "row": "row",
     "rowHover": "row-hover"
+  },
+  "typeface": {
+    "family": "Nanum Gothic",
+    "regular": "NanumGothic-Regular.ttf",
+    "bold": "NanumGothic-Bold.ttf",
+    "extraBold": "NanumGothic-ExtraBold.ttf",
+    "license": "SIL OFL 1.1",
+    "source": "https://github.com/google/fonts/tree/main/ofl/nanumgothic"
+  },
+  "tabs": [
+    {
+      "x": 432,
+      "y": 15,
+      "w": 121,
+      "h": 42
+    },
+    {
+      "x": 562,
+      "y": 15,
+      "w": 121,
+      "h": 42
+    },
+    {
+      "x": 692,
+      "y": 15,
+      "w": 121,
+      "h": 42
+    },
+    {
+      "x": 822,
+      "y": 15,
+      "w": 163,
+      "h": 42
+    },
+    {
+      "x": 994,
+      "y": 15,
+      "w": 116,
+      "h": 42
+    }
+  ],
+  "close": {
+    "x": 1177,
+    "y": 17,
+    "w": 45,
+    "h": 38
+  },
+  "controls": {
+    "input": {
+      "x": 14,
+      "y": 75,
+      "w": 305,
+      "h": 31
+    },
+    "add": {
+      "x": 331,
+      "y": 75,
+      "w": 72,
+      "h": 31
+    },
+    "remove": {
+      "x": 409,
+      "y": 75,
+      "w": 72,
+      "h": 31
+    },
+    "refresh": {
+      "x": 487,
+      "y": 75,
+      "w": 94,
+      "h": 31
+    }
+  },
+  "table": {
+    "header": {
+      "x": 10,
+      "y": 137,
+      "w": 678,
+      "h": 29
+    },
+    "rows": {
+      "x": 10,
+      "y": 171,
+      "w": 678,
+      "h": 31,
+      "gap": 2,
+      "count": 12
+    },
+    "columns": {
+      "name": 37,
+      "id": 472,
+      "status": 575
+    },
+    "iconSize": 24
   }
 }
