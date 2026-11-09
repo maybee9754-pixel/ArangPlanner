@@ -1,0 +1,55 @@
+name: Build addon demo ZIP (not a release)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ArangPlanner/**'
+      - '.github/workflows/demo-artifact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate Lua syntax
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.4
+          luac -p ArangPlanner/ArangPlanner.lua ArangPlanner/Layout.lua
+      - name: Check addon structure
+        run: |
+          python3 - <<'PY'
+          import pathlib, re
+          root=pathlib.Path("ArangPlanner")
+          toc=(root/"ArangPlanner.toc").read_text(encoding="utf-8")
+          assert re.search(r"(?m)^## Version: 0\.6\.0-demo$", toc)
+          assert [line.strip() for line in toc.splitlines() if line.strip().endswith(".lua")] == ["Layout.lua", "ArangPlanner.lua"]
+          assert (root/"Layout.lua").exists() and (root/"ArangPlanner.lua").exists()
+          assert not list(root.rglob("*SavedVariables*"))
+          PY
+      - name: Package ZIP
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile, hashlib
+          target=Path("ArangPlanner_v0.6.0-demo.zip")
+          with zipfile.ZipFile(target,"w",zipfile.ZIP_DEFLATED) as z:
+              for p in sorted(Path("ArangPlanner").rglob("*")):
+                  if p.is_file():z.write(p,p.as_posix())
+          with zipfile.ZipFile(target) as z:
+              assert z.testzip() is None
+              assert "ArangPlanner/ArangPlanner.toc" in z.namelist()
+          print(target.name, hashlib.sha256(target.read_bytes()).hexdigest())
+          PY
+      - name: Upload ZIP for testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArangPlanner-v0.6.0-demo
+          path: ArangPlanner_v0.6.0-demo.zip
+          retention-days: 30
