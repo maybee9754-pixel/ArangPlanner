@@ -58,6 +58,12 @@ jobs:
           assert "live.textContent=css" in html, "Live CSS application missing"
           assert "latestDesignRules" in html, "CSS style element missing"
           assert "r3-static" in html, "Static preview stylesheet version not bumped"
+          fresh=(root/"preview-r4.html").read_text(encoding="utf-8")
+          assert "R4 새 페이지 로드됨" in fresh
+          assert "live.textContent=css" in fresh
+          assert "CSS 적용 중…" not in fresh
+          assert "R4 HTML" in fresh
+          print("CACHE BYPASS PAGE VERIFIED: preview-r4.html")
           for key in ("header","panel-body","panel-header","row","row-hover","button-idle","button-active","button-hover"):
               assert (root/"assets"/(key+".png")).stat().st_size>0, key
           for name in ("NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf"):
