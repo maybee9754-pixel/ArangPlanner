@@ -1,55 +1,85 @@
-name: Build addon demo ZIP (not a release)
+name: Build and publish ArangPlanner v0.7.0-demo
 
 on:
   push:
     branches: [main]
     paths:
       - 'ArangPlanner/**'
+      - 'tools/render_textures.py'
       - '.github/workflows/demo-artifact.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
-      - name: Validate Lua syntax
+
+      - name: Generate shared WoW art textures
+        run: |
+          python3 -m pip install Pillow==11.3.0
+          python3 tools/render_textures.py ArangPlanner/Textures
+
+      - name: Check Lua syntax
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.4
-          luac -p ArangPlanner/ArangPlanner.lua ArangPlanner/Layout.lua
-      - name: Check addon structure
+          luac -p ArangPlanner/Layout.lua ArangPlanner/ArangPlanner.lua
+
+      - name: Validate and package demo
         run: |
           python3 - <<'PY'
-          import pathlib, re
+          import hashlib, pathlib, re, zipfile
           root=pathlib.Path("ArangPlanner")
           toc=(root/"ArangPlanner.toc").read_text(encoding="utf-8")
-          assert re.search(r"(?m)^## Version: 0\.6\.0-demo$", toc)
-          assert [line.strip() for line in toc.splitlines() if line.strip().endswith(".lua")] == ["Layout.lua", "ArangPlanner.lua"]
-          assert (root/"Layout.lua").exists() and (root/"ArangPlanner.lua").exists()
-          assert not list(root.rglob("*SavedVariables*"))
-          PY
-      - name: Package ZIP
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import zipfile, hashlib
-          target=Path("ArangPlanner_v0.6.0-demo.zip")
+          assert re.search(r"(?m)^## Version: 0\.7\.0-demo$",toc)
+          assert [x.strip() for x in toc.splitlines() if x.strip().endswith(".lua")] == ["Layout.lua", "ArangPlanner.lua"]
+          names={"panel-body","panel-header","arcane-circle","progress-ring"}
+          for stem in names:
+              p=root/"Textures"/(stem+".tga")
+              assert p.is_file() and p.stat().st_size > 1024, p
+          assert not (root/"WTF").exists() and not (root/"SavedVariables").exists()
+          target=pathlib.Path("ArangPlanner_v0.7.0-demo.zip")
           with zipfile.ZipFile(target,"w",zipfile.ZIP_DEFLATED) as z:
-              for p in sorted(Path("ArangPlanner").rglob("*")):
-                  if p.is_file():z.write(p,p.as_posix())
+              for p in sorted(root.rglob("*")):
+                  if p.is_file() and p.suffix.lower() != ".png":
+                      z.write(p, p.as_posix())
           with zipfile.ZipFile(target) as z:
               assert z.testzip() is None
               assert "ArangPlanner/ArangPlanner.toc" in z.namelist()
-          print(target.name, hashlib.sha256(target.read_bytes()).hexdigest())
+              for stem in names: assert "ArangPlanner/Textures/"+stem+".tga" in z.namelist()
+          digest=hashlib.sha256(target.read_bytes()).hexdigest()
+          pathlib.Path(target.name+".sha256").write_text(digest+"  "+target.name+"\n")
+          print("PACKAGE",target.name,target.stat().st_size,"SHA256",digest)
           PY
-      - name: Upload ZIP for testing
+
+      - name: Upload Actions build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v0.6.0-demo
-          path: ArangPlanner_v0.6.0-demo.zip
+          name: ArangPlanner-v0.7.0-demo
+          path: |
+            ArangPlanner_v0.7.0-demo.zip
+            ArangPlanner_v0.7.0-demo.zip.sha256
           retention-days: 30
+
+      - name: Publish downloadable GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.7.0-demo
+          name: "ArangPlanner v0.7.0-demo | UI 시험판"
+          prerelease: false
+          draft: false
+          body: |
+            외형 미리보기 **데모 버전**입니다. 기존 GearPlanner 애드온과 별개입니다.
+            웹 스튜디오와 공통 규칙으로 만든 텍스처(원형 게이지, 마법진, 패널)를 포함합니다.
+            실제 파밍 수치 / 공허핵 획득 / 보스 전리품 정보는 연결되지 않았습니다.
+            게임을 완전히 종료한 후 설치하고 WoW에서 `/arang`을 입력하세요.
+            설치 전 기존 ArangPlanner 폴더 백업을 권장합니다.
+            ※ 업데이터의 releases/latest API에 데모를 노출하기 위해 사전 출시 태그이지만 GitHub prerelease 표시는 사용하지 않습니다.
+          files: |
+            ArangPlanner_v0.7.0-demo.zip
+            ArangPlanner_v0.7.0-demo.zip.sha256
