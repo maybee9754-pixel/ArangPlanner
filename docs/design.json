@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-pixel-match-r10",
+  "revision": "arangplanner-v1.3.0-alpha-pixel-match-r11",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "WoW v1.3.0 실제 화면과 웹 r9를 픽셀 정렬 비교하여 한 번에 수정: 게임의 거의 검정색 헤더/패널 및 어두운 테이블 머리·입력창, 장비 행 밝기, 색·폰트·경계. 인게임 코드/DB 변경 없음.",
+  "notes": "r10 웹·게임 실제 1270x725 정렬 측정 후 일괄 미세 보정. 이미 일치한 헤더·패널 평면은 유지하고 표 헤더 빈 공간, 행 텍스처 및 하단 안내문 대비만 교정. 인게임 Lua/DB 불변.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 10,
+    "revision": 11,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -357,6 +357,61 @@
       "layout": "Preserve current 1270x725 coordinates. Do not compensate for game window placement on the screen.",
       "renderPolicy": "Dark backing colors for header and panels, use game-like border colors. Table row keep existing shared art with less dark overlay; do not alter item demo icons.",
       "target": "Improve visual resemblance toward 98% subjective goal; cannot certify a numeric 98% without browser render verification."
+    },
+    "r11": {
+      "reference": "web image(20261109-234932).png crop (31,41,1270,725); game image(20261109-234942).png crop (5,5,1270,725)",
+      "currentRegionalMedians": {
+        "header": {
+          "web": [
+            14,
+            12,
+            22
+          ],
+          "game": [
+            14,
+            12,
+            20
+          ]
+        },
+        "panel": {
+          "web": [
+            12,
+            11,
+            19
+          ],
+          "game": [
+            12,
+            11,
+            19
+          ]
+        },
+        "tableHeader": {
+          "web": [
+            16,
+            14,
+            25
+          ],
+          "game": [
+            14,
+            12,
+            20
+          ]
+        },
+        "rows": {
+          "web": [
+            29,
+            28,
+            40
+          ],
+          "game": [
+            26,
+            26,
+            40
+          ]
+        }
+      },
+      "strategy": "Preserve geometry and already-matched panel/header; correct only remaining table header, row tint, and footer contrast.",
+      "disclaimer": "No claim of 98 percent measured visual similarity without rendering the updated browser and comparing final screenshots."
     }
   }
 }

@@ -257,5 +257,19 @@ css.extend([
     ".panel.right .game-help>div{height:21px !important;line-height:21px !important}",
 ])
 
+# R11 post-r10 measured RGB and typography corrections, applied during every build.
+css.extend([
+    "/* R11 measured regional RGB correction: preserve already-matching panels and header. */",
+    ".center .tablehead{background-color:#0e0c14 !important}",
+    ".center .tableline{background-image:linear-gradient(rgba(0,0,38,0.11),rgba(0,0,38,0.11)),url('assets/row.png') !important;background-size:100% 100%,100% 100% !important}",
+    ".center .tableline:hover{background-image:url('assets/row-hover.png') !important}",
+    ".canvas .footer-game{color:#878398 !important;bottom:2px !important;font-weight:400 !important}",
+    ".center #pages{color:#b7b4c9 !important;font-weight:400 !important}",
+    ".head .identity small{color:#a8a3b8 !important;font-weight:400 !important;letter-spacing:0 !important}",
+    ".panel.right .game-help>div{font-weight:400 !important;line-height:21px !important}",
+    ".center .tablehead>span{font-size:12px !important;font-weight:700 !important;color:#ffd100 !important}",
+    ".center .tableline .item-name,.center .tableline .id,.center .tableline .owned{font-size:12px !important;font-weight:400 !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
