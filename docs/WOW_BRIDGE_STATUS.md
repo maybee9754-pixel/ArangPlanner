@@ -1,21 +1,26 @@
-# WoW 게임 적용 브리지 데모 (v0.5.0-demo)
+# WoW Studio Bridge 현황
 
-현재 웹 스튜디오의 `docs/design.json` 6개 패널 좌표와 색상 값을 Lua 테이블 `Layout.lua`로 변환해 사용하는 **독립 시험판**을 로컬 ZIP으로 제작했습니다.
+## v0.6.0-demo (개발 소스 등록됨)
 
-- 캔버스: 1440 × 810
-- 구현: 상단 메뉴, 파밍 현황, 능력치 비교, 미획득 아이템, 중앙 장비 세팅, 오른쪽 전리품 목록
-- 실제 연동: 장착 중인 아이템 아이콘/링크 조회, 캐릭터 모델 시도
-- 미구현: 공허핵 스캔, 실제 보스 전리품 데이터, 정확한 파밍 달성률, 기존 GearPlanner 데이터 연동
-- 실행 명령어: `/arang`
-- 기존 애드온과 구분: `ArangPlanner` 폴더 별도, `GearPlanner`는 수정하지 않음
+- GitHub 게임용 애드온 소스: [ArangPlanner/](../ArangPlanner/)
+- Lua 레이아웃: [ArangPlanner/Layout.lua](../ArangPlanner/Layout.lua)
+- 웹 디자인 데이터: [docs/design.json](design.json)
+- 테스트용 ZIP 자동 생성: [Build addon demo ZIP](../actions/workflows/demo-artifact.yml) → 성공한 실행의 **Artifacts**에서 다운로드
 
-**현재 상태:** 게임용 ZIP은 대화에서 제공됨. 이 GitHub 저장소에 아직 애드온 소스와 Release ZIP이 게시되지는 않았습니다. Windows/WoW 게임 클라이언트에서 실제 테스트하지 않았습니다.
+### 외형 수정
+- 눈에 거슬리는 깨진 유니코드 심벌을 기본 도형 텍스처로 대체
+- 패널과 헤더를 어두운 판타지 배경/은은한 보라색 테두리로 변경
+- 왼쪽 원형 파밍 진행 표시를 게임용 도형으로 구현
+- 중앙 캐릭터 뒤의 마법진과 장비 슬롯 장식 추가
+- 상단 탭과 보스 목록 카드 외형 개선
+- 실제 착용 장비 텍스처와 캐릭터 PlayerModel 유지
 
-웹 스튜디오 변경은 `docs/design.json`에 적용되지만 WoW 클라이언트가 웹 데이터에 직접 접근하는 것은 아닙니다. 새 게임용 배포본을 만들 때마다 이 데이터로 `Layout.lua`를 생성하고 게임용 ZIP으로 묶어야 합니다.
+### 제한 사항
+- 실제 파밍 수치 및 보스별 획득량은 **예시 데이터**입니다.
+- WoW 클라이언트 실행 테스트는 아직 하지 않았습니다.
+- 자동 ZIP 빌드가 GitHub Actions에서 성공하는지는 확인해야 합니다.
+- **GitHub Release로 게시한 상태가 아니므로**, 윈도우 업데이트 매니저의 '새 버전 확인'에는 표시되지 않습니다.
+- 웹 스튜디오에서 수정한 디자인이 게임에 즉시 동기화되는 구조는 아닙니다. 웹 디자인 수정 후 새 게임용 패키지가 필요합니다.
+- 기존 GearPlanner 데이터/설정은 변경하지 않습니다.
 
-## 다음 배포 단계
-
-1. `ArangPlanner/ArangPlanner.toc`, `ArangPlanner/ArangPlanner.lua`, `ArangPlanner/Layout.lua` 전체 소스를 저장소에 업로드.
-2. 구문 검사 및 WoW 인게임 확인.
-3. 태그/Release로 검증한 ZIP 배포.
-4. 업데이트 매니저로 설치 및 회귀 테스트.
+이 데모는 실제 게임 UI 외형을 확인하기 위한 독립 시험판입니다.
