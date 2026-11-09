@@ -15,6 +15,7 @@ skin=(root/"tools/render_v12_skin.py").read_text(encoding="utf-8")
 version=d["gameVersion"]
 assert "## Version: "+version in toc, "TOC / design.json version mismatch"
 assert "ArangPlanner v"+version in lua, "Lua header not updated"
+assert 'C_AddOns.GetAddOnMetadata("ArangPlanner","Version")' in lua, "Game title must reflect the installed TOC version, not a hardcoded version"
 assert "ArangPlanner v"+version in web, "Web header not updated"
 assert 'applyLayout(data)' in web, "Web update must apply geometry, not just revision"
 assert 'data.panels' in web, "Web must consume docs/design.json geometry"
