@@ -151,5 +151,18 @@ css.extend([
 ".center .hint{font-weight:400 !important}",
 ".center .tableline .name .item-icon{font-size:14px !important}",
 ])
+# R4: browser text baselines and section header geometry follow game FontStrings.
+fm=cal["fontMatch"]
+css.extend([
+".section{position:relative !important;top:1px !important;margin:0 1px !important;width:calc(100% - 2px) !important;height:33px !important;padding:0 12px !important;display:flex !important;align-items:center !important;font-size:%dpx !important}"%fm["headingFontSize"],
+".head .tab,.center .mini,.pagination .mini{line-height:normal !important;letter-spacing:0 !important}",
+".panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .missing,.panel.right h4,.panel.right .muted,.center .specrow,.center .hint{letter-spacing:%s !important}"%fm["letterSpacing"],
+".panel.left .stat{white-space:pre !important}",
+".panel.left .stat .rose{white-space:pre !important}",
+".canvas .footer-game{bottom:%dpx !important;line-height:14px !important;letter-spacing:0 !important;white-space:pre !important}"%foot["bottom"],
+".right .game-help{font-weight:400 !important}",
+".center .tableline .name,.center .tableline .id,.center .tableline .owned{letter-spacing:0 !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
