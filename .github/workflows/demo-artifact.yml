@@ -1,12 +1,6 @@
 name: Build and publish ArangPlanner v0.9.0-demo
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ArangPlanner/**'
-      - 'tools/render_textures.py'
-      - '.github/workflows/demo-artifact.yml'
   workflow_dispatch:
 
 permissions:
