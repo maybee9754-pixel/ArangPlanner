@@ -148,8 +148,14 @@ $('revision').textContent='게시 버전: '+data.revision+' · '+data.updatedAt;
 applyLayout(data);
 // Refresh the actual CSS asset as well; previously this button only updated JSON text.
 const sheet=$('uiContractStyles');
-if(sheet)sheet.href='ui-contract.css?revision='+encodeURIComponent(data.revision);
-$('state').textContent='✓ 최신 디자인 적용됨';
+if(sheet){
+  $('state').textContent='CSS 적용 중…';
+  sheet.onload=()=>{$('state').textContent='✓ 최신 디자인 적용됨'};
+  sheet.onerror=()=>{$('state').textContent='CSS 적용 오류'};
+  sheet.href='ui-contract.css?revision='+encodeURIComponent(data.revision);
+}else{
+  $('state').textContent='공통 스타일 파일 없음';
+}
 }catch(e){$('state').textContent='디자인 확인 오류';$('revision').textContent=String(e)}
 }
 $('update').onclick=update;render();update();
