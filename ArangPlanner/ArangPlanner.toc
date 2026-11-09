@@ -2,7 +2,7 @@
 ## Title: ArangPlanner | Studio Bridge Demo
 ## Notes: Gradient and glow visual demo; farming figures are placeholders
 ## Author: Arang Planner Studio
-## Version: 0.8.0-demo
+## Version: 0.9.0-demo
 ## SavedVariables: ArangPlannerBridgeDB
 
 Layout.lua
