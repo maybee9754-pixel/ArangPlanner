@@ -100,52 +100,93 @@ end
 
 -- All possession checks are current snapshots only; no inferred raid-drop provenance.
 -- Query equipped gear and carried bags. Bank contents are intentionally excluded.
-function AP.GetPossession()
-    local equipped, bags = {}, {}
-    for _, row in ipairs(AP.GetDisplayRows()) do
-        if row.itemId then equipped[tostring(row.itemId)] = true end
+-- Keep target-table generation independent of inventory/item-cache failures.
+-- A registered target MUST still render even if a bag API or item info fails.
+local function equippedItemIDs()
+    local result={}
+    for _,slot in ipairs(SLOT_IDS) do
+        local ok,link=pcall(GetInventoryItemLink,"player",slot)
+        if ok and type(link)=="string" then
+            local itemId=tonumber(link:match("item:(%d+)"))
+            if itemId then result[tostring(itemId)]=true end
+        end
     end
-    if C_Container and C_Container.GetContainerNumSlots and C_Container.GetContainerItemID then
-        for bag = 0, 4 do
-            local count = C_Container.GetContainerNumSlots(bag) or 0
-            for slot = 1, count do
-                local itemId = C_Container.GetContainerItemID(bag,slot)
-                if type(itemId) == "number" then bags[tostring(itemId)] = true end
+    return result
+end
+
+local function bagItemIDs()
+    local result={}
+    if not C_Container or not C_Container.GetContainerNumSlots or not C_Container.GetContainerItemID then return result end
+    for bag=0,4 do
+        local okSlots,count=pcall(C_Container.GetContainerNumSlots,bag)
+        if okSlots and type(count)=="number" then
+            for slot=1,count do
+                local ok,itemId=pcall(C_Container.GetContainerItemID,bag,slot)
+                if ok and type(itemId)=="number" then result[tostring(itemId)]=true end
             end
         end
     end
-    return equipped, bags
+    return result
+end
+
+function AP.GetPossession()
+    return equippedItemIDs(),bagItemIDs()
 end
 
 function AP.GetTargetRows()
-    local record = state()
-    local equipped, bags = AP.GetPossession()
-    local rows = {}
+    local record=state()
+    local rows={}
+    local equipped,bags=AP.GetPossession()
     for id, enabled in pairs(record.targets) do
         if enabled then
-            local number = tonumber(id)
+            local number=tonumber(id)
             if number then
-                local name, link, _, _, _, _, _, _, _, icon = GetItemInfo(number)
-                local stateText = equipped[id] and "착용" or (bags[id] and "가방 보유" or "미확인")
-                rows[#rows+1] = {
-                    id=number, name=name or ("아이템 "..id),
-                    link=link, icon=icon or (C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(number)) or 134400,
-                    status=stateText
+                local name,link,icon
+                local ok,gotName,gotLink,_,_,_,_,_,_,_,gotIcon=pcall(GetItemInfo,number)
+                if ok then name,link,icon=gotName,gotLink,gotIcon end
+                if not icon and C_Item and C_Item.GetItemIconByID then
+                    local valid,result=pcall(C_Item.GetItemIconByID,number)
+                    if valid then icon=result end
+                end
+                local status=equipped[id] and "착용" or (bags[id] and "가방 보유" or "미확인")
+                rows[#rows+1]={
+                    id=number,
+                    name=name or ("아이템 ID "..id),
+                    link=link,
+                    icon=icon or 134400,
+                    status=status
                 }
             end
         end
     end
-    table.sort(rows,function(a,b) return a.id < b.id end)
+    table.sort(rows,function(x,y) return x.id < y.id end)
     return rows
 end
 
 function AP.TargetCounts()
-    local rows=AP.GetTargetRows()
-    local possessed=0
-    for _,row in ipairs(rows) do
-        if row.status=="착용" or row.status=="가방 보유" then possessed=possessed+1 end
+    local record=state()
+    local total,possessed=0,0
+    local equipped,bags=AP.GetPossession()
+    for id, enabled in pairs(record.targets) do
+        if enabled then
+            total=total+1
+            if equipped[id] or bags[id] then possessed=possessed+1 end
+        end
     end
-    return #rows, possessed
+    return total,possessed
+end
+
+function AP.Debug()
+    local record,key,spec=state()
+    local total=0
+    for id,on in pairs(record.targets) do
+        if on then total=total+1;say("목표 ID "..tostring(id)) end
+    end
+    say("진단: 전문화 "..spec.." / 캐릭터 "..key.." / 등록 "..total)
+    if AP.RefreshUI then
+        local ok,err=pcall(AP.RefreshUI)
+        if not ok then say("UI 갱신 오류: "..tostring(err)) end
+    end
 end
 
 function AP.GetSpecName()
@@ -190,7 +231,10 @@ eventFrame:SetScript("OnEvent",function(_,event,arg)
     end
     if not UnitExists("player") then return end
     if event~="BAG_UPDATE_DELAYED" and event~="GET_ITEM_INFO_RECEIVED" then AP.ScanEquipped() end
-    if AP.RefreshUI then AP.RefreshUI() end
+    if AP.RefreshUI then
+        local ok,err=pcall(AP.RefreshUI)
+        if not ok then say("UI 갱신 오류: "..tostring(err)) end
+    end
 end)
 
 SLASH_ARANGPLANNER1 = "/arang"
@@ -210,7 +254,8 @@ SlashCmdList.ARANGPLANNER = function(message)
         say(AP.RemoveTarget(value) and ("목표 아이템 "..value.." 제외") or "아이템 ID가 올바르지 않음")
         if AP.RefreshUI then AP.RefreshUI() end
     elseif action=="status" then AP.Status()
+    elseif action=="debug" then AP.Debug()
     else
-        say("/arang | /arang scan | /arang add 아이템ID | /arang remove 아이템ID | /arang status")
+        say("/arang | /arang scan | /arang add 아이템ID | /arang remove 아이템ID | /arang status | /arang debug")
     end
 end
