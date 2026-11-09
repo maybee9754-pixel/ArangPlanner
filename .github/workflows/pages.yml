@@ -4,7 +4,9 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'tools/render_textures.py'
+      - 'tools/render_v12_skin.py'
+      - 'ArangPlanner/UI.lua'
+      - 'ArangPlanner/ArangPlanner.toc'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
@@ -25,10 +27,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
-      - name: Generate shared preview PNG assets
+      - name: Setup Python for shared texture generation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate current v1.2 UI PNG assets
         run: |
-          python3 -m pip install Pillow==11.3.0
-          python3 tools/render_textures.py docs/assets
+          python -m pip install Pillow==11.3.0
+          python tools/render_v12_skin.py docs/assets
       - name: Upload static website
         uses: actions/upload-pages-artifact@v3
         with:
