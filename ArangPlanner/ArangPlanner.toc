@@ -1,9 +1,8 @@
-## Interface: 120105
-## Title: ArangPlanner | Studio Bridge Demo
-## Notes: Gradient and glow visual demo; farming figures are placeholders
-## Author: Arang Planner Studio
-## Version: 0.9.0-demo
-## SavedVariables: ArangPlannerBridgeDB
+## Interface: 120001
+## Title: 아랑플래너 | ArangPlanner Alpha
+## Notes: Independent gear goal manager, not a repackage of GearPlanner
+## Version: 1.0.0-alpha
+## SavedVariables: ArangPlannerDB
 
-Layout.lua
-ArangPlanner.lua
+Core.lua
+UI.lua
