@@ -70,6 +70,56 @@ css.append(".center .tableline .name{gap:8px}")
 css.append(".item-icon{width:%dpx !important;height:%dpx !important}"%(spec["table"]["iconSize"],spec["table"]["iconSize"]))
 css.append(".game-help>div{height:%dpx !important;line-height:%dpx !important}"%(spec["typography"]["rightHelpLineHeight"],spec["typography"]["rightHelpLineHeight"]))
 css.append(".identity b{font-size:%dpx !important}.spec,.specrow{font-size:%dpx !important}.eyebrow,.muted,.hint,.game-help,.tableline{font-size:%dpx !important}"%(spec["typography"]["large"],spec["typography"]["normal"],spec["typography"]["small"]))
+# All browser inner text anchors mirror the WoW FontString TOPLEFT / LEFT points.
+# A grid auto-width cannot reproduce the exact x pixel of game table columns.
+cal=spec["previewCalibration"]
+left=cal["left"]
+right=cal["right"]
+mid=cal["middle"]
+head=cal["header"]
+foot=cal["footer"]
+css.extend([
+".canvas{border:1px solid #494252;overflow:hidden}",
+".panel.left .body,.panel.right .body{padding:0 !important}",
+".panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .rule,.panel.left .missing,.panel.left #missingList{position:absolute !important;margin:0 !important}",
+".panel.left .eyebrow{left:14px;top:%dpx;line-height:15px}"%left["summaryY"],
+".panel.left .spec{left:14px;top:%dpx;line-height:17px}"%left["specY"],
+".panel.left .stat{left:14px;top:%dpx;line-height:17px}"%left["progressY"],
+".panel.left .stat .rose{position:absolute;left:0;top:%dpx;width:238px;white-space:nowrap;line-height:18px}"%(left["detailY"]-left["progressY"]),
+".panel.left .rule{left:14px;top:%dpx;width:228px;height:1px}"%left["dividerY"],
+".panel.left .missing{left:14px;top:%dpx;line-height:17px}"%left["missingTitleY"],
+".panel.left #missingList{left:17px;top:%dpx;line-height:18px;max-width:221px}"%left["missingRowsY"],
+".panel.right h4,.panel.right .muted,.panel.right .game-help{position:absolute !important;margin:0 !important;left:14px}",
+".panel.right h4{top:%dpx;line-height:18px;white-space:nowrap}"%right["titleY"],
+".panel.right .muted{top:%dpx;line-height:18px}"%right["noteY"],
+".panel.right .game-help{top:%dpx;line-height:18px}"%right["helpY"],
+".center .specrow{top:%dpx !important;line-height:18px}"%mid["specY"],
+".center .hint{top:%dpx !important;line-height:17px}"%mid["hintY"],
+".center .tablehead{display:block !important;gap:0 !important;padding:0 !important;border:0}",
+".center .tablehead>span{position:absolute;top:0;line-height:%dpx;white-space:nowrap}"%spec["table"]["header"]["h"],
+".center .tablehead>span:nth-child(1){left:%dpx}"%(spec["table"]["columns"]["name"]+2),
+".center .tablehead>span:nth-child(2){left:%dpx}"%(spec["table"]["columns"]["id"]+2),
+".center .tablehead>span:nth-child(3){left:%dpx}"%(spec["table"]["columns"]["status"]+2),
+".center .tableline{position:relative !important;display:block !important;gap:0 !important;padding:0 !important}",
+".center .tableline>span{position:absolute;top:0;line-height:%dpx;white-space:nowrap}"%spec["table"]["rows"]["h"],
+".center .tableline .name{left:5px;display:flex;align-items:center;top:3px !important;line-height:24px !important;height:24px}",
+".center .tableline .id{left:%dpx}"%spec["table"]["columns"]["id"],
+".center .tableline .owned,.center .tableline .unknown{left:%dpx}"%spec["table"]["columns"]["status"],
+".center .tableline .item-icon{border-radius:0;line-height:24px !important}",
+".center .pagination{position:absolute;inset:0 !important;display:block !important;pointer-events:none}",
+".center .pagination button{position:absolute;top:%dpx;height:%dpx;width:72px;pointer-events:auto;padding:0 !important}"%(mid["pageButtonsY"],mid["pageButtonsH"]),
+".center #prev{left:%dpx}"%mid["pagePrevX"],
+".center #next{left:%dpx}"%mid["pageNextX"],
+".center #pages{position:absolute;bottom:%dpx;left:50%%;transform:translateX(-50%%);white-space:nowrap;line-height:15px}"%mid["pageLabelBottom"],
+".canvas .footer-game{bottom:%dpx !important;line-height:13px;font-size:%dpx !important;white-space:nowrap}"%(foot["bottom"],foot["fontSize"]),
+".head .identity{position:absolute;left:%dpx;top:0;height:100%%;display:flex;align-items:center;gap:%dpx;min-width:0}"%(head["markLeft"],head["brandGap"]),
+".head .diamond{width:26px;height:26px;margin:0 4px 0 4px;border:0;background:#c7abe4;box-shadow:inset 0 0 0 5px #76508c}",
+".head .identity b{margin-top:%dpx}"%head["brandOffsetY"],
+".head .identity small{margin-left:%dpx;margin-top:1px}"%head["versionGap"],
+".center #itemInput{padding:0 8px !important;border-radius:0 !important;font-weight:400 !important}",
+".head .tab,.center .mini,.pagination .mini{border-radius:0 !important;box-shadow:none !important;text-shadow:none !important}",
+])
+
 # Web text must follow the corresponding WoW FontString style rather than
 # inheriting browser semantic <strong>/<button> defaults.
 css.extend([
