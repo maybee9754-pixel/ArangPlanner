@@ -5,9 +5,9 @@
     "width": 1440,
     "height": 810
   },
-  "revision": "studio-bridge-v0.7.0-demo",
+  "revision": "studio-bridge-v0.8.0-demo",
   "updatedAt": "2026-11-09",
-  "notes": "웹과 게임에서 동일한 생성 규칙으로 만든 이미지 자산 사용. 모든 파밍 수치와 전리품은 예시 데이터.",
+  "notes": "v0.8 시각 스타일 통일: 발광, 타이틀 바 그라데이션, 선택/마우스오버 버튼, 헤더, 슬롯 간격. 수치/전리품은 예시.",
   "panels": {
     "header": {
       "label": "상단 메뉴",
@@ -105,5 +105,13 @@
       "asset": null,
       "assetName": null
     }
+  },
+  "style": {
+    "titleTexture": "title-bar.png",
+    "headerTexture": "section-bar.png",
+    "buttonActive": "button-active.png",
+    "buttonIdle": "button-idle.png",
+    "buttonHover": "button-hover.png",
+    "slotTexture": "slot-surface.png"
   }
 }
