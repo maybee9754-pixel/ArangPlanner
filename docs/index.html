@@ -57,6 +57,9 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 .disclaimer{text-align:center;color:#8f899a;font-size:12px;padding:4px 10px 30px}
 .game-help{margin-top:25px;color:#b8b4c9;font-size:12px}
 .game-help>div{height:21px;line-height:21px;white-space:nowrap}
+.item-icon{width:24px;height:24px;flex:0 0 24px;border:1px solid #675477;background:linear-gradient(135deg,#493157,#261e33);display:inline-flex;justify-content:center;align-items:center;color:#baa2cd;font-size:14px}
+.item-name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block}
+.tableline .name{display:flex;align-items:center;gap:8px;min-width:0}
 .name,.id,.owned,.unknown{font-size:12px}
 .top,.meta{font-size:12px}
 @media(max-width:1306px){.canvas{margin-left:0;margin-right:0}}
@@ -103,7 +106,13 @@ $('rows').replaceChildren();
 for(const item of targets.slice((page-1)*12,page*12)){
 const row=document.createElement('div');row.className='tableline';
 for(const [value,cls] of [[item.name,'name'],[item.id,'id'],[item.status,item.status==='미확인'?'unknown':'owned']]){
-const span=document.createElement('span');span.className=cls;span.textContent=value;row.append(span);
+const span=document.createElement('span');span.className=cls;
+if(cls==='name'){
+  const icon=document.createElement('span');icon.className='item-icon';icon.textContent='◆';
+  const label=document.createElement('span');label.className='item-name';label.textContent=value;
+  span.append(icon,label);
+}else span.textContent=value;
+row.append(span);
 }
 row.title='Shift+클릭: ID 입력, Ctrl+클릭: 제거';row.addEventListener('click',e=>{if(e.ctrlKey){targets=targets.filter(x=>x.id!==item.id);render()}else if(e.shiftKey){$('itemInput').value=item.id;$('itemInput').focus()}});$('rows').append(row)
 }
