@@ -1,4 +1,4 @@
--- ArangPlanner v0.8.0-demo | common visual style and layout pass
+-- ArangPlanner v0.9.0-demo | slot hover, tooltip anchors and loot expansion
 -- This is a standalone visual demo. It does not import/alter GearPlanner saves.
 local layout = ArangPlannerStudioLayout
 if type(layout) ~= "table" or type(layout.panels) ~= "table" then return end
@@ -122,7 +122,7 @@ do
   diamond:SetRotation(math.pi/4)
   local name=font(head,"아랑플래너",23,{1,.92,1})
   name:SetPoint("TOPLEFT",76,-15)
-  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.8",9,{.72,.63,.83})
+  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.9",9,{.72,.63,.83})
   subtitle:SetPoint("TOPLEFT",76,-47)
   local tabs={{"장비 세팅",true},{"파밍 계획",false},{"드랍 정보",false}}
   for i,entry in ipairs(tabs) do
@@ -214,14 +214,40 @@ local function gearRow(parent, name, slotId, x, y, width)
   hoverArt:SetAllPoints()
   hoverArt:SetTexture(TX.."button-hover.tga")
   hoverArt:SetAlpha(0)
-  b:SetScript("OnEnter",function(self)
-    hoverArt:SetAlpha(.28)
-    self:SetBackdropBorderColor(.80,.58,1,1)
+  local glow=CreateFrame("Frame",nil,b,"BackdropTemplate")
+  glow:SetPoint("TOPLEFT",b,"TOPLEFT",-3,3)
+  glow:SetPoint("BOTTOMRIGHT",b,"BOTTOMRIGHT",3,-3)
+  glow:SetFrameLevel(b:GetFrameLevel()+1)
+  backdrop(glow,"#160d29","#af7ff1",0)
+  glow:SetBackdropBorderColor(.70,.43,1,0)
+  glow:EnableMouse(false)
+  local function tooltipForSlot()
     local link=GetInventoryItemLink("player",slotId)
-    if link then GameTooltip:SetOwner(self,"ANCHOR_RIGHT");GameTooltip:SetHyperlink(link);GameTooltip:Show()end
+    if not link then return end
+    GameTooltip:SetOwner(b,"ANCHOR_NONE")
+    GameTooltip:ClearAllPoints()
+    -- Position to the inside of each equipment column, keeping the right loot list clear.
+    -- Tooltip is clamped by the UI parent so oversized items stay on-screen.
+    if slotId==13 or slotId==14 then
+      GameTooltip:SetPoint("BOTTOM",b,"TOP",0,12)
+    elseif slotId==10 or slotId==6 or slotId==7 or slotId==8 or slotId==11 or slotId==12 then
+      GameTooltip:SetPoint("TOPRIGHT",b,"TOPLEFT",-10,0)
+    else
+      GameTooltip:SetPoint("TOPLEFT",b,"TOPRIGHT",10,0)
+    end
+    GameTooltip:SetClampedToScreen(true)
+    GameTooltip:SetHyperlink(link)
+    GameTooltip:Show()
+  end
+  b:SetScript("OnEnter",function(self)
+    hoverArt:SetAlpha(.68)
+    glow:SetBackdropBorderColor(.72,.47,1,.92)
+    self:SetBackdropBorderColor(.90,.72,1,1)
+    tooltipForSlot()
   end)
   b:SetScript("OnLeave",function(self)
     hoverArt:SetAlpha(0)
+    glow:SetBackdropBorderColor(.70,.43,1,0)
     local r,g,z=hex("#6f5292");self:SetBackdropBorderColor(r,g,z,1)
     GameTooltip:Hide()
   end)
@@ -233,13 +259,13 @@ do
   local note=font(equipment,"비전 마법사   |   착용 장비",12,{.77,.65,.89})
   note:SetPoint("TOPLEFT",23,-54)
   local stage=CreateFrame("Frame",nil,equipment)
-  stage:SetSize(305,355);stage:SetPoint("CENTER",0,-3)
+  stage:SetSize(305,355);stage:SetPoint("CENTER",0,-9)
   local circle=stage:CreateTexture(nil,"BACKGROUND",nil,1)
-  circle:SetSize(330,330);circle:SetPoint("CENTER",0,-7)
+  circle:SetSize(326,326);circle:SetPoint("CENTER",0,-4)
   circle:SetTexture(TX.."arcane-circle.tga")
   circle:SetAlpha(.86)
   model=CreateFrame("PlayerModel",nil,equipment)
-  model:SetSize(250,385);model:SetPoint("CENTER",0,-1)
+  model:SetSize(250,385);model:SetPoint("CENTER",0,-6)
   model:SetFrameLevel(equipment:GetFrameLevel()+2)
   local l={{"머리",1},{"어깨",3},{"가슴",5},{"손목",9},{"망토",15},{"무기",16}}
   local r={{"손",10},{"허리",6},{"다리",7},{"발",8},{"반지 1",11},{"반지 2",12}}
@@ -270,18 +296,32 @@ do
   local warning=font(loot,"공격대 보스  ·  예시 데이터",12,{.96,.73,.49})
   warning:SetPoint("TOPLEFT",14,-147)
   local names={"네크잘리","매장된 파수꾼","길 잃은 탐험가","바쉬니크","스조라크","쌍둥이 송곳니","줄잔","울라텍","키식스"}
+  -- Match the web studio: first boss expanded, later entries collapsed.
+  -- This is a static visual example, not actual loot tracking.
   for i,v in ipairs(names) do
+    local open=i==1
+    local top=open and -179 or (-179-113-5-(i-2)*44)
     local row=CreateFrame("Frame",nil,loot,"BackdropTemplate")
-    row:SetSize(loot:GetWidth()-24,44);row:SetPoint("TOPLEFT",12,-179-(i-1)*49)
-    backdrop(row,i==1 and "#2b1a40" or "#1c152a",i==1 and "#8c5db5" or "#5b4575",.98)
-    styleSurface(row,"slot-surface.tga",i==1 and .93 or .73)
-    local status=row:CreateTexture(nil,"ARTWORK")
-    status:SetPoint("LEFT",7,0);status:SetSize(3,25)
-    status:SetColorTexture(i==1 and .68 or .38,i==1 and .42 or .28,i==1 and .96 or .55,.9)
+    row:SetSize(loot:GetWidth()-24,open and 113 or 39)
+    row:SetPoint("TOPLEFT",12,top)
+    backdrop(row,open and "#2b1a40" or "#1c152a",open and "#8c5db5" or "#5b4575",.98)
+    styleSurface(row,"slot-surface.tga",open and .93 or .73)
+    local stripe=row:CreateTexture(nil,"ARTWORK")
+    stripe:SetPoint("TOPLEFT",7,-9);stripe:SetSize(3,23)
+    stripe:SetColorTexture(open and .68 or .38,open and .42 or .28,open and .96 or .55,.9)
     local n=font(row,i..". "..v,12)
-    n:SetPoint("LEFT",17,0)
-    local count=font(row,i==1 and "5 / 7" or "0 / 6",11,{.78,.67,.90},"RIGHT")
-    count:SetPoint("RIGHT",-12,0)
+    n:SetPoint("TOPLEFT",17,-10)
+    local count=font(row,open and "5 / 7" or (i==2 and "4 / 6" or "0 / 6"),11,{.78,.67,.90},"RIGHT")
+    count:SetPoint("TOPRIGHT",-12,-11)
+    if open then
+      local items={{"군주의 로드","보유",true},{"눈안광한 허리띠","미보유",false},{"오메가의 반지","보유",true}}
+      for j,item in ipairs(items) do
+        local detail=font(row,item[1],10,{.69,.64,.81})
+        detail:SetPoint("TOPLEFT",20,-40-(j-1)*21)
+        local owned=font(row,item[2],10,item[3] and {.42,.92,.68} or {1,.55,.77},"RIGHT")
+        owned:SetPoint("TOPRIGHT",-13,-40-(j-1)*21)
+      end
+    end
   end
 end
 local function updateGear()
@@ -318,4 +358,4 @@ SlashCmdList.ARANGPLANNER=function(arg)
     if root:IsShown() then root:Hide() else root:Show()end
   else print("|cffbd91ef아랑플래너 v0.6 데모|r: /arang, /arang show, /arang hide") end
 end
-print("|cffbd91ef아랑플래너|r UI 데모 v0.8.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
+print("|cffbd91ef아랑플래너|r UI 데모 v0.9.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
