@@ -102,3 +102,17 @@
 .canvas .footer-game{bottom:1px !important;line-height:14px !important;letter-spacing:0 !important;white-space:pre !important}
 .right .game-help{font-weight:400 !important}
 .center .tableline .name,.center .tableline .id,.center .tableline .owned{letter-spacing:0 !important}
+.head .identity b{font-size:18px !important;color:#F5F0FA !important;font-weight:800 !important;line-height:22px !important}
+.head .identity small{font-size:12px !important;color:#A8A3B8 !important;font-weight:400 !important;letter-spacing:0 !important}
+.panel.left .eyebrow{color:#ABA8BD !important}
+.panel.left .spec{color:#F0E3FF !important;font-weight:700 !important}
+.panel.left .stat{color:#CFBDE3 !important;font-weight:400 !important}
+.panel.left .stat .green{color:#9BC9C4 !important}
+.panel.left .missing{color:#D4C5EB !important;font-size:13px !important;font-weight:700 !important}
+.center .hint{color:#A39EB3 !important}
+.panel.right h4{color:#E0CFF2 !important;font-weight:400 !important}
+.panel.right .muted{color:#A8A3BD !important}
+.panel.right .game-help{color:#B8B3C9 !important}
+.canvas .footer-game{color:#9996AD !important;bottom:6px !important;line-height:14px !important;z-index:3}
+.head .nav .tab{font-size:13px !important;font-weight:400 !important}
+.center .tableline .name{font-size:12px !important;font-weight:400 !important}
