@@ -164,5 +164,24 @@ css.extend([
 ".center .tableline .name,.center .tableline .id,.center .tableline .owned{letter-spacing:0 !important}",
 ])
 
+# R5: colors and typography directly mapped from game's FontString styles.
+tc=cal["textColors"]
+css.extend([
+".head .identity b{font-size:%dpx !important;color:%s !important;font-weight:800 !important;line-height:22px !important}"%(fm["headerBrandSize"],tc["title"]),
+".head .identity small{font-size:12px !important;color:%s !important;font-weight:400 !important;letter-spacing:0 !important}"%tc["version"],
+".panel.left .eyebrow{color:%s !important}"%tc["summary"],
+".panel.left .spec{color:%s !important;font-weight:700 !important}"%tc["spec"],
+".panel.left .stat{color:%s !important;font-weight:400 !important}"%tc["progress"],
+".panel.left .stat .green{color:%s !important}"%tc["acquired"],
+".panel.left .missing{color:%s !important;font-size:13px !important;font-weight:700 !important}"%tc["missing"],
+".center .hint{color:%s !important}"%tc["hint"],
+".panel.right h4{color:%s !important;font-weight:400 !important}"%tc["rightTitle"],
+".panel.right .muted{color:%s !important}"%tc["rightNote"],
+".panel.right .game-help{color:%s !important}"%tc["rightHelp"],
+".canvas .footer-game{color:%s !important;bottom:%dpx !important;line-height:14px !important;z-index:3}"%(tc["footer"],foot["bottom"]),
+".head .nav .tab{font-size:13px !important;font-weight:400 !important}",
+".center .tableline .name{font-size:12px !important;font-weight:400 !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
