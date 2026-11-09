@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArangPlanner Studio | v1.2 인게임 UI 미리보기</title>
+<title>ArangPlanner Studio | v1.2.1 게임 UI 미리보기</title>
 <style>
-:root{font-family:"Malgun Gothic",system-ui,sans-serif;color:#eae7ef;background:#101018}
+:root{font-family:"Malgun Gothic",system-ui,sans-serif;color:#eae7ef;background:#0f0e17;font-size:12px}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(ellipse at 50% -20%,#242031,#0e0e17 65%);min-height:100vh}
 button,input{font:inherit}
@@ -23,7 +23,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 .head{left:12px;top:12px;width:1246px;height:72px;display:flex;align-items:center;padding:0 18px;gap:10px}
 .head .identity{display:flex;align-items:center;gap:11px;min-width:410px}
 .diamond{width:25px;height:25px;background:#a68bc4;transform:rotate(45deg);border:4px solid #473754;flex:none}
-.identity b{font-size:21px}.identity small{font-size:11px;color:#afa8b8}
+.identity b{font-size:18px}.identity small{font-size:12px;color:#afa8b8}
 .nav{display:flex;gap:8px}
 .tab,.mini{border-radius:2px;background-image:url("assets/button-idle.png");background-size:100% 100%;border:0;box-shadow:none}
 .tab{min-width:110px;height:42px;padding:0 16px;white-space:nowrap;font-size:12px}
@@ -34,8 +34,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 .left{left:12px;width:258px}.center{left:281px;width:697px}.right{left:989px;width:269px}
 .section{height:34px;padding:9px 12px;background-image:url("assets/panel-header.png");background-size:100% 100%;font-size:12px;font-weight:750}
 .body{padding:14px}
-.eyebrow{color:#a9a1b7;font-size:12px;margin-bottom:6px}.spec{font-weight:800;font-size:15px;color:#decbea}
-.stat{margin-top:32px;font-size:14px;line-height:1.8}.stat strong{color:#bda2d3}.stat .green{color:#7fd3ae}.stat .rose{color:#e39eac}
+.eyebrow{color:#a9a1b7;font-size:12px;margin-bottom:6px}.spec{font-weight:800;font-size:13px;color:#decbea}
+.stat{margin-top:32px;font-size:13px;line-height:1.9}.stat strong{color:#bda2d3}.stat .green{color:#7fd3ae}.stat .rose{color:#e39eac}
 .rule{height:1px;background:#443c4f;margin:24px 0 17px}
 .missing{font-size:12px;color:#b6a6c4;margin-bottom:18px}.muted{font-size:12px;color:#928c9f}
 .center .body{padding:12px 13px}
@@ -52,9 +52,13 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 .id{color:#bbb6c3}.owned{color:#7dd2ab}.unknown{color:#e6b1bd}
 .pagination{position:absolute;bottom:13px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;color:#aaa2b4;font-size:12px}
 .placeholder{text-align:center;color:#b8a9c5;font-size:15px;margin:125px auto;line-height:2}
-.right .body{font-size:12px;color:#c8c2d0;line-height:1.7}
+.right .body{font-size:12px;color:#c8c2d0;line-height:1.3}
 .right h4{color:#dacbe8;font-size:13px;margin:7px 0 13px}
 .disclaimer{text-align:center;color:#8f899a;font-size:12px;padding:4px 10px 30px}
+.game-help{margin-top:25px;color:#b8b4c9;font-size:12px}
+.game-help>div{height:21px;line-height:21px;white-space:nowrap}
+.name,.id,.owned,.unknown{font-size:12px}
+.top,.meta{font-size:12px}
 @media(max-width:1306px){.canvas{margin-left:0;margin-right:0}}
 </style></head>
 <body>
@@ -62,7 +66,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 <div class="meta"><span>아랑플래너 UI 미리보기 · 실제 WoW 데이터와 연결되지 않는 시각·조작 테스트</span><span id="revision">게시 버전 확인 중</span></div>
 <div class="viewport"><main class="canvas">
 <header class="surface head" style="background-image:url('assets/header.png')">
-<div class="identity"><div class="diamond"></div><b>아랑플래너</b><small>ArangPlanner v1.2.0-alpha</small></div>
+<div class="identity"><div class="diamond"></div><b>아랑플래너</b><small>ArangPlanner v1.2.1-alpha</small></div>
 <div class="nav" id="nav"><button class="tab active" data-index="0">장비 세팅</button><button class="tab" data-index="1">공격대</button><button class="tab" data-index="2">쐐기돌</button><button class="tab" data-index="3">획득 추적기</button><button class="tab" data-index="4">설정</button></div>
 <button class="tab close" title="브라우저에서는 화면을 숨기지 않습니다">×</button></header>
 <section class="surface panel left"><div class="section">진행 현황</div><div class="body">
@@ -72,13 +76,13 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 </div></section>
 <section class="surface panel center"><div class="section">목표 장비 관리</div><div class="body">
 <div class="specrow">현재 전문화　|　잠행 (261)</div>
-<div class="controls"><input id="itemInput" aria-label="아이템 ID" placeholder="아이템 ID를 입력하세요"><button class="mini" id="add">등록</button><button class="mini" id="remove">제거</button><button class="mini" id="reset">새로고침</button></div>
+<div class="controls"><input id="itemInput" aria-label="아이템 ID" placeholder=""><button class="mini" id="add">등록</button><button class="mini" id="remove">제거</button><button class="mini" id="reset">새로고침</button></div>
 <div class="hint">아이템 ID 직접 입력 · 가방 Shift+클릭은 WoW 게임에서만 작동</div>
 <div id="table"><div class="tablehead"><span>목표 아이템</span><span>아이템 ID</span><span>상태</span></div><div id="rows"></div></div>
 <div id="placeholder" class="placeholder" hidden></div></div>
 <div class="pagination"><button class="mini" id="prev">이전</button><span id="pages">1 / 1 페이지</span><button class="mini" id="next">다음</button></div>
 </section>
-<section class="surface panel right"><div class="section">전리품 목록</div><div class="body"><h4>공격대·쐐기돌 획득 추적</h4><div class="muted">데이터 연동 준비 중</div><p style="margin-top:25px">현재 버전은 전문화별 목표 등록과 착용/가방 확인을 지원합니다.</p><p>공허핵, 티어 변환, 보스 전리품은 확인되지 않은 수치를 표시하지 않도록 비워 두었습니다.</p></div></section>
+<section class="surface panel right"><div class="section">전리품 목록</div><div class="body"><h4>공격대·쐐기돌 획득 추적</h4><div class="muted">데이터 연동 준비 중</div><div class="game-help" aria-label="전리품 기능 안내"><div>현재 버전은 전문화별 목표</div><div>등록과 착용/가방 확인을</div><div>지원합니다.</div><div>&nbsp;</div><div>공허핵, 티어 변환, 보스</div><div>전리품은 확인되지 않은</div><div>수치를 표시하지 않습니다.</div></div></div></section>
 </main></div><div class="disclaimer">웹의 장비 데이터는 시연용 예시이며 저장되지 않습니다. 실제 캐릭터 및 저장 데이터는 게임 애드온에서만 확인할 수 있습니다.</div>
 <script>
 (()=>{'use strict';
@@ -111,6 +115,18 @@ $('remove').onclick=()=>{const id=Number($('itemInput').value.trim());targets=ta
 $('reset').onclick=()=>{targets=sample.map(o=>({...o}));tab=0;page=1;render()};
 $('itemInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('add').click()});
 $('prev').onclick=()=>{page--;render()};$('next').onclick=()=>{page++;render()};
+function applyLayout(data){
+  if(!data.panels)return;
+  const mapping={header:document.querySelector('.head'),left:document.querySelector('.panel.left'),middle:document.querySelector('.panel.center'),right:document.querySelector('.panel.right')};
+  for(const [key,node] of Object.entries(mapping)){
+    const p=data.panels[key];
+    if(!node||!p)continue;
+    node.style.left=p.x+'px';node.style.top=p.y+'px';
+    node.style.width=p.w+'px';node.style.height=p.h+'px';
+  }
+  const resolution=data.designResolution;
+  if(resolution){const canvas=document.querySelector('.canvas');canvas.style.width=resolution.width+'px';canvas.style.height=resolution.height+'px'}
+}
 async function update(){
 $('state').textContent='최신 디자인 확인 중…';
 try{
@@ -119,6 +135,7 @@ if(!res.ok)throw Error('HTTP '+res.status);
 const data=await res.json();
 if(data.format!=='ArangPlannerLivePreview')throw Error('새 버전 디자인 데이터가 아닙니다.');
 $('revision').textContent='게시 버전: '+data.revision+' · '+data.updatedAt;
+applyLayout(data);
 $('state').textContent='✓ 최신 디자인 적용됨';
 }catch(e){$('state').textContent='디자인 확인 오류';$('revision').textContent=String(e)}
 }
