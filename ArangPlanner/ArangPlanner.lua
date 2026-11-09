@@ -1,8 +1,16 @@
--- ArangPlanner v0.6.0-demo | visual refinement
+-- ArangPlanner v0.7.0-demo | shared-texture visual refinement
 -- This is a standalone visual demo. It does not import/alter GearPlanner saves.
 local layout = ArangPlannerStudioLayout
 if type(layout) ~= "table" or type(layout.panels) ~= "table" then return end
 local W, H = layout.width or 1440, layout.height or 810
+local TX = "Interface\\AddOns\\ArangPlanner\\Textures\\"
+local function addTexture(parent, file, layer, alpha)
+  local tex=parent:CreateTexture(nil,layer or "BACKGROUND")
+  tex:SetAllPoints()
+  tex:SetTexture(TX..file)
+  tex:SetAlpha(alpha or 1)
+  return tex
+end
 local function clamp(x,a,b) return math.max(a, math.min(b,x)) end
 local function hex(v)
   if type(v)~="string" or not v:match("^#%x%x%x%x%x%x$") then return .45,.30,.67 end
@@ -66,6 +74,7 @@ local function makePanel(id)
   f:SetPoint("TOPLEFT",root,"TOPLEFT",p.x,-p.y)
   f:SetSize(p.w,p.h)
   backdrop(f,"#131021",p.border,clamp((p.opacity or 100)/100,.4,1))
+  addTexture(f,"panel-body.tga","BACKGROUND",.92)
   borderGlow(f,"#b17aee")
   panels[id]=f
   if id ~= "header" then
@@ -74,7 +83,7 @@ local function makePanel(id)
     h:SetPoint("TOPRIGHT",-1,-1)
     h:SetHeight(39)
     backdrop(h,"#27183e","#5d3d86",.95)
-    strip(h,-1,3,"#7046a0",.75)
+    addTexture(h,"panel-header.tga","BACKGROUND",.95)
     local mark=h:CreateTexture(nil,"ARTWORK")
     mark:SetSize(10,10);mark:SetPoint("LEFT",14,0)
     mark:SetColorTexture(.83,.61,1,1)
@@ -89,6 +98,7 @@ for _,id in ipairs({"header","farming","compare","missing","equipment","loot"}) 
 local head=panels.header
 do
   backdrop(head,"#20162e","#7650a3",1)
+  addTexture(head,"panel-header.tga","BACKGROUND",.96)
   local logo=CreateFrame("Frame",nil,head,"BackdropTemplate")
   logo:SetSize(42,42);logo:SetPoint("LEFT",18,0)
   backdrop(logo,"#3c2662","#ad80df",1)
@@ -97,7 +107,7 @@ do
   diamond:SetRotation(math.pi/4)
   local name=font(head,"아랑플래너",23,{1,.92,1})
   name:SetPoint("TOPLEFT",76,-15)
-  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.6",9,{.72,.63,.83})
+  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.7",9,{.72,.63,.83})
   subtitle:SetPoint("TOPLEFT",76,-47)
   local tabs={{"장비 세팅",true},{"파밍 계획",false},{"드랍 정보",false}}
   for i,entry in ipairs(tabs) do
@@ -118,21 +128,12 @@ local farm=panels.farming
 do
   local ring=CreateFrame("Frame",nil,farm)
   ring:SetSize(134,134);ring:SetPoint("TOPLEFT",11,-65)
-  local cx,cy=67,67
-  local radians=math.pi*2
-  for i=1,72 do
-    local angle=-(i-1)/72*radians-math.pi/2
-    local radius=54
-    local x,y=math.cos(angle)*radius,math.sin(angle)*radius
-    local tick=ring:CreateTexture(nil,"ARTWORK")
-    tick:SetSize(8,14)
-    tick:SetPoint("CENTER",ring,"CENTER",x,y)
-    tick:SetRotation(-angle)
-    tick:SetColorTexture(i<=52 and .63 or .20,i<=52 and .36 or .14,i<=52 and 1 or .30,.95)
-  end
-  local dark=ring:CreateTexture(nil,"ARTWORK")
-  dark:SetSize(91,91);dark:SetPoint("CENTER")
-  dark:SetColorTexture(.07,.05,.14,.95)
+  local graphic=ring:CreateTexture(nil,"ARTWORK")
+  graphic:SetAllPoints(ring)
+  graphic:SetTexture(TX.."progress-ring.tga")
+  local inner=ring:CreateTexture(nil,"ARTWORK")
+  inner:SetSize(92,92);inner:SetPoint("CENTER")
+  inner:SetColorTexture(.065,.05,.11,.88)
   local cap=font(ring,"달성률",11,{.83,.75,.90},"CENTER")
   cap:SetPoint("CENTER",0,15)
   local number=font(ring,"72%",28,{.88,.77,1},"CENTER")
@@ -177,6 +178,7 @@ local function gearRow(parent, name, slotId, x, y, width)
   local b=CreateFrame("Button",nil,parent,"BackdropTemplate")
   b:SetSize(width,57);b:SetPoint("TOPLEFT",x,y)
   backdrop(b,"#211731","#6f5292",.96)
+  addTexture(b,"panel-body.tga","BACKGROUND",.72)
   local stripTex=b:CreateTexture(nil,"BACKGROUND")
   stripTex:SetWidth(3);stripTex:SetPoint("TOPLEFT",2,-3);stripTex:SetPoint("BOTTOMLEFT",2,3)
   stripTex:SetColorTexture(.54,.34,.84,.75)
@@ -213,27 +215,10 @@ do
   note:SetPoint("TOPLEFT",23,-54)
   local stage=CreateFrame("Frame",nil,equipment)
   stage:SetSize(305,355);stage:SetPoint("CENTER",0,9)
-  local ring1=stage:CreateTexture(nil,"BACKGROUND")
-  ring1:SetSize(292,292);ring1:SetPoint("CENTER")
-  ring1:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-BACKGROUND")
-  ring1:SetAlpha(.12)
-  for n=1,48 do
-    local a=n/48*math.pi*2
-    local x,y=math.cos(a)*133,math.sin(a)*133
-    local t=stage:CreateTexture(nil,"ARTWORK")
-    t:SetSize(4,10);t:SetPoint("CENTER",stage,"CENTER",x,y)
-    t:SetRotation(-a)
-    t:SetColorTexture(.56,.39,.92,n%4==0 and .65 or .24)
-  end
-  for _,radius in ipairs({112,119}) do
-    for n=1,96 do
-      local a=n/96*math.pi*2
-      local t=stage:CreateTexture(nil,"ARTWORK")
-      t:SetSize(2,3)
-      t:SetPoint("CENTER",stage,"CENTER",math.cos(a)*radius,math.sin(a)*radius)
-      t:SetColorTexture(.57,.39,.88,.33)
-    end
-  end
+  local circle=stage:CreateTexture(nil,"BACKGROUND",nil,1)
+  circle:SetSize(332,332);circle:SetPoint("CENTER")
+  circle:SetTexture(TX.."arcane-circle.tga")
+  circle:SetAlpha(.86)
   model=CreateFrame("PlayerModel",nil,equipment)
   model:SetSize(250,385);model:SetPoint("CENTER",0,2)
   model:SetFrameLevel(equipment:GetFrameLevel()+2)
@@ -308,4 +293,4 @@ SlashCmdList.ARANGPLANNER=function(arg)
     if root:IsShown() then root:Hide() else root:Show()end
   else print("|cffbd91ef아랑플래너 v0.6 데모|r: /arang, /arang show, /arang hide") end
 end
-print("|cffbd91ef아랑플래너|r UI 데모 v0.6.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
+print("|cffbd91ef아랑플래너|r UI 데모 v0.7.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
