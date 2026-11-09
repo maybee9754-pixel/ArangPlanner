@@ -1,0 +1,8 @@
+## Interface: 120001
+## Title: Arang Planner Next (Independent Prototype)
+## Notes: Original independently-authored prototype, separate from GearPlanner
+## Version: 0.1.0-alpha
+## SavedVariables: ArangPlannerNextDB
+
+Core.lua
+UI.lua
