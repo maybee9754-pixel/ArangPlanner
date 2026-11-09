@@ -217,5 +217,24 @@ css.extend([
     ".surface.panel{background-size:100% 100% !important}",
 ])
 
+# R9 pixel-anchored CSS; must be generated on every Pages deploy.
+css.extend([
+    "/* R9 screenshot-derived pixel calibration. Parent canvas outlines must not displace all child coordinates. */",
+    ".canvas{border:0 !important;outline:1px solid #494252 !important;outline-offset:-1px !important}",
+    ".head .identity{gap:10px !important}",
+    ".head .identity .diamond{width:21px !important;height:21px !important;position:relative !important;background:#B092D9 !important;border:0 !important;box-shadow:none !important;margin:0 7px !important;transform:rotate(45deg) !important;flex:none !important}",
+    ".head .identity .diamond::after{content:'';position:absolute;left:4.5px;top:4.5px;width:12px;height:12px;background:#E6D1FF}",
+    ".head .identity b{font-size:18px !important;font-weight:800 !important;letter-spacing:0 !important}",
+    ".head .identity small{margin-left:2px !important;font-size:12px !important;font-weight:400 !important}",
+    ".section{font-size:13px !important;font-weight:700 !important;letter-spacing:0 !important;line-height:17px !important}",
+    ".canvas .footer-game{bottom:2px !important;line-height:14px !important;font-size:12px !important;color:#9996AD !important}",
+    ".center .tablehead>span{color:#FFD100 !important;font-size:12px !important;font-weight:700 !important}",
+    ".panel.left .eyebrow,.panel.left .spec,.panel.left .stat,.panel.left .stat .rose,.panel.left .missing,.center .specrow,.center .hint,.panel.right h4,.panel.right .muted,.panel.right .game-help{letter-spacing:0 !important;text-shadow:none !important}",
+    ".panel{background-image:linear-gradient(rgba(0,0,70,0.04),rgba(0,0,70,0.04)),linear-gradient(rgba(0,0,0,0.21),rgba(0,0,0,0.21)),url('assets/panel-body.png') !important;background-size:100% 100%,100% 100%,100% 100% !important}",
+    ".head{background-image:linear-gradient(rgba(38,35,90,0.05),rgba(38,35,90,0.05)),linear-gradient(rgba(0,0,0,0.13),rgba(0,0,0,0.13)),url('assets/header.png') !important;background-size:100% 100%,100% 100%,100% 100% !important}",
+    ".section,.center .tablehead{background-image:linear-gradient(rgba(57,36,99,0.05),rgba(57,36,99,0.05)),linear-gradient(rgba(0,0,0,0.14),rgba(0,0,0,0.14)),url('assets/panel-header.png') !important;background-size:100% 100%,100% 100%,100% 100% !important}",
+    ".center .tableline{background-image:linear-gradient(rgba(0,23,58,0.04),rgba(0,23,58,0.04)),linear-gradient(rgba(0,0,0,0.16),rgba(0,0,0,0.16)),url('assets/row.png') !important;background-size:100% 100%,100% 100%,100% 100% !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")

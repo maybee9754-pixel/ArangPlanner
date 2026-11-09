@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-visual-audit-r8",
+  "revision": "arangplanner-v1.3.0-alpha-pixel-calibration-r9",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "게임 v1.3.0 스크린샷과 웹을 동일 1270×725 기준으로 전체 비교: 색상·레이아웃·타이포그래피·표 헤더·행·하단·실제 2개 데모 아이콘을 한 번의 커밋으로 통합 보정. 아이콘은 제공된 게임 스크린샷에서 추출한 웹 예시이며 게임 아이템 DB가 아님.",
+  "notes": "WoW v1.3 실제 스크린샷과 웹 r8 비교: 프레임 1px 원점 보정, 21px 회전 다이아몬드, 13px 게임 패널 타이틀, 글꼴과 footer 기준, 개별 RGB 텍스처 틴트 보정. 웹만 수정.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 8,
+    "revision": 9,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -255,6 +255,40 @@
       "fixedColors": "WoW gold table headings, muted item names and IDs, turquoise states",
       "demoIcons": "user-provided screenshot crop 24x24 for item 271510 and 271511 only",
       "constraints": "browser and WoW rasterization differs; preview is not live game data"
+    },
+    "pixelMatch": {
+      "outerBorder": "browser .canvas border-box 1px content offset replaced by outline",
+      "headerLogo": "WoW 21px diamond + 12px center, positioned inside 35px mark footprint",
+      "panelHeaderFont": "WoW GameFontNormal 13px Bold",
+      "footerOffset": "CSS bottom 2px to approximate WoW FontString bottom 6px",
+      "tint": {
+        "panel": {
+          "r": 0,
+          "g": 0,
+          "b": 70,
+          "alpha": 0.04
+        },
+        "header": {
+          "r": 38,
+          "g": 35,
+          "b": 90,
+          "alpha": 0.05
+        },
+        "section": {
+          "r": 57,
+          "g": 36,
+          "b": 99,
+          "alpha": 0.05
+        },
+        "row": {
+          "r": 0,
+          "g": 23,
+          "b": 58,
+          "alpha": 0.04
+        }
+      },
+      "measurement": "RGB medians: web/game panel 13,13,21 / 12,12,23; header 38,35,50 / 38,35,52; section 40,36,49 / 41,36,52; row 25,23,34 / 24,23,35",
+      "note": "Non-text textures only; original WoW lua and DB unchanged. Browser and WoW text rasterization cannot be guaranteed pixel-identical."
     }
   }
 }
