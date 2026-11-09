@@ -1,4 +1,4 @@
-## Interface: 120001
+## Interface: 120105
 ## Title: 아랑플래너 | ArangPlanner Alpha
 ## Notes: Independent gear goal manager, not a repackage of GearPlanner
 ## Version: 1.0.0-alpha
