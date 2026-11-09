@@ -4,16 +4,25 @@ Fonts remain third-party OFL assets; never treat them as ArangPlanner code.
 """
 from pathlib import Path
 from urllib.request import urlopen, Request
-import hashlib,sys
+import hashlib,sys,time
 
 root=Path(__file__).resolve().parent.parent
 targets=[root/"ArangPlanner/Fonts",root/"docs/assets/fonts"]
 base="https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/"
 files=["NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf","OFL.txt"]
 for filename in files:
-    req=Request(base+filename,headers={"User-Agent":"ArangPlanner-independent-build/1.3"})
-    with urlopen(req,timeout=90) as response:
-        data=response.read()
+    data=None
+    for attempt in range(1,6):
+        try:
+            req=Request(base+filename,headers={"User-Agent":"ArangPlanner-independent-build/1.3"})
+            with urlopen(req,timeout=45) as response:
+                data=response.read()
+            break
+        except Exception as exc:
+            if attempt==5:
+                raise RuntimeError(f"Failed downloading {filename} after 5 tries: {exc}") from exc
+            print(f"Font download retry {attempt}/5 for {filename}: {exc}",flush=True)
+            time.sleep(attempt * 2)
     if filename.endswith(".ttf"):
         if not data.startswith(b"\x00\x01\x00\x00") or len(data)<100_000:
             raise RuntimeError("Invalid TTF fetched: "+filename)
