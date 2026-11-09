@@ -9,7 +9,6 @@ on:
       - 'tools/build_ui_contract.py'
       - 'tools/fetch_shared_fonts.py'
       - 'ArangPlanner/UI.lua'
-      - 'ArangPlanner/UI.lua'
       - 'ArangPlanner/ArangPlanner.toc'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
@@ -44,6 +43,26 @@ jobs:
         run: |
           python -m pip install Pillow==11.3.0
           python tools/render_v12_skin.py docs/assets
+      - name: Validate final website files before publishing
+        run: |
+          python -m py_compile tools/build_ui_contract.py tools/fetch_shared_fonts.py tools/check_studio_contract.py
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path("docs")
+          design=json.loads((root/"design.json").read_text(encoding="utf-8"))
+          css=(root/"ui-contract.css").read_text(encoding="utf-8")
+          html=(root/"index.html").read_text(encoding="utf-8")
+          assert design["revision"]=="arangplanner-v1.3.0-alpha-web-calibration-r3", design["revision"]
+          assert "linear-gradient(rgba(0,0,0,0.18)" in css, "r3 panel darkening absent from generated CSS"
+          assert "sheet.href='ui-contract.css?revision='" in html
+          for key in ("header","panel-body","panel-header","row","row-hover","button-idle","button-active","button-hover"):
+              assert (root/"assets"/(key+".png")).stat().st_size>0, key
+          for name in ("NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf"):
+              assert (root/"assets/fonts"/name).stat().st_size>100000, name
+          assert (root/"assets/fonts/OFL.txt").is_file()
+          print("R3 WEBSITE ARTIFACT VALIDATED:",design["revision"])
+          PY
       - name: Upload static website
         uses: actions/upload-pages-artifact@v3
         with:
