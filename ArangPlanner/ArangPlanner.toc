@@ -1,7 +1,7 @@
 ## Interface: 120105
 ## Title: 아랑플래너 | ArangPlanner Alpha
-## Notes: Independent gear goal manager, not a repackage of GearPlanner
-## Version: 1.0.1-alpha
+## Notes: Independent specialization target gear table and equipped/bag status
+## Version: 1.1.0-alpha
 ## SavedVariables: ArangPlannerDB
 
 ArangPlanner.lua
