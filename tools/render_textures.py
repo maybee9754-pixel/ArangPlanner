@@ -92,3 +92,32 @@ d.arc((25,25,231,231),start=-90,end=270,fill=(66,43,89,230),width=20)
 d.arc((25,25,231,231),start=-90,end=-90+259.2,fill=(160,91,248,255),width=20)
 d.arc((31,31,225,225),start=-90,end=-90+259.2,fill=(205,164,255,170),width=3)
 export(ring,"progress-ring")
+
+
+# v0.8 shared UI surface assets. Buttons use top-to-bottom lighting
+# and a subtle horizontal highlight; PNG and TGA have identical pixels.
+def surface(name, w, h, top, bottom, border, shine, glow_power=0):
+    img=Image.new("RGBA",(w,h))
+    pix=img.load()
+    for y in range(h):
+        t=y/max(1,h-1)
+        for x in range(w):
+            fx=1-abs(x-(w*.34))/(w*.85)
+            hl=max(0,1-abs(y-h*.12)/(h*.30))
+            g=max(0,fx)*hl*shine
+            pix[x,y]=tuple(max(0,min(255,round(top[k]*(1-t)+bottom[k]*t+g))) for k in range(3))+(255,)
+    d=ImageDraw.Draw(img)
+    d.rectangle((0,0,w-1,h-1),outline=border,width=2)
+    d.line((5,3,w-6,3),fill=(210,163,255,160),width=2)
+    d.line((5,6,w-6,6),fill=(187,134,255,70),width=1)
+    if glow_power:
+        for i in range(3):
+            d.line((5,9+i,w-6,9+i),fill=(188,125,255,max(0,glow_power-i*28)),width=1)
+    export(img,name)
+
+surface("title-bar",512,96,(51,29,78),(18,14,35),(137,96,181,235),13,80)
+surface("section-bar",512,96,(60,33,91),(28,20,48),(116,77,161,210),10,48)
+surface("button-active",256,96,(132,83,193),(58,31,100),(190,145,238,255),35,144)
+surface("button-idle",256,96,(48,33,67),(26,20,40),(92,70,122,215),11,18)
+surface("button-hover",256,96,(108,65,155),(51,30,83),(170,123,220,255),28,106)
+surface("slot-surface",512,128,(42,28,62),(23,19,36),(106,77,140,194),9,0)
