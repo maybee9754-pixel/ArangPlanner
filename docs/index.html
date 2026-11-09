@@ -149,10 +149,16 @@ applyLayout(data);
 // Refresh the actual CSS asset as well; previously this button only updated JSON text.
 const sheet=$('uiContractStyles');
 if(sheet){
-  $('state').textContent='CSS 적용 중…';
-  sheet.onload=()=>{$('state').textContent='✓ 최신 디자인 적용됨'};
-  sheet.onerror=()=>{$('state').textContent='CSS 적용 오류'};
-  sheet.href='ui-contract.css?revision='+encodeURIComponent(data.revision);
+  const cssURL='ui-contract.css?revision='+encodeURIComponent(data.revision)+'&t='+Date.now();
+  // Verify the requested stylesheet exists before updating the linked sheet.
+  // A link.onload event alone can remain pending in some browser/cache states.
+  const stylesheet=await fetch(cssURL,{cache:'no-store'});
+  if(!stylesheet.ok)throw Error('CSS HTTP '+stylesheet.status);
+  const css=await stylesheet.text();
+  if(!css.includes('.panel')||!css.includes('ArangNanum'))
+    throw Error('CSS content failed verification');
+  sheet.href=cssURL;
+  $('state').textContent='✓ '+data.revision+' CSS 요청 완료';
 }else{
   $('state').textContent='공통 스타일 파일 없음';
 }
