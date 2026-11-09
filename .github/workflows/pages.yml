@@ -49,16 +49,22 @@ jobs:
           index=(base/"index.html").read_text(encoding="utf-8")
           preview=(base/"preview-r4.html").read_text(encoding="utf-8")
           css=(base/"ui-contract.css").read_text(encoding="utf-8")
-          assert data["revision"]=="arangplanner-v1.3.0-alpha-web-calibration-r7"
-          assert "R7 새 페이지 로드됨" in preview
+          assert data["revision"]=="arangplanner-v1.3.0-alpha-visual-audit-r8"
+          assert "R8 새 페이지 로드됨" in preview
           assert "live.textContent=css" in preview
           assert "live.textContent=css" in index
-          assert "ui-contract.css?v=1.3.0-r7-static" in index
+          assert "ui-contract.css?v=1.3.0-r8-visual-audit" in index
           assert ".panel{background-image:linear-gradient(rgba(0,0,0,0.21)" in css, "r7 panel calibration missing"
           assert ".center .tableline{background-image:linear-gradient(rgba(0,0,0,0.16)" in css, "r7 row calibration missing"
           assert ".canvas .footer-game{color:#9996AD !important;bottom:6px" in css, "r5 footer/typography missing"
           assert ".panel.left .stat .rose{color:#9CC9C4 !important" in css, "game status text color missing"
           assert ".section{position:relative !important;top:1px" in css, "r4 heading correction missing"
+          assert ".center .tablehead>span{color:#FFD100" in css, "game gold loot header missing"
+          assert ".center .tableline .id{color:#B3ADBF" in css, "game item-id text missing"
+          assert "demo-item-271510.webp" in index and "demo-item-271511.webp" in index
+          assert "game-item-icon" in css
+          for name in ("271510","271511"):
+              assert (base/"assets"/("demo-item-"+name+".webp")).stat().st_size>400, name
           names=("header","panel-body","panel-header","row","row-hover","button-idle","button-active","button-hover")
           for name in names:
               assert (base/"assets"/(name+".png")).stat().st_size>100, name

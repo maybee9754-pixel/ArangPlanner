@@ -64,7 +64,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 .top,.meta{font-size:12px}
 @media(max-width:1306px){.canvas{margin-left:0;margin-right:0}}
 </style>
-<link id="uiContractStyles" rel="stylesheet" href="ui-contract.css?v=1.3.0-r7-static"></head>
+<link id="uiContractStyles" rel="stylesheet" href="ui-contract.css?v=1.3.0-r8-visual-audit"></head>
 <body>
 <div class="top"><div class="brand"><div class="mark"><span>✦</span></div><div>ARANG PLANNER<small>WEB STUDIO · CURRENT GAME UI PREVIEW</small></div></div><div><span id="state" style="font-size:12px;color:#b4adb9;margin-right:12px">불러오는 중</span><button id="update">⟳ 최신 디자인 업데이트</button></div></div>
 <div class="meta"><span>아랑플래너 UI 미리보기 · 실제 WoW 데이터와 연결되지 않는 시각·조작 테스트</span><span id="revision">게시 버전 확인 중</span></div>
@@ -109,7 +109,9 @@ const row=document.createElement('div');row.className='tableline';
 for(const [value,cls] of [[item.name,'name'],[item.id,'id'],[item.status,item.status==='미확인'?'unknown':'owned']]){
 const span=document.createElement('span');span.className=cls;
 if(cls==='name'){
-  const icon=document.createElement('span');icon.className='item-icon';icon.textContent='◆';
+  const demoIcon=({'271510':'assets/demo-item-271510.webp','271511':'assets/demo-item-271511.webp'})[String(item.id)];
+  const icon=document.createElement(demoIcon?'img':'span');icon.className=demoIcon?'item-icon game-item-icon':'item-icon';
+  if(demoIcon){icon.src=demoIcon;icon.alt='예시 장비 아이콘';icon.width=24;icon.height=24;}else icon.textContent='◆';
   const label=document.createElement('span');label.className='item-name';label.textContent=value;
   span.append(icon,label);
 }else span.textContent=value;

@@ -191,5 +191,31 @@ css.extend([
 ".center .tableline .owned{color:%s !important}"%tc["itemState"],
 ])
 
+css.extend([
+    "/* R8 comprehensive visual audit: game pixel-anchored content, not an approximation sketch. */",
+    ".center .tablehead>span{color:#FFD100 !important;font-size:12px !important;font-weight:700 !important;letter-spacing:0 !important;text-shadow:none !important}",
+    ".center .tablehead>span:nth-child(1){left:39px !important}",
+    ".center .tablehead>span:nth-child(2){left:474px !important}",
+    ".center .tablehead>span:nth-child(3){left:577px !important}",
+    ".center .tableline .name{color:#EAE7EF !important;font-size:12px !important;letter-spacing:0 !important}",
+    ".center .tableline .id{color:#B3ADBF !important;font-size:12px !important}",
+    ".center .tableline .owned{color:#9CC9C4 !important;font-size:12px !important}",
+    ".center .tableline .unknown{color:#D9B5BD !important;font-size:12px !important}",
+    ".center .tableline .name .game-item-icon{width:24px !important;height:24px !important;object-fit:cover;border:0 !important;background:none !important;display:block;flex:none;border-radius:0 !important}",
+    ".center .tableline .name .item-name{font-size:12px !important;font-weight:400 !important;letter-spacing:0 !important}",
+    ".panel.left .stat .rose{color:#9CC9C4 !important;font-weight:400 !important}",
+    ".panel.left .stat strong{color:#CFBDE3 !important;font-weight:400 !important}",
+    ".panel.left .stat .green{color:#9CC9C4 !important;font-weight:400 !important}",
+    ".panel.left .eyebrow{font-size:12px !important;font-weight:400 !important}",
+    ".panel.left .spec,.panel.left .missing{font-size:13px !important;font-weight:700 !important}",
+    ".panel.right .game-help>div{height:21px !important;line-height:21px !important;font-size:12px !important;font-weight:400 !important}",
+    ".center .hint{font-size:12px !important;font-weight:400 !important}",
+    ".center .specrow{font-size:13px !important;font-weight:700 !important}",
+    ".canvas .footer-game{bottom:6px !important;font-size:12px !important;line-height:14px !important;letter-spacing:0 !important}",
+    ".head .nav .tab,.center .mini,.pagination .mini{font-weight:400 !important;font-size:13px !important;letter-spacing:0 !important}",
+    ".head .identity small{font-size:12px !important;font-weight:400 !important;letter-spacing:0 !important}",
+    ".surface.panel{background-size:100% 100% !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")

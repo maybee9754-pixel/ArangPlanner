@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r7",
+  "revision": "arangplanner-v1.3.0-alpha-visual-audit-r8",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "실제 인게임 v1.3 스크린샷과 웹 r6의 같은 위치 RGB 차이를 비교해 웹 패널/행/헤더 명암 미세 조정. 1270x725 구조와 게임 원본 유지.",
+  "notes": "게임 v1.3.0 스크린샷과 웹을 동일 1270×725 기준으로 전체 비교: 색상·레이아웃·타이포그래피·표 헤더·행·하단·실제 2개 데모 아이콘을 한 번의 커밋으로 통합 보정. 아이콘은 제공된 게임 스크린샷에서 추출한 웹 예시이며 게임 아이템 DB가 아님.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 7,
+    "revision": 8,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -236,12 +236,25 @@
       "footer": "#9996AD",
       "progressDetail": "#9CC9C4",
       "progressNumbers": "#CFBDE3",
-      "itemState": "#9CC9C4"
+      "itemState": "#9CC9C4",
+      "tableHeader": "#FFD100",
+      "itemName": "#EAE7EF",
+      "itemId": "#B3ADBF",
+      "tableState": "#9CC9C4"
     },
     "measurement": {
       "method": "game/web 1270x725 screenshot area aligned by outer frame",
       "sampleSummary": "Web row RGB median ~29/28/40 vs WoW ~26/25/38; web panel ~14/15/23 vs WoW ~12/14/24. Overlay applied only to textures, not fonts.",
       "metric": "RGB median per region; not a pixel-perfect guarantee"
+    },
+    "visualAudit": {
+      "baseline": "WoW 1.3.0 game screenshot image(20261109-230533).png",
+      "comparator": "Web r6 screenshot image(20261109-230541).png; translated to common 1270x725 UI",
+      "fixedGeometry": true,
+      "fixedTypeface": "Nanum Gothic regular/bold/extra-bold shared TTF",
+      "fixedColors": "WoW gold table headings, muted item names and IDs, turquoise states",
+      "demoIcons": "user-provided screenshot crop 24x24 for item 271510 and 271511 only",
+      "constraints": "browser and WoW rasterization differs; preview is not live game data"
     }
   }
 }
