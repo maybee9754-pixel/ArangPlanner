@@ -1,0 +1,35 @@
+name: Validate independent addon source
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ArangPlannerNext/**'
+      - '.github/workflows/independent-addon-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua syntax validator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.4
+      - name: Validate all source files
+        run: |
+          luac -p ArangPlannerNext/Core.lua
+          luac -p ArangPlannerNext/UI.lua
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('ArangPlannerNext')
+          toc=(root/'ArangPlannerNext.toc').read_text()
+          assert '## SavedVariables: ArangPlannerNextDB' in toc
+          assert [x.strip() for x in toc.splitlines() if x.strip().endswith('.lua')]==['Core.lua','UI.lua']
+          for fn in ('Core.lua','UI.lua'):
+              assert (root/fn).exists()
+          assert not (root/'libs').exists()
+          assert not (root/'Media').exists()
+          print('Validated independent source structure')
+          PY
