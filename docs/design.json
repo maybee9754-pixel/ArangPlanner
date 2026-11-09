@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r2",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r3",
   "updatedAt": "2026-11-09",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "게임 v1.3.0-alpha 스크린샷 기준 웹 전용 좌표 보정. 패널·버튼·입력/표는 동일 디자인 계약; 게임 코드 및 저장정보 불변.",
+  "notes": "스크린샷 같은 상대 좌표의 RGB 비교를 통한 웹 배경 밝기 보정. 원본 패널·버튼 크기/폰트/게임 저장 데이터 불변.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -202,6 +202,14 @@
     "footer": {
       "bottom": 6,
       "fontSize": 12
+    },
+    "colorMatch": {
+      "baseline": "WoW v1.3.0-alpha",
+      "panelOverlayAlpha": 0.18,
+      "sectionOverlayAlpha": 0.1,
+      "headerOverlayAlpha": 0.1,
+      "rowOverlayAlpha": 0.08,
+      "buttonOverlayAlpha": 0.03
     }
   }
 }
