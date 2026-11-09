@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-pixel-calibration-r9",
+  "revision": "arangplanner-v1.3.0-alpha-pixel-match-r10",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "WoW v1.3 실제 스크린샷과 웹 r8 비교: 프레임 1px 원점 보정, 21px 회전 다이아몬드, 13px 게임 패널 타이틀, 글꼴과 footer 기준, 개별 RGB 텍스처 틴트 보정. 웹만 수정.",
+  "notes": "WoW v1.3.0 실제 화면과 웹 r9를 픽셀 정렬 비교하여 한 번에 수정: 게임의 거의 검정색 헤더/패널 및 어두운 테이블 머리·입력창, 장비 행 밝기, 색·폰트·경계. 인게임 코드/DB 변경 없음.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 9,
+    "revision": 10,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -289,6 +289,74 @@
       },
       "measurement": "RGB medians: web/game panel 13,13,21 / 12,12,23; header 38,35,50 / 38,35,52; section 40,36,49 / 41,36,52; row 25,23,34 / 24,23,35",
       "note": "Non-text textures only; original WoW lua and DB unchanged. Browser and WoW text rasterization cannot be guaranteed pixel-identical."
+    },
+    "fullPass": {
+      "method": "Aligned 1270x725 web screenshot crop (x31,y38) to in-game crop (x5,y3); region medians were inspected; browser fonts remain renderer-dependent.",
+      "measurements": {
+        "headerBackground": {
+          "web": [
+            28,
+            25,
+            40
+          ],
+          "game": [
+            12,
+            11,
+            20
+          ]
+        },
+        "leftPanelBody": {
+          "web": [
+            14,
+            14,
+            26
+          ],
+          "game": [
+            12,
+            11,
+            19
+          ]
+        },
+        "inputFill": {
+          "web": [
+            17,
+            16,
+            26
+          ],
+          "game": [
+            6,
+            6,
+            14
+          ]
+        },
+        "tableHeaderBlank": {
+          "web": [
+            33,
+            29,
+            44
+          ],
+          "game": [
+            14,
+            12,
+            20
+          ]
+        },
+        "tableRowBlank": {
+          "web": [
+            22,
+            23,
+            35
+          ],
+          "game": [
+            24,
+            24,
+            37
+          ]
+        }
+      },
+      "layout": "Preserve current 1270x725 coordinates. Do not compensate for game window placement on the screen.",
+      "renderPolicy": "Dark backing colors for header and panels, use game-like border colors. Table row keep existing shared art with less dark overlay; do not alter item demo icons.",
+      "target": "Improve visual resemblance toward 98% subjective goal; cannot certify a numeric 98% without browser render verification."
     }
   }
 }

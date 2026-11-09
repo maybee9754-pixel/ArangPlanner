@@ -49,11 +49,11 @@ jobs:
           index=(base/"index.html").read_text(encoding="utf-8")
           preview=(base/"preview-r4.html").read_text(encoding="utf-8")
           css=(base/"ui-contract.css").read_text(encoding="utf-8")
-          assert data["revision"]=="arangplanner-v1.3.0-alpha-pixel-calibration-r9"
+          assert data["revision"]=="arangplanner-v1.3.0-alpha-pixel-match-r10"
           assert "R8 새 페이지 로드됨" in preview
           assert "live.textContent=css" in preview
           assert "live.textContent=css" in index
-          assert "ui-contract.css?v=1.3.0-r9-pixel-calibration" in index
+          assert "ui-contract.css?v=1.3.0-r10-pixel-match" in index
           assert ".panel{background-image:linear-gradient(rgba(0,0,0,0.21)" in css, "r7 panel calibration missing"
           assert ".center .tableline{background-image:linear-gradient(rgba(0,0,0,0.16)" in css, "r7 row calibration missing"
           assert ".canvas .footer-game{color:#9996AD !important;bottom:6px" in css, "r5 footer/typography missing"
@@ -71,6 +71,12 @@ jobs:
           assert ".canvas .footer-game{bottom:2px" in css, "footer baseline correction missing"
           assert "rgba(0,0,70,0.04)" in css, "panel RGB pixel calibration missing"
           assert "rgba(57,36,99,0.05)" in css, "section RGB pixel calibration missing"
+          assert ".head{background-image:linear-gradient(180deg,#0e0c16" in css, "game header tone mismatch"
+          assert ".surface.panel{background-image:linear-gradient(180deg,#0c0b14" in css, "panel background tone mismatch"
+          assert ".center .tablehead{background-image:none" in css, "dark game table header mismatch"
+          assert ".center #itemInput{background:#06060e" in css, "game input fill mismatch"
+          assert ".center .tableline{background-image:linear-gradient(rgba(0,0,0,0.07)" in css, "row brightness mismatch"
+          assert data["previewCalibration"]["fullPass"]["measurements"]["inputFill"]["game"]==[6,6,14]
           names=("header","panel-body","panel-header","row","row-hover","button-idle","button-active","button-hover")
           for name in names:
               assert (base/"assets"/(name+".png")).stat().st_size>100, name

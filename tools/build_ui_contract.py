@@ -236,5 +236,26 @@ css.extend([
     ".center .tableline{background-image:linear-gradient(rgba(0,23,58,0.04),rgba(0,23,58,0.04)),linear-gradient(rgba(0,0,0,0.16),rgba(0,0,0,0.16)),url('assets/row.png') !important;background-size:100% 100%,100% 100%,100% 100% !important}",
 ])
 
+# R10 full-screen screenshot alignment correction, reapplied at every deploy.
+css.extend([
+    "/* R10 comprehensive aligned game/web screenshot tone and font cleanup. */",
+    ".canvas{background:#0a0a11 !important;outline-color:#4b4359 !important}",
+    ".head{background-image:linear-gradient(180deg,#0e0c16 0%,#0c0b14 100%) !important;background-color:#0c0b14 !important;background-size:100% 100% !important}",
+    ".surface.panel{background-image:linear-gradient(180deg,#0c0b14 0%,#0c0b13 65%,#0b0a13 100%) !important;background-color:#0c0b14 !important;background-size:100% 100% !important}",
+    ".center .tablehead{background-image:none !important;background-color:#100e19 !important;border-top:1px solid #40384b !important;border-bottom:1px solid #383142 !important}",
+    ".center #itemInput{background:#06060e !important;color:#f5effa !important;border:1px solid #5f566f !important;box-shadow:none !important}",
+    ".center .tableline{background-image:linear-gradient(rgba(0,0,0,0.07),rgba(0,0,0,0.07)),url('assets/row.png') !important;background-size:100% 100%,100% 100% !important}",
+    ".center .tableline:hover{background-image:url('assets/row-hover.png') !important}",
+    ".surface.panel{border-color:#4b4357 !important}",
+    ".head .nav .tab{font-size:13px !important;line-height:normal !important;text-shadow:none !important}",
+    ".center .mini,.pagination .mini{font-size:13px !important;line-height:normal !important;text-shadow:none !important}",
+    ".section{font-family:'ArangNanum',sans-serif !important;font-size:13px !important;font-weight:700 !important}",
+    ".panel.left .eyebrow,.panel.left .stat,.panel.left .stat .rose,.panel.right h4,.panel.right .muted,.panel.right .game-help,.center .hint{font-weight:400 !important}",
+    ".center .tableline .name,.center .tableline .id,.center .tableline .owned,.center .tableline .unknown{font-weight:400 !important;letter-spacing:0 !important}",
+    ".center .tablehead>span{color:#FFD100 !important;font-size:12px !important;font-weight:700 !important;letter-spacing:0 !important}",
+    ".canvas .footer-game{bottom:2px !important;color:#9996ad !important;font-weight:400 !important;line-height:14px !important}",
+    ".panel.right .game-help>div{height:21px !important;line-height:21px !important}",
+])
+
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
