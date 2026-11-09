@@ -120,6 +120,20 @@ css.extend([
 ".head .tab,.center .mini,.pagination .mini{border-radius:0 !important;box-shadow:none !important;text-shadow:none !important}",
 ])
 
+# Correct only graphic backgrounds. In screenshots, web PNG composite appears
+# around 4-5 RGB levels lighter than WoW TGA composite at the same coordinates.
+# Applying CSS filter to parent would also darken Korean text; never do that.
+cm=cal["colorMatch"]
+css.extend([
+".panel{background-image:linear-gradient(rgba(0,0,0,%.2f),rgba(0,0,0,%.2f)),url('assets/panel-body.png') !important;background-size:100%% 100%%,100%% 100%% !important}"%(cm["panelOverlayAlpha"],cm["panelOverlayAlpha"]),
+".head{background-image:linear-gradient(rgba(0,0,0,%.2f),rgba(0,0,0,%.2f)),url('assets/header.png') !important;background-size:100%% 100%%,100%% 100%% !important}"%(cm["headerOverlayAlpha"],cm["headerOverlayAlpha"]),
+".section,.center .tablehead{background-image:linear-gradient(rgba(0,0,0,%.2f),rgba(0,0,0,%.2f)),url('assets/panel-header.png') !important;background-size:100%% 100%%,100%% 100%% !important}"%(cm["sectionOverlayAlpha"],cm["sectionOverlayAlpha"]),
+".center .tableline{background-image:linear-gradient(rgba(0,0,0,%.2f),rgba(0,0,0,%.2f)),url('assets/row.png') !important;background-size:100%% 100%%,100%% 100%% !important}"%(cm["rowOverlayAlpha"],cm["rowOverlayAlpha"]),
+".head .tab:not(.active),.center .mini,.pagination .mini{background-image:linear-gradient(rgba(0,0,0,%.2f),rgba(0,0,0,%.2f)),url('assets/button-idle.png') !important;background-size:100%% 100%%,100%% 100%% !important}"%(cm["buttonOverlayAlpha"],cm["buttonOverlayAlpha"]),
+".head .tab.active{background-image:url('assets/button-active.png') !important}",
+".head .tab:hover,.center .mini:hover,.pagination .mini:hover{background-image:url('assets/button-hover.png') !important}",
+])
+
 # Web text must follow the corresponding WoW FontString style rather than
 # inheriting browser semantic <strong>/<button> defaults.
 css.extend([
