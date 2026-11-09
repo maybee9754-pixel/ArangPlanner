@@ -1,4 +1,4 @@
--- ArangPlanner v0.7.0-demo | shared-texture visual refinement
+-- ArangPlanner v0.8.0-demo | common visual style and layout pass
 -- This is a standalone visual demo. It does not import/alter GearPlanner saves.
 local layout = ArangPlannerStudioLayout
 if type(layout) ~= "table" or type(layout.panels) ~= "table" then return end
@@ -10,6 +10,21 @@ local function addTexture(parent, file, layer, alpha)
   tex:SetTexture(TX..file)
   tex:SetAlpha(alpha or 1)
   return tex
+end
+local function styleSurface(f,file,alpha)
+  local tx=addTexture(f,file,"BACKGROUND",alpha or 1)
+  tx:SetDrawLayer("BACKGROUND",1)
+  return tx
+end
+local function interactiveSurface(button,active)
+  styleSurface(button,active and "button-active.tga" or "button-idle.tga",1)
+  local hover=button:CreateTexture(nil,"ARTWORK")
+  hover:SetAllPoints()
+  hover:SetTexture(TX.."button-hover.tga")
+  hover:SetAlpha(0)
+  button:SetScript("OnEnter",function()hover:SetAlpha(.78)end)
+  button:SetScript("OnLeave",function()hover:SetAlpha(0)end)
+  return hover
 end
 local function clamp(x,a,b) return math.max(a, math.min(b,x)) end
 local function hex(v)
@@ -83,7 +98,7 @@ local function makePanel(id)
     h:SetPoint("TOPRIGHT",-1,-1)
     h:SetHeight(39)
     backdrop(h,"#27183e","#5d3d86",.95)
-    addTexture(h,"panel-header.tga","BACKGROUND",.95)
+    styleSurface(h,"section-bar.tga",.98)
     local mark=h:CreateTexture(nil,"ARTWORK")
     mark:SetSize(10,10);mark:SetPoint("LEFT",14,0)
     mark:SetColorTexture(.83,.61,1,1)
@@ -98,7 +113,7 @@ for _,id in ipairs({"header","farming","compare","missing","equipment","loot"}) 
 local head=panels.header
 do
   backdrop(head,"#20162e","#7650a3",1)
-  addTexture(head,"panel-header.tga","BACKGROUND",.96)
+  styleSurface(head,"title-bar.tga",1)
   local logo=CreateFrame("Frame",nil,head,"BackdropTemplate")
   logo:SetSize(42,42);logo:SetPoint("LEFT",18,0)
   backdrop(logo,"#3c2662","#ad80df",1)
@@ -107,18 +122,16 @@ do
   diamond:SetRotation(math.pi/4)
   local name=font(head,"아랑플래너",23,{1,.92,1})
   name:SetPoint("TOPLEFT",76,-15)
-  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.7",9,{.72,.63,.83})
+  local subtitle=font(head,"ARANG PLANNER  |  STUDIO BRIDGE v0.8",9,{.72,.63,.83})
   subtitle:SetPoint("TOPLEFT",76,-47)
   local tabs={{"장비 세팅",true},{"파밍 계획",false},{"드랍 정보",false}}
   for i,entry in ipairs(tabs) do
     local b=CreateFrame("Button",nil,head,"BackdropTemplate")
     b:SetSize(104,40);b:SetPoint("RIGHT",head,"RIGHT",-55-(3-i)*113,0)
     backdrop(b,entry[2] and "#59338b" or "#221731",entry[2] and "#ad7bef" or "#55416f",1)
+    interactiveSurface(b,entry[2])
     local text=font(b,entry[1],12)
     text:SetPoint("CENTER")
-    if entry[2] then strip(b,0,3,"#a86cff",.95) end
-    b:SetScript("OnEnter",function()b:SetBackdropColor(.40,.25,.59,1)end)
-    b:SetScript("OnLeave",function()local r,g,bl=hex(entry[2] and "#59338b" or "#221731");b:SetBackdropColor(r,g,bl,1)end)
   end
   local close=CreateFrame("Button",nil,head,"UIPanelCloseButton")
   close:SetSize(32,32);close:SetPoint("RIGHT",-6,0)
@@ -178,7 +191,7 @@ local function gearRow(parent, name, slotId, x, y, width)
   local b=CreateFrame("Button",nil,parent,"BackdropTemplate")
   b:SetSize(width,57);b:SetPoint("TOPLEFT",x,y)
   backdrop(b,"#211731","#6f5292",.96)
-  addTexture(b,"panel-body.tga","BACKGROUND",.72)
+  styleSurface(b,"slot-surface.tga",.88)
   local stripTex=b:CreateTexture(nil,"BACKGROUND")
   stripTex:SetWidth(3);stripTex:SetPoint("TOPLEFT",2,-3);stripTex:SetPoint("BOTTOMLEFT",2,3)
   stripTex:SetColorTexture(.54,.34,.84,.75)
@@ -197,12 +210,18 @@ local function gearRow(parent, name, slotId, x, y, width)
   arrow:SetSize(9,9);arrow:SetPoint("RIGHT",-14,0)
   arrow:SetColorTexture(.40,.93,.66,1)
   arrow:SetRotation(math.pi/4)
+  local hoverArt=b:CreateTexture(nil,"ARTWORK")
+  hoverArt:SetAllPoints()
+  hoverArt:SetTexture(TX.."button-hover.tga")
+  hoverArt:SetAlpha(0)
   b:SetScript("OnEnter",function(self)
+    hoverArt:SetAlpha(.28)
     self:SetBackdropBorderColor(.80,.58,1,1)
     local link=GetInventoryItemLink("player",slotId)
     if link then GameTooltip:SetOwner(self,"ANCHOR_RIGHT");GameTooltip:SetHyperlink(link);GameTooltip:Show()end
   end)
   b:SetScript("OnLeave",function(self)
+    hoverArt:SetAlpha(0)
     local r,g,z=hex("#6f5292");self:SetBackdropBorderColor(r,g,z,1)
     GameTooltip:Hide()
   end)
@@ -214,20 +233,21 @@ do
   local note=font(equipment,"비전 마법사   |   착용 장비",12,{.77,.65,.89})
   note:SetPoint("TOPLEFT",23,-54)
   local stage=CreateFrame("Frame",nil,equipment)
-  stage:SetSize(305,355);stage:SetPoint("CENTER",0,9)
+  stage:SetSize(305,355);stage:SetPoint("CENTER",0,-3)
   local circle=stage:CreateTexture(nil,"BACKGROUND",nil,1)
-  circle:SetSize(332,332);circle:SetPoint("CENTER")
+  circle:SetSize(330,330);circle:SetPoint("CENTER",0,-7)
   circle:SetTexture(TX.."arcane-circle.tga")
   circle:SetAlpha(.86)
   model=CreateFrame("PlayerModel",nil,equipment)
-  model:SetSize(250,385);model:SetPoint("CENTER",0,2)
+  model:SetSize(250,385);model:SetPoint("CENTER",0,-1)
   model:SetFrameLevel(equipment:GetFrameLevel()+2)
   local l={{"머리",1},{"어깨",3},{"가슴",5},{"손목",9},{"망토",15},{"무기",16}}
   local r={{"손",10},{"허리",6},{"다리",7},{"발",8},{"반지 1",11},{"반지 2",12}}
-  for i,s in ipairs(l) do gearRow(equipment,s[1],s[2],14,-90-(i-1)*66,229)end
-  for i,s in ipairs(r) do gearRow(equipment,s[1],s[2],equipment:GetWidth()-243,-90-(i-1)*66,229)end
-  gearRow(equipment,"장신구 1",13,136,-equipment:GetHeight()+78,220)
-  gearRow(equipment,"장신구 2",14,374,-equipment:GetHeight()+78,220)
+  -- Keep the icon rows clear of the player model while tightening spacing.
+  for i,s in ipairs(l) do gearRow(equipment,s[1],s[2],19,-91-(i-1)*64,229)end
+  for i,s in ipairs(r) do gearRow(equipment,s[1],s[2],equipment:GetWidth()-248,-91-(i-1)*64,229)end
+  gearRow(equipment,"장신구 1",13,136,-equipment:GetHeight()+80,220)
+  gearRow(equipment,"장신구 2",14,374,-equipment:GetHeight()+80,220)
   for _,s in ipairs(slots)do s.frame:SetFrameLevel(equipment:GetFrameLevel()+4)end
   local foot=font(equipment,"실착용 아이콘 · 파밍 추적은 아직 연결되지 않음",10,{.76,.66,.87},"CENTER")
   foot:SetPoint("BOTTOM",0,6)
@@ -239,6 +259,7 @@ do
     local b=CreateFrame("Frame",nil,loot,"BackdropTemplate")
     b:SetSize(i==1 and 111 or 92,34);b:SetPoint("TOPLEFT",12+(i-1)*104,-53)
     backdrop(b,v[2] and "#57358d" or "#21182d",v[2] and "#9e75d7" or "#4e3a69",1)
+    styleSurface(b,v[2] and "button-active.tga" or "button-idle.tga",1)
     local text=font(b,v[1],10);text:SetPoint("CENTER")
   end
   local selector=CreateFrame("Frame",nil,loot,"BackdropTemplate")
@@ -253,8 +274,12 @@ do
     local row=CreateFrame("Frame",nil,loot,"BackdropTemplate")
     row:SetSize(loot:GetWidth()-24,44);row:SetPoint("TOPLEFT",12,-179-(i-1)*49)
     backdrop(row,i==1 and "#2b1a40" or "#1c152a",i==1 and "#8c5db5" or "#5b4575",.98)
+    styleSurface(row,"slot-surface.tga",i==1 and .93 or .73)
+    local status=row:CreateTexture(nil,"ARTWORK")
+    status:SetPoint("LEFT",7,0);status:SetSize(3,25)
+    status:SetColorTexture(i==1 and .68 or .38,i==1 and .42 or .28,i==1 and .96 or .55,.9)
     local n=font(row,i..". "..v,12)
-    n:SetPoint("LEFT",12,0)
+    n:SetPoint("LEFT",17,0)
     local count=font(row,i==1 and "5 / 7" or "0 / 6",11,{.78,.67,.90},"RIGHT")
     count:SetPoint("RIGHT",-12,0)
   end
@@ -293,4 +318,4 @@ SlashCmdList.ARANGPLANNER=function(arg)
     if root:IsShown() then root:Hide() else root:Show()end
   else print("|cffbd91ef아랑플래너 v0.6 데모|r: /arang, /arang show, /arang hide") end
 end
-print("|cffbd91ef아랑플래너|r UI 데모 v0.7.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
+print("|cffbd91ef아랑플래너|r UI 데모 v0.8.0 (실제 공허핵 스캔 기능 없음). /arang 로 표시")
