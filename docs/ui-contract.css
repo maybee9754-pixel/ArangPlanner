@@ -116,3 +116,6 @@
 .canvas .footer-game{color:#9996AD !important;bottom:6px !important;line-height:14px !important;z-index:3}
 .head .nav .tab{font-size:13px !important;font-weight:400 !important}
 .center .tableline .name{font-size:12px !important;font-weight:400 !important}
+.panel.left .stat .rose{color:#9CC9C4 !important;font-weight:400 !important}
+.panel.left .stat strong{color:#CFBDE3 !important;font-weight:400 !important}
+.center .tableline .owned{color:#9CC9C4 !important}
