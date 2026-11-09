@@ -4,6 +4,16 @@ World of Warcraft용 **아랑플래너** 개발 저장소입니다.
 
 > **현재 상태: 개발/시험 단계.** 게임 내 UI 시안은 확정되었지만 실제 기능이 구현된 정식판은 아직 배포하지 않았습니다. 자동 업데이트를 위한 GitHub Release도 아직 게시하지 않았습니다.
 
+## 설치 없는 웹 스튜디오 (열람 전용)
+
+- 웹주소: https://maybee9754-pixel.github.io/ArangPlanner/
+- Python, GitHub CLI, WoW 설치 필요 없음. 웹브라우저에서 열람
+- 상단 **최신 디자인 업데이트** 버튼으로 `docs/design.json`을 캐시 무시하고 새로 불러옴
+- 이 저장소의 `docs/design.json`을 수정하면 다음 조회 시 디자인이 반영됨
+- 처음 한 번: 저장소 **Settings → Pages → Build and deployment → Source: GitHub Actions** 활성화 필요할 수 있음
+- GitHub Pages 자동 배포: `.github/workflows/pages.yml`
+- 웹 미리보기는 게임 자체 실행이나 정식 애드온 패키지가 아닙니다.
+
 ## 확정 UI 방향
 - 왼쪽: 파밍 현황, 능력치 비교, 미획득 아이템
 - 가운데: 캐릭터 모델과 착용 장비 및 장신구
