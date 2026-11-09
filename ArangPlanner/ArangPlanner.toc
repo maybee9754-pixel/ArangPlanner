@@ -1,0 +1,9 @@
+## Interface: 120105
+## Title: ArangPlanner | Studio Bridge Demo
+## Notes: Studio-aligned visual demo; farming figures are placeholders
+## Author: Arang Planner Studio
+## Version: 0.6.0-demo
+## SavedVariables: ArangPlannerBridgeDB
+
+Layout.lua
+ArangPlanner.lua
