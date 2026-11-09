@@ -6,6 +6,9 @@ on:
       - 'docs/**'
       - 'tools/render_v12_skin.py'
       - 'tools/check_studio_contract.py'
+      - 'tools/build_ui_contract.py'
+      - 'tools/fetch_shared_fonts.py'
+      - 'ArangPlanner/UI.lua'
       - 'ArangPlanner/UI.lua'
       - 'ArangPlanner/ArangPlanner.toc'
       - '.github/workflows/pages.yml'
@@ -32,9 +35,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Validate shared WoW and Web layout
-        run: python tools/check_studio_contract.py
-      - name: Generate current v1.2 UI PNG assets
+      - name: Generate both UI contracts and matching OFL fonts
+        run: |
+          python tools/build_ui_contract.py
+          python tools/fetch_shared_fonts.py
+          python tools/check_studio_contract.py
+      - name: Generate matching game/web PNG assets
         run: |
           python -m pip install Pillow==11.3.0
           python tools/render_v12_skin.py docs/assets
