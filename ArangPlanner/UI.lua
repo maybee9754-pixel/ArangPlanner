@@ -1,4 +1,4 @@
--- ArangPlanner v1.2.1-alpha: in-game/web typography and spacing calibration.
+-- ArangPlanner v1.2.2-alpha: TOC-driven version display; in-game/web typography and spacing calibration.
 -- All interactive labels are Blizzard Lua frames; art is generated from
 -- tools/render_v12_skin.py, not copied from another addon.
 local AP=_G.ArangPlanner
@@ -118,7 +118,17 @@ core:SetRotation(math.pi/4)
 local brand=text(header,"아랑플래너","GameFontNormalLarge")
 brand:SetPoint("LEFT",mark,"RIGHT",10,9)
 brand:SetTextColor(.96,.94,.98)
-local ver=text(header,"ArangPlanner v1.2.0-alpha","GameFontHighlightSmall")
+-- Read the live installed TOC metadata rather than a hard-coded visual label.
+local function installedVersion()
+    local version
+    if C_AddOns and type(C_AddOns.GetAddOnMetadata)=="function" then
+        version=C_AddOns.GetAddOnMetadata("ArangPlanner","Version")
+    elseif type(GetAddOnMetadata)=="function" then
+        version=GetAddOnMetadata("ArangPlanner","Version")
+    end
+    return (type(version)=="string" and version~="") and version or "unknown"
+end
+local ver=text(header,"ArangPlanner v"..installedVersion(),"GameFontHighlightSmall")
 ver:SetPoint("LEFT",brand,"RIGHT",12,-1)
 ver:SetTextColor(.66,.64,.72)
 local tabs={}
