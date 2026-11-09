@@ -43,13 +43,47 @@ end
 local info=label(root,"", "GameFontNormal",19,-82)
 local summary=label(root,"", "GameFontHighlightSmall",19,-104,{.77,.72,.84})
 
-local entry=CreateFrame("EditBox",nil,root,"InputBoxTemplate")
+-- Use an explicit keyboard-enabled EditBox so focus is not dependent on
+-- the current Blizzard InputBoxTemplate or default text-color settings.
+local entry=CreateFrame("EditBox","ArangPlannerItemEntry",root,"BackdropTemplate")
 entry:SetSize(190,27)
 entry:SetPoint("TOPLEFT",28,-137)
+entry:SetFrameLevel(root:GetFrameLevel()+10)
+entry:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+entry:SetBackdropColor(.07,.055,.13,.98)
+entry:SetBackdropBorderColor(.57,.45,.78,1)
+entry:SetFontObject("ChatFontNormal")
+entry:SetTextColor(1,.94,1,1)
+entry:SetTextInsets(8,8,0,0)
+entry:SetJustifyH("LEFT")
+entry:EnableMouse(true)
+entry:EnableKeyboard(true)
 entry:SetAutoFocus(false)
-entry:SetMaxLetters(200)
+entry:SetMaxLetters(1024)
 entry:SetText("")
-local hint=label(root,"아이템 ID 또는 아이템 링크 붙여넣기","GameFontHighlightSmall",29,-169,{.60,.57,.69})
+entry:SetScript("OnMouseDown",function(self)self:SetFocus()end)
+entry:SetScript("OnEditFocusGained",function(self)
+    self:SetBackdropBorderColor(.89,.69,1,1)
+end)
+entry:SetScript("OnEditFocusLost",function(self)
+    self:SetBackdropBorderColor(.57,.45,.78,1)
+end)
+local hint=label(root,"아이템 ID 입력 또는 가방 아이템 Shift+클릭","GameFontHighlightSmall",29,-169,{.60,.57,.69})
+
+-- Blizzard normally routes shift-click links into the chat edit box.
+-- While our window is visible, also put an item link into our own input.
+-- Do not replace or override Blizzard's ChatEdit_InsertLink function.
+if type(ChatEdit_InsertLink)=="function" then
+    hooksecurefunc("ChatEdit_InsertLink",function(link)
+        if not root:IsShown() or not IsShiftKeyDown() or type(link)~="string" then return end
+        local itemId=AP.GetItemIDFromText(link)
+        if itemId then
+            entry:SetText(link)
+            entry:HighlightText(0,0)
+            entry:SetFocus()
+        end
+    end)
+end
 
 local function actionButton(text,x,width,callback)
     local b=CreateFrame("Button",nil,root,"UIPanelButtonTemplate")
@@ -61,11 +95,12 @@ local function actionButton(text,x,width,callback)
 end
 local function refresh() if AP.RefreshUI then AP.RefreshUI() end end
 local function insertTarget()
-    if AP.AddTarget(entry:GetText()) then
+    local raw=entry:GetText()
+    if AP.AddTarget(raw) then
         entry:SetText("")
         refresh()
     else
-        UIErrorsFrame:AddMessage("아이템 ID 또는 링크를 입력하세요.",1,.35,.45)
+        UIErrorsFrame:AddMessage("아이템 ID 또는 링크를 입력하세요. 입력값: "..tostring(raw):sub(1,50),1,.35,.45)
     end
 end
 actionButton("등록",237,80,insertTarget)
@@ -136,7 +171,7 @@ local nextButton=CreateFrame("Button",nil,root,"UIPanelButtonTemplate")
 nextButton:SetSize(68,24);nextButton:SetPoint("BOTTOMRIGHT",-18,24);nextButton:SetText("다음")
 local pageInfo=root:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
 pageInfo:SetPoint("BOTTOM",0,31)
-local footer=label(root,"Shift+클릭: ID 입력   |   Ctrl+클릭: 목표 제거   |   상태는 현재 착용/가방 기준","GameFontHighlightSmall",93,-593,{.60,.58,.70})
+local footer=label(root,"가방 Shift+클릭: 링크 입력   |   테이블 Shift+클릭: ID 입력   |   Ctrl+클릭: 목표 제거","GameFontHighlightSmall",93,-593,{.60,.58,.70})
 footer:SetWidth(550)
 
 function AP.RefreshUI()
