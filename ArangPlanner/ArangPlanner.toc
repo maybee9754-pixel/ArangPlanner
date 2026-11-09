@@ -1,8 +1,9 @@
 ## Interface: 120105
 ## Title: 아랑플래너 | ArangPlanner Alpha
 ## Notes: Independent gear target manager with muted-charcoal visual skin
-## Version: 1.2.2-alpha
+## Version: 1.3.0-alpha
 ## SavedVariables: ArangPlannerDB
 
 ArangPlanner.lua
+UIContract.lua
 UI.lua
