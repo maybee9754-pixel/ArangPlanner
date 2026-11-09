@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r6",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r7",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "WoW v1.3 게임 Lua에 설정된 RGB를 기준으로 웹 상태 텍스트와 숫자의 색상 수정. 패널 좌표와 인게임 파일 유지.",
+  "notes": "실제 인게임 v1.3 스크린샷과 웹 r6의 같은 위치 RGB 차이를 비교해 웹 패널/행/헤더 명암 미세 조정. 1270x725 구조와 게임 원본 유지.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 6,
+    "revision": 7,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -205,11 +205,11 @@
     },
     "colorMatch": {
       "baseline": "WoW v1.3.0-alpha",
-      "panelOverlayAlpha": 0.18,
-      "sectionOverlayAlpha": 0.1,
-      "headerOverlayAlpha": 0.1,
-      "rowOverlayAlpha": 0.08,
-      "buttonOverlayAlpha": 0.03
+      "panelOverlayAlpha": 0.21,
+      "sectionOverlayAlpha": 0.14,
+      "headerOverlayAlpha": 0.13,
+      "rowOverlayAlpha": 0.16,
+      "buttonOverlayAlpha": 0.04
     },
     "fontMatch": {
       "letterSpacing": "0px",
@@ -237,6 +237,11 @@
       "progressDetail": "#9CC9C4",
       "progressNumbers": "#CFBDE3",
       "itemState": "#9CC9C4"
+    },
+    "measurement": {
+      "method": "game/web 1270x725 screenshot area aligned by outer frame",
+      "sampleSummary": "Web row RGB median ~29/28/40 vs WoW ~26/25/38; web panel ~14/15/23 vs WoW ~12/14/24. Overlay applied only to textures, not fonts.",
+      "metric": "RGB median per region; not a pixel-perfect guarantee"
     }
   }
 }
