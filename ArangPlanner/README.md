@@ -1,4 +1,4 @@
-# 아랑플래너 v1.2.1-alpha
+# 아랑플래너 v1.2.2-alpha
 
 기존 GearPlanner의 저작권 보호 소스 또는 미디어를 사용하지 않고 독립 작성한 UI 및 장비 등록 기능입니다.
 
@@ -22,7 +22,7 @@
 - `/arang debug` 전문화별 아이템 진단
 
 ## 배포와 설치
-- 배포 ZIP `ArangPlanner_v1.2.1-alpha.zip`
+- 배포 ZIP `ArangPlanner_v1.2.2-alpha.zip`
 - 기존 Windows 업데이터에 맞춰 `ArangPlanner/ArangPlanner.toc` 및 `ArangPlanner/ArangPlanner.lua`를 포함
 - `ArangPlanner/Textures/` 아래 8종 TGA 텍스처 포함
 - GitHub Actions가 `tools/render_v12_skin.py`로 PNG/TGA를 같은 규칙에서 생성
@@ -44,3 +44,8 @@ Lua 구문 및 ZIP 구성은 자동 검사할 수 있지만 실제 WoW 클라이
 - 아이템 등록 데이터 `ArangPlannerDB` 스키마 및 애드온 명령어 변경 없음
 
 실제 게임 스크린샷을 기준으로 조정했지만, 서로 다른 렌더러의 글꼴 래스터와 UI 배율에 따른 미세한 차이는 남을 수 있습니다.
+
+## v1.2.2 버전 표시 수정
+- UI 상단 버전 문구를 하드코딩하지 않고 `C_AddOns.GetAddOnMetadata("ArangPlanner", "Version")`에서 가져옵니다.
+- 게임에 설치된 TOC 버전과 UI 표시 버전이 일치하는지 확인할 수 있습니다.
+- 독립 저장 데이터 및 기존 목표 등록 내용은 변경되지 않습니다.
