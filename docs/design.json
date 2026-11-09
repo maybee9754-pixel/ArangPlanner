@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-shared-font-layout",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r2",
   "updatedAt": "2026-11-09",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "웹과 WoW 모두 나눔고딕 같은 OFL TTF 파일, 같은 패널·탭·입력·테이블 좌표, 같은 PNG/TGA 텍스처 원본을 사용합니다. 실제 게임 아이템 데이터는 웹에서 볼 수 없습니다.",
+  "notes": "게임 v1.3.0-alpha 스크린샷 기준 웹 전용 좌표 보정. 패널·버튼·입력/표는 동일 디자인 계약; 게임 코드 및 저장정보 불변.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -164,5 +164,44 @@
       "status": 575
     },
     "iconSize": 24
+  },
+  "previewCalibration": {
+    "baseline": "WoW v1.3.0-alpha screenshot",
+    "revision": 2,
+    "header": {
+      "markLeft": 17,
+      "markSize": 35,
+      "brandGap": 10,
+      "brandOffsetY": -9,
+      "versionGap": 12
+    },
+    "left": {
+      "summaryY": 48,
+      "specY": 70,
+      "progressY": 117,
+      "detailY": 143,
+      "dividerY": 177,
+      "missingTitleY": 195,
+      "missingRowsY": 226
+    },
+    "right": {
+      "titleY": 55,
+      "noteY": 86,
+      "helpY": 126,
+      "helpLineHeight": 21
+    },
+    "middle": {
+      "specY": 47,
+      "hintY": 115,
+      "pageButtonsY": 580,
+      "pageButtonsH": 27,
+      "pagePrevX": 15,
+      "pageNextX": 607,
+      "pageLabelBottom": 15
+    },
+    "footer": {
+      "bottom": 6,
+      "fontSize": 12
+    }
   }
 }
