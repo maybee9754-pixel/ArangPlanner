@@ -70,5 +70,22 @@ css.append(".center .tableline .name{gap:8px}")
 css.append(".item-icon{width:%dpx !important;height:%dpx !important}"%(spec["table"]["iconSize"],spec["table"]["iconSize"]))
 css.append(".game-help>div{height:%dpx !important;line-height:%dpx !important}"%(spec["typography"]["rightHelpLineHeight"],spec["typography"]["rightHelpLineHeight"]))
 css.append(".identity b{font-size:%dpx !important}.spec,.specrow{font-size:%dpx !important}.eyebrow,.muted,.hint,.game-help,.tableline{font-size:%dpx !important}"%(spec["typography"]["large"],spec["typography"]["normal"],spec["typography"]["small"]))
+# Web text must follow the corresponding WoW FontString style rather than
+# inheriting browser semantic <strong>/<button> defaults.
+css.extend([
+".head .tab,.head .close,.center .mini,.pagination .mini{font-weight:400 !important}",
+".section,.spec,.specrow,.tablehead,.missing,.identity b{font-weight:700 !important}",
+".identity b{font-weight:800 !important}",
+".stat,.stat strong,.stat .green,.stat .rose,.eyebrow,.muted,.hint,.right h4,.right .body,.game-help,.tableline,.pagination,.missingList{font-weight:400 !important}",
+".right h4{font-size:13px !important}",
+".center .tableline .name,.center .tableline .id,.center .tableline .owned,.center .tableline .unknown{font-weight:400 !important}",
+".center .tablehead{font-weight:700 !important}",
+".game-help{margin-top:25px !important}",
+".panel.left .body{padding:14px !important}",
+".panel.right .body{padding:14px !important}",
+".canvas .footer-game{position:absolute;bottom:6px;left:0;width:100%;text-align:center;font-size:12px;font-weight:400;color:#9996ad;line-height:14px;pointer-events:none}",
+".center .hint{font-weight:400 !important}",
+".center .tableline .name .item-icon{font-size:14px !important}",
+])
 (website/"ui-contract.css").write_text("\n".join(css)+"\n",encoding="utf-8")
 print("Generated",addon/"UIContract.lua",website/"ui-contract.css")
