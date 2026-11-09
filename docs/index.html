@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ArangPlanner Studio | v1.2.1 게임 UI 미리보기</title>
+<title>ArangPlanner Studio | v1.3.0 게임 UI 미리보기</title>
 <style>
 :root{font-family:"Malgun Gothic",system-ui,sans-serif;color:#eae7ef;background:#0f0e17;font-size:12px}
 *{box-sizing:border-box}
@@ -76,7 +76,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 <section class="surface panel left"><div class="section">진행 현황</div><div class="body">
 <div class="eyebrow">현재 전문화</div><div class="spec">잠행 (261)</div>
 <div class="stat">목표 등록 <strong id="total">2</strong>　보유 확인 <strong class="green" id="owned">2</strong><div class="rose">미확인 <span id="missing">0</span>개 · 미획득 확정 아님</div></div>
-<div class="rule"></div><div class="missing">미확인 목표 아이템</div><div class="muted" id="missingList">표시할 항목 없음</div>
+<div class="rule"></div><div class="missing">미확인 목표 아이템</div><div class="muted" id="missingList"></div>
 </div></section>
 <section class="surface panel center"><div class="section">목표 장비 관리</div><div class="body">
 <div class="specrow">현재 전문화　|　잠행 (261)</div>
@@ -87,7 +87,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #b99add;outline-offse
 <div class="pagination"><button class="mini" id="prev">이전</button><span id="pages">1 / 1 페이지</span><button class="mini" id="next">다음</button></div>
 </section>
 <section class="surface panel right"><div class="section">전리품 목록</div><div class="body"><h4>공격대·쐐기돌 획득 추적</h4><div class="muted">데이터 연동 준비 중</div><div class="game-help" aria-label="전리품 기능 안내"><div>현재 버전은 전문화별 목표</div><div>등록과 착용/가방 확인을</div><div>지원합니다.</div><div>&nbsp;</div><div>공허핵, 티어 변환, 보스</div><div>전리품은 확인되지 않은</div><div>수치를 표시하지 않습니다.</div></div></div></section>
-</main></div><div class="disclaimer">웹의 장비 데이터는 시연용 예시이며 저장되지 않습니다. 실제 캐릭터 및 저장 데이터는 게임 애드온에서만 확인할 수 있습니다.</div>
+<div class="footer-game">목표 목록: Ctrl+클릭 제거 · Shift+클릭 ID 입력 | 획득 상태는 현재 착용/가방 기준</div></main></div><div class="disclaimer">웹의 장비 데이터는 시연용 예시이며 저장되지 않습니다. 실제 캐릭터 및 저장 데이터는 게임 애드온에서만 확인할 수 있습니다.</div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
@@ -101,7 +101,7 @@ $('placeholder').textContent=['','공격대','쐐기돌','획득 추적기','설
 $('placeholder').style.whiteSpace='pre-line';
 const owned=targets.filter(x=>x.status!=='미확인').length;
 $('total').textContent=targets.length;$('owned').textContent=owned;$('missing').textContent=targets.length-owned;
-$('missingList').textContent=targets.filter(x=>x.status==='미확인').map(x=>x.name).join(' · ')||'표시할 항목 없음';
+$('missingList').textContent=targets.filter(x=>x.status==='미확인').map(x=>x.name).join(' · ')||'';
 const max=Math.max(1,Math.ceil(targets.length/12));page=Math.min(page,max);
 $('rows').replaceChildren();
 for(const item of targets.slice((page-1)*12,page*12)){
