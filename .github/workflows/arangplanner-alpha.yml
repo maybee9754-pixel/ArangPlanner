@@ -3,6 +3,10 @@ on:
   push:
     branches: [main]
     paths:
+      - 'ArangPlanner/ArangPlanner.lua'
+      - 'ArangPlanner/UI.lua'
+      - 'ArangPlanner/ArangPlanner.toc'
+      - 'ArangPlanner/README.md'
       - '.github/workflows/arangplanner-alpha.yml'
   workflow_dispatch:
 permissions:
@@ -26,7 +30,7 @@ jobs:
           root=pathlib.Path('ArangPlanner')
           paths=['ArangPlanner.toc','ArangPlanner.lua','UI.lua','README.md']
           toc=(root/'ArangPlanner.toc').read_text(encoding='utf-8')
-          assert '## Version: 1.0.1-alpha' in toc
+          assert '## Version: 1.1.0-alpha' in toc
           assert '## SavedVariables: ArangPlannerDB' in toc
           assert [x.strip() for x in toc.splitlines() if x.strip().endswith('.lua')]==['ArangPlanner.lua','UI.lua']
           assert all((root/f).is_file() for f in paths)
@@ -34,7 +38,7 @@ jobs:
               content=p.read_text(encoding='utf-8')
               assert 'GearPlannerDB' not in content
               assert 'GearPlanner_Arang' not in content
-          target=pathlib.Path('ArangPlanner_v1.0.1-alpha.zip')
+          target=pathlib.Path('ArangPlanner_v1.1.0-alpha.zip')
           with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
               for f in paths:z.write(root/f,'ArangPlanner/'+f)
           with zipfile.ZipFile(target) as z:
@@ -47,24 +51,24 @@ jobs:
       - name: Attach build files
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v1.0.1-alpha
+          name: ArangPlanner-v1.1.0-alpha
           path: |
-            ArangPlanner_v1.0.1-alpha.zip
-            ArangPlanner_v1.0.1-alpha.zip.sha256
+            ArangPlanner_v1.1.0-alpha.zip
+            ArangPlanner_v1.1.0-alpha.zip.sha256
       - name: Publish initial alpha
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1-alpha
-          name: ArangPlanner v1.0.1-alpha (independent prototype)
+          tag_name: v1.1.0-alpha
+          name: ArangPlanner v1.1.0-alpha (independent prototype)
           prerelease: false
           draft: false
           body: |
-            Independent ArangPlanner core alpha. Updater v1.0.5 compatible file names.
+            ArangPlanner specialization target table alpha. Updater v1.0.5 compatible file names.
             It does NOT contain the original GearPlanner copyrighted source.
-            Includes current equipped-gear scan, character/spec target list and minimal UI.
+            Includes character/spec target table with add/remove, equipment and carried bag checks, 12-row paging.
             NOT feature-equivalent to GearPlanner Arang 1.5. No voidcore tracking or loot history.
             Back up the previous ArangPlanner folder before installing.
             Retain original GearPlanner and its SavedVariables.
           files: |
-            ArangPlanner_v1.0.1-alpha.zip
-            ArangPlanner_v1.0.1-alpha.zip.sha256
+            ArangPlanner_v1.1.0-alpha.zip
+            ArangPlanner_v1.1.0-alpha.zip.sha256
