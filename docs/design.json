@@ -1,13 +1,13 @@
 {
   "format": "ArangPlannerLivePreview",
   "version": 2,
-  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r5",
+  "revision": "arangplanner-v1.3.0-alpha-web-calibration-r6",
   "updatedAt": "2026-11-10",
   "designResolution": {
     "width": 1270,
     "height": 725
   },
-  "notes": "실제 게임 v1.3 UI 기준 웹 텍스트 색상과 크기, 좌우 패널과 하단 안내의 좌표 보정. 웹 수정이며 게임 파일 불변.",
+  "notes": "WoW v1.3 게임 Lua에 설정된 RGB를 기준으로 웹 상태 텍스트와 숫자의 색상 수정. 패널 좌표와 인게임 파일 유지.",
   "palette": {
     "base": "#0f0e17",
     "panel": "#171722",
@@ -167,7 +167,7 @@
   },
   "previewCalibration": {
     "baseline": "WoW v1.3.0-alpha screenshot",
-    "revision": 5,
+    "revision": 6,
     "header": {
       "markLeft": 17,
       "markSize": 35,
@@ -233,7 +233,10 @@
       "rightTitle": "#E0CFF2",
       "rightNote": "#A8A3BD",
       "rightHelp": "#B8B3C9",
-      "footer": "#9996AD"
+      "footer": "#9996AD",
+      "progressDetail": "#9CC9C4",
+      "progressNumbers": "#CFBDE3",
+      "itemState": "#9CC9C4"
     }
   }
 }
