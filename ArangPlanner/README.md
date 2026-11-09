@@ -1,4 +1,4 @@
-# 아랑플래너 v1.0.0-alpha
+# 아랑플래너 v1.0.1-alpha
 
 기존 GearPlanner Arang의 사용 목적을 바탕으로 **별도 작성한 독립 개발 초기버전**입니다. 기존 GearPlanner의 All Rights Reserved 소스, 리소스, 프리셋, 기록은 포함하지 않습니다.
 
@@ -17,3 +17,6 @@
 **저장 키:** `ArangPlannerDB` (기존 GearPlanner 데이터에는 접근하지 않음). 이전 v0.9 UI 데모는 GitHub 이력에 남지만 해당 데모의 기능과 텍스처는 새 버전에 포함되지 않습니다.
 
 설치: `_retail_/Interface/AddOns/ArangPlanner`에 폴더를 넣습니다. 기존 ArangPlanner가 있다면 **별도 백업** 후 교체하고 게임을 재시작합니다. 기존 GearPlanner 폴더는 삭제하지 마세요. WoW 클라이언트 실제 검증 전의 시험판입니다.
+
+## v1.0.1 수정
+기존 Windows 업데이터 v1.0.5가 요구하는 `ArangPlanner.toc`와 `ArangPlanner.lua`를 ZIP 최상위 애드온 폴더에 포함하도록 고쳤습니다.
