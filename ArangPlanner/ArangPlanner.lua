@@ -217,8 +217,11 @@ function AP.GetSlotTargetRows()
     local equipped,bags=AP.GetPossession()
     for slot,id in pairs(AP.GetSlotTargets()) do
         local name,link,icon
-        local ok,n,l,_,__,___,____,_____,______,_______,i=pcall(GetItemInfo,id)
-        if ok then name,link,icon=n,l,i end
+        local getInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
+        if type(getInfo)=="function" then
+            local ok,n,l,_,__,___,____,_____,______,_______,i=pcall(getInfo,id)
+            if ok then name,link,icon=n,l,i end
+        end
         if not icon and C_Item and C_Item.GetItemIconByID then
             local found,v=pcall(C_Item.GetItemIconByID,id)
             if found then icon=v end
