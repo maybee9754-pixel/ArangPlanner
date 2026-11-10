@@ -24,3 +24,6 @@ ArangPlanner now renders its own native raid/dungeon loot browser, selection pre
 
 ## v1.9.5-alpha standalone equipment browser
 Native ArangPlanner-only right panel: source multi-filter, dark themed category rows, quality-colored loot, highlighted selection, item preview, upgrade track/rank dropdowns and target registration. No GearPlanner install or its files are required. WoW Encounter Journal supplies available loot; unimplemented providers are not falsely populated.
+
+## 1.9.6 in-game visibility and layout corrections
+Fix the selected equipment slot title being hidden by the refresh button, default-open the first raid/dungeon loot sections, improve dropdown labels and readability, and prevent missing-item and bottom-slot labels from overlapping. Still a self-contained ArangPlanner implementation.
