@@ -1,4 +1,4 @@
-name: Build ArangPlanner v1.2 visual alpha
+name: Build ArangPlanner v1.4 gold dashboard alpha
 on:
   push:
     branches: [main]
@@ -8,6 +8,7 @@ on:
       - 'ArangPlanner/ArangPlanner.toc'
       - 'ArangPlanner/README.md'
       - 'tools/render_v12_skin.py'
+      - 'tools/render_ap_logo.py'
       - 'tools/check_studio_contract.py'
       - 'tools/build_ui_contract.py'
       - 'tools/fetch_shared_fonts.py'
@@ -40,6 +41,7 @@ jobs:
           python tools/build_ui_contract.py
           python tools/fetch_shared_fonts.py
           python tools/render_v12_skin.py ArangPlanner/Textures
+          python tools/render_ap_logo.py
           python tools/check_studio_contract.py
 
       - name: Validate shared WoW and Web UI layout contract
@@ -56,12 +58,12 @@ jobs:
           root=Path('ArangPlanner')
           expected=['ArangPlanner.toc','ArangPlanner.lua','UIContract.lua','UI.lua','README.md']
           toc=(root/'ArangPlanner.toc').read_text(encoding='utf-8')
-          assert '## Version: 1.3.0-alpha' in toc
+          assert '## Version: 1.4.0-alpha' in toc
           assert '## SavedVariables: ArangPlannerDB' in toc
           assert [line.strip() for line in toc.splitlines() if line.strip().endswith('.lua')]==['ArangPlanner.lua','UIContract.lua','UI.lua']
           for f in expected: assert (root/f).is_file(), f
           assert 'GearPlannerDB' not in (root/'ArangPlanner.lua').read_text(encoding='utf-8')
-          images=['header','panel-header','panel-body','button-idle','button-active','button-hover','row','row-hover']
+          images=['ap-logo','header','panel-header','panel-body','button-idle','button-active','button-hover','row','row-hover']
           for name in images:
               p=root/'Textures'/(name+'.tga')
               assert p.is_file() and p.stat().st_size>2048, p
@@ -71,6 +73,8 @@ jobs:
                   assert im.height in (64,128,512)
           ui=(root/'UI.lua').read_text(encoding='utf-8')
           assert 'ChatEdit_InsertLink' in ui
+          assert 'PlayerModel' in ui
+          assert 'AP.TargetCounts' in ui
           assert 'AP.GetTargetRows' in ui
           assert 'button-active.tga' not in ui or True
           print('Validated UI and game skin assets')
@@ -86,7 +90,7 @@ jobs:
           files+=sorted((root/'Fonts').glob('*.ttf'))
           files.append(root/'Fonts'/'OFL.txt')
           files+=sorted((root/'Textures').glob('*.tga'))
-          target=Path('ArangPlanner_v1.3.0-alpha.zip')
+          target=Path('ArangPlanner_v1.4.0-alpha.zip')
           with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
               for file in files:z.write(file,file.as_posix())
           with zipfile.ZipFile(target,'r') as z:
@@ -94,7 +98,7 @@ jobs:
               items=set(z.namelist())
               assert 'ArangPlanner/ArangPlanner.lua' in items
               assert 'ArangPlanner/ArangPlanner.toc' in items
-              assert len([x for x in items if x.endswith('.tga')])==8
+              assert len([x for x in items if x.endswith('.tga')])==9
               assert len([x for x in items if x.endswith('.ttf')])==3
               assert 'ArangPlanner/Fonts/OFL.txt' in items
               assert 'ArangPlanner/UIContract.lua' in items
@@ -106,17 +110,17 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v1.3.0-alpha
+          name: ArangPlanner-v1.4.0-alpha
           path: |
-            ArangPlanner_v1.3.0-alpha.zip
-            ArangPlanner_v1.3.0-alpha.zip.sha256
+            ArangPlanner_v1.4.0-alpha.zip
+            ArangPlanner_v1.4.0-alpha.zip.sha256
           retention-days: 30
 
       - name: Publish downloadable Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.0-alpha
-          name: 'ArangPlanner v1.3.0-alpha | Dark Charcoal UI'
+          tag_name: v1.4.0-alpha
+          name: 'ArangPlanner v1.4.0-alpha | Black and Gold Equipment Dashboard'
           prerelease: false
           draft: false
           body: |
@@ -127,5 +131,5 @@ jobs:
             Back up your current ArangPlanner folder. Keep GearPlanner and SavedVariables untouched.
             Fully exit and restart WoW after installing. Use /arang.
           files: |
-            ArangPlanner_v1.3.0-alpha.zip
-            ArangPlanner_v1.3.0-alpha.zip.sha256
+            ArangPlanner_v1.4.0-alpha.zip
+            ArangPlanner_v1.4.0-alpha.zip.sha256

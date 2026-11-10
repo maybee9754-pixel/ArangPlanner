@@ -1,447 +1,275 @@
--- ArangPlanner v1.3.0-alpha: shared TTF and generated layout contract.
--- All interactive labels are Blizzard Lua frames; art is generated from
--- tools/render_v12_skin.py, not copied from another addon.
+-- ArangPlanner 1.4: independently created black-and-gold equipment dashboard.
+-- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
-local TX="Interface\\AddOns\\ArangPlanner\\Textures\\"
--- Generated from docs/design.json. Keep all geometry in the common contract.
-local U=_G.ArangPlannerUIContract
-assert(type(U)=="table","ArangPlanner: missing generated UIContract.lua")
-local FONT_ROOT="Interface\\AddOns\\ArangPlanner\\Fonts\\"
-local FONT_REGULAR=FONT_ROOT..U.typeface.regular
-local FONT_BOLD=FONT_ROOT..U.typeface.bold
-local FONT_EXTRA=FONT_ROOT..U.typeface.extraBold
+local GOLD={.96,.76,.22}
+local IVORY={.94,.91,.83}
+local MUTED={.64,.62,.57}
+local ROOT=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
+ROOT:SetSize(1280,720)
+ROOT:SetPoint("CENTER")
+ROOT:SetClampedToScreen(true)
+ROOT:SetFrameStrata("DIALOG")
+ROOT:SetMovable(true)
+ROOT:EnableMouse(true)
+ROOT:RegisterForDrag("LeftButton")
+ROOT:SetScript("OnDragStart",function(self)self:StartMoving()end)
+ROOT:SetScript("OnDragStop",function(self)self:StopMovingOrSizing()end)
+ROOT:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileSize=32,edgeSize=27,insets={left=8,right=8,top=8,bottom=8}})
+ROOT:SetBackdropColor(.055,.05,.055,.99)
+ROOT:SetBackdropBorderColor(.82,.65,.29,1)
+ROOT:Hide()
 
-
-local root=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
-root:SetSize(U.designResolution.width,U.designResolution.height)
-root:SetPoint("CENTER")
-root:SetClampedToScreen(true)
-root:SetFrameStrata("DIALOG")
-root:SetMovable(true)
-root:EnableMouse(true)
-root:RegisterForDrag("LeftButton")
-root:SetScript("OnDragStart",root.StartMoving)
-root:SetScript("OnDragStop",root.StopMovingOrSizing)
-root:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
-                  edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-root:SetBackdropColor(.055,.054,.078,.99)
-root:SetBackdropBorderColor(.30,.27,.36,1)
-
-local function art(parent,filename,layer,alpha)
-    local t=parent:CreateTexture(nil,layer or "BACKGROUND")
-    t:SetAllPoints(parent)
-    t:SetTexture(TX..filename..".tga")
-    t:SetAlpha(alpha or 1)
+local function color(t,c) t:SetTextColor(c[1],c[2],c[3]) end
+local function label(p,txt,x,y,size,tint)
+    local s=p:CreateFontString(nil,"OVERLAY",size or "GameFontHighlight")
+    s:SetPoint("TOPLEFT",p,"TOPLEFT",x,-y)
+    s:SetText(txt or "")
+    color(s,tint or IVORY)
+    s:SetJustifyH("LEFT")
+    return s
+end
+local function tint(p, r,g,b,a, layer)
+    local t=p:CreateTexture(nil,layer or "BACKGROUND")
+    t:SetAllPoints()
+    t:SetColorTexture(r,g,b,a or 1)
     return t
 end
-local function text(parent,s,template)
-    local fontObject=template or "GameFontHighlight"
-    local f=parent:CreateFontString(nil,"OVERLAY",fontObject)
-    -- Same OFL Nanum Gothic TTF files and point sizes in WoW and the website.
-    local sizes={GameFontHighlightSmall=U.typography.small,
-        GameFontNormalSmall=U.typography.small,
-        GameFontHighlight=U.typography.normal,
-        GameFontNormal=U.typography.normal,
-        GameFontNormalLarge=U.typography.large}
-    local wanted=sizes[fontObject] or U.typography.normal
-    local file=(fontObject=="GameFontNormalLarge") and FONT_EXTRA
-        or ((fontObject=="GameFontNormal" or fontObject=="GameFontNormalSmall") and FONT_BOLD or FONT_REGULAR)
-    f:SetFont(file,wanted,"")
-    f:SetShadowOffset(0,0)
-    f:SetShadowColor(0,0,0,0)
-    f:SetText(s or "")
-    return f
+local function pane(parent,x,y,w,h)
+    local p=CreateFrame("Frame",nil,parent,"BackdropTemplate")
+    p:SetPoint("TOPLEFT",x,-y)
+    p:SetSize(w,h)
+    p:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileSize=32,edgeSize=20,insets={left=5,right=5,top=5,bottom=5}})
+    p:SetBackdropColor(.065,.06,.075,.98)
+    p:SetBackdropBorderColor(.67,.52,.21,.95)
+    return p
 end
-local function frame(parent,x,y,w,h,texture)
-    local f=CreateFrame("Frame",nil,parent,"BackdropTemplate")
-    f:SetPoint("TOPLEFT",parent,"TOPLEFT",x,-y)
-    f:SetSize(w,h)
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
-                    edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    f:SetBackdropColor(.065,.063,.09,.97)
-    f:SetBackdropBorderColor(.28,.25,.34,.85)
-    if texture then art(f,texture,"BACKGROUND",.98) end
-    return f
-end
-local function heading(parent,label)
-    local bar=CreateFrame("Frame",nil,parent)
-    bar:SetPoint("TOPLEFT",parent,"TOPLEFT",1,-1)
-    bar:SetPoint("TOPRIGHT",parent,"TOPRIGHT",-1,-1)
-    bar:SetHeight(33)
-    art(bar,"panel-header")
-    local t=text(bar,label,"GameFontNormal")
-    t:SetPoint("LEFT",12,0)
-    t:SetTextColor(.91,.88,.96)
-    return bar
-end
-local function button(parent,caption,x,y,w,h,callback,active)
-    local b=CreateFrame("Button",nil,parent,"BackdropTemplate")
-    b:SetSize(w,h)
-    b:SetPoint("TOPLEFT",parent,"TOPLEFT",x,-y)
-    b:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    b:SetBackdropBorderColor(.32,.29,.38,.8)
-    local idle=art(b,"button-idle","BACKGROUND")
-    local on=art(b,"button-active","ARTWORK")
-    local over=art(b,"button-hover","ARTWORK")
-    over:SetAlpha(0)
-    local label=text(b,caption,"GameFontHighlight")
-    label:SetPoint("CENTER")
-    label:SetTextColor(.94,.91,.97)
-    b.activeTexture=on
-    function b:SetVisualActive(yes)
-        self.isActive=not not yes
-        on:SetAlpha(self.isActive and 1 or 0)
-        b:SetBackdropBorderColor(self.isActive and .57 or .32,self.isActive and .41 or .29,self.isActive and .69 or .38,.9)
-    end
-    b:SetVisualActive(active)
-    b:SetScript("OnEnter",function()
-        over:SetAlpha(b.isActive and .28 or .67)
-    end)
-    b:SetScript("OnLeave",function()over:SetAlpha(0)end)
-    b:SetScript("OnClick",function()
-        if callback then callback(b) end
-    end)
+local function bar(parent,txt)
+    local b=CreateFrame("Frame",nil,parent)
+    b:SetPoint("TOPLEFT",12,-10);b:SetPoint("TOPRIGHT",-12,-10);b:SetHeight(27)
+    tint(b,.18,.14,.075,.85)
+    label(b,txt,12,5,"GameFontNormalLarge",GOLD)
     return b
 end
-
--- Design-faithful title bar. Dragging only starts on non-button header area.
-local header=frame(root,U.panels.header.x,U.panels.header.y,U.panels.header.w,U.panels.header.h,"header")
-header:EnableMouse(true)
-header:RegisterForDrag("LeftButton")
-header:SetScript("OnDragStart",function()root:StartMoving()end)
-header:SetScript("OnDragStop",function()root:StopMovingOrSizing()end)
--- Native texture logo: Korean WoW fonts may not support decorative Unicode glyphs.
-local mark=CreateFrame("Frame",nil,header)
-mark:SetSize(35,35)
-mark:SetPoint("LEFT",17,0)
-local diamond=mark:CreateTexture(nil,"ARTWORK")
-diamond:SetSize(21,21)
-diamond:SetPoint("CENTER")
-diamond:SetTexture("Interface\\Buttons\\WHITE8X8")
-diamond:SetVertexColor(.69,.57,.85,.93)
-diamond:SetRotation(math.pi/4)
-local core=mark:CreateTexture(nil,"OVERLAY")
-core:SetSize(12,12)
-core:SetPoint("CENTER")
-core:SetTexture("Interface\\Buttons\\WHITE8X8")
-core:SetVertexColor(.90,.82,1,1)
-core:SetRotation(math.pi/4)
-local brand=text(header,"아랑플래너","GameFontNormalLarge")
-brand:SetPoint("LEFT",mark,"RIGHT",10,9)
-brand:SetTextColor(.96,.94,.98)
--- Read the live installed TOC metadata rather than a hard-coded visual label.
-local function installedVersion()
-    local version
-    if C_AddOns and type(C_AddOns.GetAddOnMetadata)=="function" then
-        version=C_AddOns.GetAddOnMetadata("ArangPlanner","Version")
-    elseif type(GetAddOnMetadata)=="function" then
-        version=GetAddOnMetadata("ArangPlanner","Version")
-    end
-    return (type(version)=="string" and version~="") and version or "unknown"
+local function button(parent,txt,x,y,w,h,fn)
+    local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
+    b:SetPoint("TOPLEFT",x,-y);b:SetSize(w,h);b:SetText(txt)
+    b:SetScript("OnClick",function()if fn then fn()end end)
+    return b
 end
-local ver=text(header,"ArangPlanner v"..installedVersion(),"GameFontHighlightSmall")
-ver:SetPoint("LEFT",brand,"RIGHT",12,-1)
-ver:SetTextColor(.66,.64,.72)
+local function newIcon(parent,x,y,w,h)
+    local f=CreateFrame("Button",nil,parent,"BackdropTemplate")
+    f:SetPoint("TOPLEFT",x,-y);f:SetSize(w,h)
+    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    f:SetBackdropColor(.06,.05,.07,1)
+    f:SetBackdropBorderColor(.64,.48,.16,1)
+    f.icon=f:CreateTexture(nil,"ARTWORK")
+    f.icon:SetPoint("TOPLEFT",2,-2);f.icon:SetPoint("BOTTOMRIGHT",-2,2)
+    f.icon:SetTexture(134400)
+    return f
+end
+local function alert(message)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffcf4a아랑플래너|r "..message) end
+end
+
+-- Header: render the independently drawn AP mark, with no copied third-party emblem.
+local top=pane(ROOT,13,11,1254,66)
+local ap=top:CreateTexture(nil,"ARTWORK")
+ap:SetPoint("LEFT",18,0);ap:SetSize(49,49)
+ap:SetTexture("Interface\\AddOns\\ArangPlanner\\Textures\\ap-logo.tga")
+local brand=label(top,"아랑플래너",78,13,"GameFontNormalLarge",GOLD)
+local brandSub=label(top,"ARANG PLANNER",80,39,"GameFontHighlightSmall",MUTED)
+local names={"장비 관리","공격대","쐐기돌","비교/시뮬","저장/불러오기"}
 local tabs={}
-local currentTab=1
-local tabNames={"장비 세팅","공격대","쐐기돌","획득 추적기","설정"}
-local function setTab(n)
-    currentTab=n
-    for i,b in ipairs(tabs) do b:SetVisualActive(i==n) end
-    if AP.RefreshUI then AP.RefreshUI() end
-end
-for i,name in ipairs(tabNames) do
-    local p=U.tabs[i]
-    tabs[i]=button(header,name,p.x,p.y,p.w,p.h,function()setTab(i)end,i==1)
-end
-local closePos=U.close
-button(header,"×",closePos.x,closePos.y,closePos.w,closePos.h,function()root:Hide()end,false)
-
-local function panel(name)
-    local p=U.panels[name]
-    return frame(root,p.x,p.y,p.w,p.h,"panel-body")
-end
-local left=panel("left")
-local middle=panel("middle")
-local right=panel("right")
-heading(left,"진행 현황")
-heading(middle,"목표 장비 관리")
-heading(right,"전리품 목록")
-
-local summaryTitle=text(left,"현재 전문화","GameFontHighlightSmall")
-summaryTitle:SetPoint("TOPLEFT",14,-48)
-summaryTitle:SetTextColor(.67,.66,.74)
-local specLabel=text(left,"","GameFontNormal")
-specLabel:SetPoint("TOPLEFT",14,-70)
-specLabel:SetTextColor(.94,.89,1)
-local progress=text(left,"","GameFontHighlight")
-progress:SetPoint("TOPLEFT",14,-117)
-progress:SetWidth(225)
-progress:SetJustifyH("LEFT")
-progress:SetTextColor(.81,.74,.89)
-local progressDetail=text(left,"","GameFontHighlightSmall")
-progressDetail:SetPoint("TOPLEFT",14,-143)
-progressDetail:SetWidth(228)
-progressDetail:SetJustifyH("LEFT")
-progressDetail:SetTextColor(.61,.79,.77)
-local divider=left:CreateTexture(nil,"ARTWORK")
-divider:SetPoint("TOPLEFT",14,-177)
-divider:SetSize(228,1)
-divider:SetColorTexture(.28,.26,.34,.76)
-local missingTitle=text(left,"미확인 목표 아이템","GameFontNormal")
-missingTitle:SetPoint("TOPLEFT",14,-195)
-missingTitle:SetTextColor(.83,.77,.92)
-local missingRows={}
-for i=1,10 do
-    local row=text(left,"","GameFontHighlightSmall")
-    row:SetPoint("TOPLEFT",17,-226-(i-1)*28)
-    row:SetWidth(221)
-    row:SetJustifyH("LEFT")
-    row:SetTextColor(.76,.71,.85)
-    missingRows[i]=row
-end
-
--- Input and registration controls remain fully independent of the screenshot.
-local specLine=text(middle,"","GameFontNormal")
-specLine:SetPoint("TOPLEFT",14,-47)
-specLine:SetTextColor(.90,.82,.97)
-local input=CreateFrame("EditBox","ArangPlannerItemEntry",middle,"BackdropTemplate")
-input:SetSize(U.controls.input.w,U.controls.input.h)
-input:SetPoint("TOPLEFT",U.controls.input.x,-U.controls.input.y)
-input:SetFrameLevel(middle:GetFrameLevel()+8)
-input:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-input:SetBackdropColor(.045,.045,.07,1)
-input:SetBackdropBorderColor(.37,.34,.45,1)
-input:SetTextInsets(8,8,0,0)
-input:SetFontObject("ChatFontNormal")
-input:SetFont(FONT_REGULAR,U.typography.normal,"")
-input:SetTextColor(1,.94,1,1)
-input:SetAutoFocus(false)
-input:SetMaxLetters(1024)
-input:EnableMouse(true)
-input:EnableKeyboard(true)
-input:SetScript("OnMouseDown",function(self)self:SetFocus()end)
-input:SetScript("OnEditFocusGained",function(self)self:SetBackdropBorderColor(.71,.53,.83,1)end)
-input:SetScript("OnEditFocusLost",function(self)self:SetBackdropBorderColor(.37,.34,.45,1)end)
-
-local function notify(message)
-    if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cffb78cce아랑플래너|r "..message)
+local current=1
+local content={}
+local function switch(n)
+    current=n
+    for i,p in ipairs(content)do p:SetShown(i==n) end
+    for i,b in ipairs(tabs)do
+        if i==n then b:LockHighlight() else b:UnlockHighlight() end
     end
 end
+for i,name in ipairs(names) do
+    tabs[i]=button(top,name,316+(i-1)*145,12,137,39,function()switch(i)end)
+end
+button(top,"X",1183,16,38,31,function()ROOT:Hide()end)
+
+-- Fixed three-column hierarchy, matching the approved screenshot.
+local left=pane(ROOT,13,88,346,620)
+local mid=pane(ROOT,366,88,559,620)
+local right=pane(ROOT,932,88,335,620)
+content[1]=CreateFrame("Frame",nil,ROOT)
+content[1]:SetAllPoints(ROOT)
+
+bar(left,"파밍 현황")
+local rate=label(left,"0%  달성률",22,61,"GameFontNormalLarge",GOLD)
+local counts=label(left,"등록 0    보유 0    미보유 0",22,106,"GameFontNormal",IVORY)
+local special=label(left,"현재 전문화",22,138,"GameFontHighlightSmall",MUTED)
+local stat=pane(left,11,198,324,236)
+bar(stat,"능력치 비교")
+local statRows={}
+for i,entry in ipairs({{"아이템 레벨",0},{"지능",4},{"치명타",5},{"가속",6},{"특화",7},{"유연성",8}}) do
+    local txt=label(stat,entry[1],18,47+(i-1)*29,"GameFontHighlight",IVORY)
+    local val=stat:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+    val:SetPoint("TOPRIGHT",stat,"TOPRIGHT",-20,-47-(i-1)*29)
+    color(val,MUTED)
+    statRows[i]={label=txt,value=val,index=entry[2]}
+end
+local missing=pane(left,11,445,324,163)
+bar(missing,"미획득 아이템")
+local missingText=label(missing,"",18,55,"GameFontHighlightSmall",IVORY)
+missingText:SetWidth(280);missingText:SetJustifyH("LEFT")
+
+bar(mid,"장비 관리")
+local specText=label(mid,"현재 장비",20,50,"GameFontNormal",GOLD)
+local modelBacking=CreateFrame("Frame",nil,mid)
+modelBacking:SetPoint("TOPLEFT",137,-105);modelBacking:SetSize(285,362)
+tint(modelBacking,.08,.07,.11,.55)
+local model=CreateFrame("PlayerModel",nil,modelBacking)
+model:SetAllPoints()
+local modelFallback=label(modelBacking,"캐릭터 모델 불러오는 중",42,166,"GameFontHighlightSmall",MUTED)
+local function modelRefresh()
+    if model.SetUnit then
+        local ok=pcall(model.SetUnit,model,"player")
+        modelFallback:SetShown(not ok)
+        if ok and model.SetCamera then pcall(model.SetCamera,model,0) end
+    end
+end
+local slots={
+    {1,15,105},{3,15,163},{5,15,221},{9,15,279},{10,15,337},
+    {15,481,105},{6,481,163},{7,481,221},{8,481,279},{11,481,337},
+    {2,87,475},{12,194,475},{13,301,475},{14,408,475},
+    {16,140,539},{17,350,539}
+}
+local equipIcons={}
+for _,sd in ipairs(slots)do
+    local f=newIcon(mid,sd[2],sd[3],54,49)
+    f.slot=sd[1]
+    local itemLevel=label(f,"",3,30,"GameFontNormalSmall",GOLD)
+    local equippedName=label(mid,"",sd[2]+((sd[2]>440) and -92 or 60),sd[3]+13,"GameFontHighlightSmall",IVORY)
+    equippedName:SetWidth(90);equippedName:SetWordWrap(false)
+    if sd[2]>440 then equippedName:SetJustifyH("RIGHT") end
+    f:SetScript("OnEnter",function(self)
+        GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
+        GameTooltip:SetInventoryItem("player",self.slot)
+        GameTooltip:Show()
+    end)
+    f:SetScript("OnLeave",function()GameTooltip:Hide()end)
+    equipIcons[#equipIcons+1]={f=f,lvl=itemLevel,name=equippedName}
+end
+local help=label(mid,"장비 아이콘에 마우스를 올리면 실제 아이템 툴팁이 표시됩니다.",24,595,"GameFontHighlightSmall",MUTED)
+help:SetWidth(513)
+
+bar(right,"전리품")
+local warning=label(right,"공격대·쐐기돌 전리품 연동은 개발 중입니다.",20,60,"GameFontHighlightSmall",IVORY)
+warning:SetWidth(286)
+warning:SetWordWrap(true)
+local targetSummary=label(right,"전문화별 목표 아이템",20,112,"GameFontNormal",GOLD)
+local selectedRows={}
+local selectedIds={}
+for i=1,6 do
+    local y=144+(i-1)*51
+    local icon=newIcon(right,16,y,38,38)
+    local txt=label(right,"",61,y+5,"GameFontHighlightSmall",IVORY)
+    txt:SetWidth(244);txt:SetWordWrap(false)
+    local status=label(right,"",61,y+23,"GameFontHighlightSmall",MUTED)
+    icon:SetScript("OnClick",function()
+        local id=selectedIds[i]
+        if id then
+            AP.RemoveTarget(id)
+            alert("목표 제외: "..id)
+            if AP.RefreshUI then AP.RefreshUI() end
+        end
+    end)
+    selectedRows[i]={icon=icon,txt=txt,status=status}
+end
+local input=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
+input:SetPoint("TOPLEFT",26,-477);input:SetSize(195,28)
+input:SetAutoFocus(false);input:SetMaxLetters(256);input:EnableMouse(true)
 local function add()
-    local raw=input:GetText()
-    if AP.AddTarget(raw) then
-        input:SetText("")
-        notify("목표 아이템 등록 완료")
+    if AP.AddTarget(input:GetText()) then
+        input:SetText("");alert("목표 아이템 등록 완료")
         if AP.RefreshUI then AP.RefreshUI() end
-    else
-        notify("유효한 아이템 ID 또는 링크를 입력하세요.")
-    end
+    else alert("유효한 아이템 ID 또는 아이템 링크를 입력하세요.") end
 end
-button(middle,"등록",U.controls.add.x,U.controls.add.y,U.controls.add.w,U.controls.add.h,add,false)
-button(middle,"제거",U.controls.remove.x,U.controls.remove.y,U.controls.remove.w,U.controls.remove.h,function()
-    if AP.RemoveTarget(input:GetText()) then
-        notify("목표 아이템 제거 완료")
-        input:SetText("")
-        if AP.RefreshUI then AP.RefreshUI() end
-    else notify("제거할 아이템 ID 또는 링크를 입력하세요.") end
-end,false)
-button(middle,"새로고침",U.controls.refresh.x,U.controls.refresh.y,U.controls.refresh.w,U.controls.refresh.h,function()
-    AP.ScanEquipped()
-    if AP.RefreshUI then AP.RefreshUI() end
-end,false)
+button(right,"등록",230,472,84,32,add)
 input:SetScript("OnEnterPressed",function(self)add();self:ClearFocus()end)
 input:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
     hooksecurefunc("ChatEdit_InsertLink",function(link)
-        if not root:IsShown() or currentTab~=1 or not IsShiftKeyDown() or type(link)~="string" then return end
-        if AP.GetItemIDFromText(link) then
-            input:SetText(link)
-            input:SetFocus()
+        if ROOT:IsShown() and type(link)=="string" and IsShiftKeyDown() and AP.GetItemIDFromText(link) then
+            input:SetText(link);input:SetFocus()
         end
     end)
 end
-local hint=text(middle,"아이템 ID 직접 입력 · 가방 아이템 Shift+클릭","GameFontHighlightSmall")
-hint:SetPoint("TOPLEFT",16,-115)
-hint:SetTextColor(.64,.62,.70)
+local note=label(right,"아이템 ID 입력 또는 가방 아이템 Shift+클릭",19,518,"GameFontHighlightSmall",MUTED)
+note:SetWidth(300)
+button(right,"목표 새로고침",20,550,288,32,function()AP.ScanEquipped();AP.RefreshUI()end)
 
-local th=U.table.header
-local headRow=frame(middle,th.x,th.y,th.w,th.h,"panel-header")
-for _,v in ipairs({{"목표 아이템",U.table.columns.name+2},{"아이템 ID",U.table.columns.id+2},{"상태",U.table.columns.status+2}}) do
-    local t=text(headRow,v[1],"GameFontNormalSmall")
-    t:SetPoint("LEFT",v[2],0)
+-- Other top-level tabs are honest WIP panels, not made-up acquisition records.
+for i=2,#names do
+    local holder=pane(ROOT,13,88,1254,620)
+    content[i]=holder
+    bar(holder,names[i])
+    label(holder,"이 화면은 개발 중입니다. 아직 실제 데이터와 연동되지 않았습니다.",40,86,"GameFontNormalLarge",IVORY)
+    label(holder,"장비 관리 탭에서 현재 장비와 전문화별 목표 아이템을 사용할 수 있습니다.",40,126,"GameFontHighlight",MUTED)
+    holder:Hide()
 end
 
-local viewRows={}
-for i=1,U.table.rows.count do
-    local itemFrame=CreateFrame("Button",nil,middle,"BackdropTemplate")
-    itemFrame:SetSize(U.table.rows.w,U.table.rows.h)
-    itemFrame:SetPoint("TOPLEFT",middle,"TOPLEFT",U.table.rows.x,-U.table.rows.y-(i-1)*(U.table.rows.h+U.table.rows.gap))
-    itemFrame:SetBackdrop({edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    itemFrame:SetBackdropBorderColor(.22,.21,.29,.5)
-    art(itemFrame,"row","BACKGROUND")
-    local hover=art(itemFrame,"row-hover","ARTWORK")
-    hover:SetAlpha(0)
-    local icon=itemFrame:CreateTexture(nil,"ARTWORK",nil,1)
-    icon:SetSize(U.table.iconSize,U.table.iconSize)
-    icon:SetPoint("LEFT",5,0)
-    local n=text(itemFrame,"","GameFontHighlightSmall")
-    n:SetPoint("LEFT",icon,"RIGHT",8,0)
-    n:SetWidth(423)
-    n:SetJustifyH("LEFT")
-    local id=text(itemFrame,"","GameFontHighlightSmall")
-    id:SetPoint("LEFT",U.table.columns.id,0)
-    id:SetWidth(94)
-    id:SetJustifyH("LEFT")
-    id:SetTextColor(.70,.68,.77)
-    local status=text(itemFrame,"","GameFontHighlightSmall")
-    status:SetPoint("LEFT",U.table.columns.status,0)
-    status:SetWidth(96)
-    status:SetJustifyH("LEFT")
-    itemFrame:SetScript("OnEnter",function(self)
-        hover:SetAlpha(.57)
-        if self.itemId then
-            GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
-            local ok=pcall(GameTooltip.SetHyperlink,GameTooltip,"item:"..self.itemId)
-            if ok then GameTooltip:Show() end
-        end
-    end)
-    itemFrame:SetScript("OnLeave",function()
-        hover:SetAlpha(0)
-        GameTooltip:Hide()
-    end)
-    itemFrame:SetScript("OnClick",function(self)
-        if not self.itemId then return end
-        if IsControlKeyDown() then
-            AP.RemoveTarget(self.itemId)
-            if AP.RefreshUI then AP.RefreshUI() end
-        elseif IsShiftKeyDown() then
-            input:SetText(tostring(self.itemId))
-            input:SetFocus()
-        end
-    end)
-    viewRows[i]={frame=itemFrame,icon=icon,name=n,id=id,status=status}
+local function statValue(index)
+    if index==0 then
+        return string.format("%.1f",GetAverageItemLevel and (select(2,GetAverageItemLevel()) or 0) or 0)
+    end
+    if index==4 then return tostring(UnitStat("player",4) or 0) end
+    if index==5 then return string.format("%.1f%%",GetCritChance and GetCritChance() or 0) end
+    if index==6 then return string.format("%.1f%%",GetHaste and GetHaste() or 0) end
+    if index==7 then return string.format("%.1f%%",GetMasteryEffect and GetMasteryEffect() or 0) end
+    if index==8 then return string.format("%.1f%%",GetCombatRatingBonus and GetCombatRatingBonus(29) or 0) end
+    return "—"
 end
-
-local page=1
-local prev=button(middle,"이전",15,580,72,27,function()
-    page=math.max(1,page-1)
-    if AP.RefreshUI then AP.RefreshUI() end
-end,false)
-local next=button(middle,"다음",607,580,72,27,function()
-    page=page+1
-    if AP.RefreshUI then AP.RefreshUI() end
-end,false)
-local pageLabel=text(middle,"","GameFontHighlightSmall")
-pageLabel:SetPoint("BOTTOM",0,15)
-pageLabel:SetTextColor(.72,.71,.79)
-local placeholder=text(middle,"","GameFontNormalLarge")
-placeholder:SetPoint("CENTER",0,40)
-placeholder:SetWidth(610)
-placeholder:SetJustifyH("CENTER")
-placeholder:SetTextColor(.76,.70,.84)
-placeholder:Hide()
-
-local rightInfo=text(right,"공격대·쐐기돌 획득 추적","GameFontHighlight")
-rightInfo:SetPoint("TOPLEFT",14,-55)
-rightInfo:SetTextColor(.88,.81,.95)
-local rightNote=text(right,"데이터 연동 준비 중","GameFontHighlightSmall")
-rightNote:SetPoint("TOPLEFT",14,-86)
-rightNote:SetTextColor(.66,.64,.74)
--- Explicit line frames prevent font ascent differences and automatic wrapping
--- from stacking Korean text on top of adjacent lines in WoW.
-local helpLines={
-    "현재 버전은 전문화별 목표",
-    "등록과 착용/가방 확인을",
-    "지원합니다.",
-    "",
-    "공허핵, 티어 변환, 보스",
-    "전리품은 확인되지 않은",
-    "수치를 표시하지 않습니다."
-}
-for i,line in ipairs(helpLines) do
-    local fs=text(right,line,"GameFontHighlightSmall")
-    fs:SetPoint("TOPLEFT",14,-126-(i-1)*U.typography.rightHelpLineHeight)
-    fs:SetSize(237,18)
-    fs:SetJustifyH("LEFT")
-    fs:SetJustifyV("MIDDLE")
-    fs:SetTextColor(.72,.70,.79)
-end
-
-local footer=text(root,"목표 목록: Ctrl+클릭 제거  ·  Shift+클릭 ID 입력  |  획득 상태는 현재 착용/가방 기준","GameFontHighlightSmall")
-footer:SetPoint("BOTTOM",root,"BOTTOM",0,6)
-footer:SetTextColor(.60,.59,.68)
-
 function AP.RefreshUI()
-    if not root:IsShown() then return end
-    local ok, spec,total,owned=pcall(AP.Info)
-    if not ok then
-        specLine:SetText("장비 데이터 오류")
-        notify("상태 갱신 오류: "..tostring(spec))
-        return
+    if not ROOT or not ROOT:IsShown() then return end
+    local total,have=AP.TargetCounts()
+    rate:SetText(string.format("%.1f%%  달성률",total>0 and have*100/total or 0))
+    counts:SetText(string.format("등록 %d     보유 %d     미보유 %d",total,have,total-have))
+    special:SetText("현재 전문화: "..AP.GetSpecName())
+    specText:SetText(AP.GetSpecName().." · 현재 장비")
+    for _,r in ipairs(statRows)do r.value:SetText(statValue(r.index)) end
+    local equipped=AP.GetDisplayRows()
+    local mapped={}
+    for _,r in ipairs(equipped)do mapped[r.slot]=r end
+    for _,r in ipairs(equipIcons)do
+        local slot=r.f.slot
+        local data=mapped[slot]
+        r.f.icon:SetTexture(data and data.icon or 134400)
+        local name=data and data.link and GetItemInfo(data.link)
+        r.name:SetText(name or "")
+        local lvl
+        if data and data.link and C_Item and C_Item.GetDetailedItemLevelInfo then
+            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.link)
+            if ok then lvl=v end
+        end
+        r.lvl:SetText(lvl and tostring(lvl) or "")
     end
-    local okName,specName=pcall(AP.GetSpecName)
-    if not okName then specName="알 수 없음" end
-    local signature=tostring(spec)..":"..specName
-    if root.lastSpec~=signature then
-        root.lastSpec=signature
-        page=1
-    end
-    specLabel:SetText(specName.." ("..tostring(spec)..")")
-    specLine:SetText("현재 전문화  |  "..specName.." ("..tostring(spec)..")")
-    progress:SetText("목표 등록  "..total.."    보유 확인  "..owned)
-    progressDetail:SetText("미확인  "..(total-owned).."개  ·  미획득 확정 아님")
-    local success,targets=pcall(AP.GetTargetRows)
-    if not success then
-        notify("목표 테이블 오류: "..tostring(targets))
-        return
-    end
-    for i=1,#missingRows do missingRows[i]:SetText("") end
-    local m=1
-    for _,v in ipairs(targets) do
-        if v.status=="미확인" and m<=#missingRows then
-            missingRows[m]:SetText("• "..(v.name or ("아이템 "..v.id)))
-            m=m+1
+    modelRefresh()
+    local rows=AP.GetTargetRows()
+    local missingNames={}
+    for i=1,6 do
+        local data=rows[i]
+        local c=selectedRows[i]
+        selectedIds[i]=data and data.id
+        c.icon:SetShown(data~=nil)
+        c.txt:SetText(data and data.name or (i==1 and "등록된 목표 아이템이 없습니다." or ""))
+        c.status:SetText(data and (tostring(data.id).."  ·  "..data.status) or "")
+        if data then
+            c.icon.icon:SetTexture(data.icon or 134400)
+            if data.status=="미확인" then missingNames[#missingNames+1]=data.name end
         end
     end
-    local showTable=currentTab==1
-    input:SetShown(showTable)
-    hint:SetShown(showTable)
-    headRow:SetShown(showTable)
-    prev:SetShown(showTable)
-    next:SetShown(showTable)
-    pageLabel:SetShown(showTable)
-    -- All actual controls in the tab remain clickable, not image-only mockups.
-    if showTable then
-        placeholder:Hide()
-        local pageCount=math.max(1,math.ceil(#targets/#viewRows))
-        page=math.min(page,pageCount)
-        for i,r in ipairs(viewRows) do
-            local item=targets[(page-1)*#viewRows+i]
-            r.frame.itemId=item and item.id or nil
-            if item then
-                r.frame:Show()
-                r.icon:SetTexture(item.icon or 134400)
-                r.name:SetText(item.link or item.name or tostring(item.id))
-                r.id:SetText(tostring(item.id))
-                r.status:SetText(item.status)
-                if item.status=="착용" then r.status:SetTextColor(.42,.89,.69)
-                elseif item.status=="가방 보유" then r.status:SetTextColor(.55,.80,.91)
-                else r.status:SetTextColor(.90,.66,.75) end
-            else r.frame:Hide() end
-        end
-        prev:SetEnabled(page>1)
-        next:SetEnabled(page<pageCount)
-        pageLabel:SetText(page.." / "..pageCount.." 페이지")
-    else
-        for _,r in ipairs(viewRows) do r.frame:Hide() end
-        placeholder:Show()
-        placeholder:SetText(tabNames[currentTab].."\n\n독립 구현 예정 기능입니다.\n실제 확인되지 않은 획득 정보는 표시하지 않습니다.")
-    end
+    missingText:SetText(#missingNames>0 and table.concat(missingNames,"\n") or "미확인 목표 아이템 없음")
 end
 function AP.ToggleUI()
-    if root:IsShown() then root:Hide()
-    else root:Show();AP.RefreshUI() end
+    if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI() end
 end
-root:Hide()
+ROOT:SetScript("OnShow",function()if AP.RefreshUI then AP.RefreshUI()end end)
+switch(1)
