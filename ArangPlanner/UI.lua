@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.9: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.10.0: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -200,7 +200,10 @@ function AP.SelectPlanSlot(slot)
     selectedSlot=slot
     selectedItem=nil
     if itemEntry then itemEntry:SetText("") end
-    if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
+    if selectedTitle then
+        selectedTitle:SetText("장비를 선택하세요.")
+        selectedTitle:SetTextColor(IVORY[1],IVORY[2],IVORY[3])
+    end
     if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
     if refreshOptions then refreshOptions(slot) end
     if AP.RefreshUI then AP.RefreshUI() end
@@ -460,26 +463,29 @@ selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormalLarg
 selectedTitle:SetWidth(431)
 selectedDetail=label(right,"목표 장비를 선택하세요",84,526,"GameFontHighlightSmall",IVORY)
 selectedDetail:SetWidth(425)
+-- Keep the item ID internally for selection and registration, without
+-- putting a raw numerical input between the item summary and controls.
 itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
 itemEntry:SetPoint("TOPLEFT",28,-549)
 itemEntry:SetSize(484,23)
 itemEntry:SetAutoFocus(false)
 itemEntry:SetMaxLetters(256)
-itemEntry:EnableMouse(true)
-local trackLabel=label(right,"등급:",120,581,"GameFontNormal",GOLD)
-local rankLabel=label(right,"강화 단계:",120,612,"GameFontNormal",GOLD)
+itemEntry:EnableMouse(false)
+itemEntry:Hide()
+local trackLabel=label(right,"등급:",144,575,"GameFontNormal",GOLD)
+local rankLabel=label(right,"강화 단계:",144,607,"GameFontNormal",GOLD)
 local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
 local chosenTrack,chosenRank="영웅",1
 local venomFlag,catalystFlag=false,false
-local trackButton=stoneButton(right,"영웅  ▾",241,577,273,27,nil)
-local rankButton=stoneButton(right,"1/6  ▾",241,607,273,27,nil)
+local trackButton=stoneButton(right,"영웅  ▾",251,570,250,27,nil)
+local rankButton=stoneButton(right,"1/6  ▾",251,602,250,27,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-venomCheck:SetPoint("TOPLEFT",155,-638);venomCheck:SetSize(26,26)
-local venomLabel=label(right,"맹독석 강화 (계획)",185,643,"GameFontHighlightSmall",GOLD)
+venomCheck:SetPoint("TOPLEFT",165,-633);venomCheck:SetSize(26,26)
+local venomLabel=label(right,"맹독석 강화 (계획)",197,638,"GameFontHighlightSmall",GOLD)
 local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-catalystCheck:SetPoint("TOPLEFT",155,-667);catalystCheck:SetSize(26,26)
-local catalystLabel=label(right,"티어 변환 (계획)",185,672,"GameFontHighlightSmall",GOLD)
-local originalText=label(right,"원본 장비: 선택한 장비",34,697,"GameFontHighlightSmall",MUTED)
+catalystCheck:SetPoint("TOPLEFT",165,-662);catalystCheck:SetSize(26,26)
+local catalystLabel=label(right,"티어 변환 (계획)",197,667,"GameFontHighlightSmall",GOLD)
+local originalText=label(right,"원본 장비: 선택한 장비",34,692,"GameFontHighlightSmall",MUTED)
 originalText:SetWidth(476)
 local canCatalyst={[1]=true,[3]=true,[5]=true,[7]=true,[10]=true}
 local function updateOptions()
@@ -531,7 +537,7 @@ local function registerItem()
     alert(AP.LootCatalog.SlotLabel(slot).." 목표 등록 완료")
     if AP.RefreshUI then AP.RefreshUI() end
 end
-stoneButton(right,"등록",151,710,245,24,registerItem)
+stoneButton(right,"등록",154,705,243,25,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
 itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
@@ -548,6 +554,15 @@ local function selectItem(item)
     choiceIcon.icon:SetTexture(item.icon or (C_Item and C_Item.GetItemIconByID
         and C_Item.GetItemIconByID(item.id)) or 134400)
     selectedTitle:SetText(item.name or ("아이템 "..item.id))
+    local itemInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
+    if type(itemInfo)=="function" then
+        local ok,_,__,quality=pcall(itemInfo,item.id)
+        if ok and type(quality)=="number" and ITEM_QUALITY_COLORS
+            and ITEM_QUALITY_COLORS[quality] then
+            local c=ITEM_QUALITY_COLORS[quality]
+            selectedTitle:SetTextColor(c.r,c.g,c.b)
+        end
+    end
     selectedDetail:SetText(item.sourceText or "획득처 확인 중")
     originalText:SetText("원본 장비: "..(item.name or ("아이템 "..item.id)))
     itemEntry:SetText(tostring(item.id))
@@ -698,6 +713,10 @@ function AP.RefreshUI()
         selectedSlot=1
         selectedItem=nil
         if itemEntry then itemEntry:SetText("") end
+        if selectedTitle then
+            selectedTitle:SetText("장비를 선택하세요.")
+            selectedTitle:SetTextColor(IVORY[1],IVORY[2],IVORY[3])
+        end
         if refreshOptions then refreshOptions(1) end
         if refreshBrowser then refreshBrowser() end
     end
