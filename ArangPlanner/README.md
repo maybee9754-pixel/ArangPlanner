@@ -18,3 +18,6 @@ Existing GearPlanner data and previous ArangPlanner goal IDs are not removed.
 
 ## 1.9.2 right panel layout
 The in-game wide right-hand panel separates its source-filtered equipment browser from the selection, upgrade track, rank, Venomstone, Catalyst and registration editor. All code and art are independent ArangPlanner assets; GearPlanner code/art is not bundled.
+
+## 1.9.4 standalone right panel
+ArangPlanner now renders its own native raid/dungeon loot browser, selection preview and target-registration options with no GearPlanner dependency. The previous optional runtime panel bridge is no longer loaded. Existing specialization targets remain in ArangPlannerDB.
