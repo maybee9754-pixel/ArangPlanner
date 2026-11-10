@@ -289,31 +289,44 @@ local function selectItem(data)
     end
     selectedItem=data
     selectedTitle:SetText(data.name or ("아이템 "..data.id))
-    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot)
-        ..(data.kind=="tierToken" and " · 티어 장비 교환 토큰" or " · 아이템 ID "..tostring(data.id)))
+    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot).." · "
+        ..(data.sourceText or "획득처 확인 필요"))
     itemEntry:SetText(tostring(data.id))
 end
 local function makeRow(y,h,depth,title,kind,action,item)
     local f=CreateFrame("Button",nil,child,"BackdropTemplate")
     f:SetPoint("TOPLEFT",child,"TOPLEFT",depth,-y)
     f:SetSize(266-depth,h)
-    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    local isGroup=kind=="group"
-    f:SetBackdropColor(isGroup and .22 or .095,isGroup and .16 or .078,.05,.94)
-    f:SetBackdropBorderColor(.53,.38,.13,isGroup and .95 or .38)
-    local x=item and 39 or 9
-    local text=label(f,title,x,item and 6 or 6,"GameFontHighlightSmall",isGroup and GOLD or IVORY)
-    text:SetWidth(f:GetWidth()-x-3)
-    text:SetWordWrap(false)
+    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
+        edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    local group=(kind=="group")
+    local zone=(kind=="instance")
+    f:SetBackdropColor(group and .21 or zone and .15 or .075,
+        group and .155 or zone and .105 or .065,.04,.96)
+    f:SetBackdropBorderColor(group and .7 or zone and .46 or .27,
+        group and .51 or zone and .32 or .22,.13,
+        group and 1 or zone and .85 or .42)
+    local textX=item and 43 or 10
+    local name=label(f,title,textX,item and 6 or 7,
+        "GameFontHighlightSmall",group and GOLD or IVORY)
+    name:SetWidth(f:GetWidth()-textX-7)
+    name:SetWordWrap(false)
     if item then
         local icon=f:CreateTexture(nil,"ARTWORK")
-        icon:SetSize(30,30)
-        icon:SetPoint("LEFT",4,0)
-        icon:SetTexture(item.icon or 134400)
+        icon:SetSize(34,34)
+        icon:SetPoint("LEFT",5,0)
+        icon:SetTexture(item.icon or (C_Item and C_Item.GetItemIconByID
+            and C_Item.GetItemIconByID(item.id)) or 134400)
+        local source=label(f,"획득처: "..(item.sourceText or "미확인"),
+            textX,25,"GameFontHighlightSmall",MUTED)
+        source:SetWidth(f:GetWidth()-textX-5)
+        source:SetWordWrap(false)
         f:SetScript("OnEnter",function()
             GameTooltip:SetOwner(f,"ANCHOR_RIGHT")
             if item.link then pcall(GameTooltip.SetHyperlink,GameTooltip,item.link)
-            elseif GameTooltip.SetItemByID then pcall(GameTooltip.SetItemByID,GameTooltip,item.id) end
+            elseif GameTooltip.SetItemByID then
+                pcall(GameTooltip.SetItemByID,GameTooltip,item.id)
+            end
             GameTooltip:Show()
         end)
         f:SetScript("OnLeave",function()GameTooltip:Hide()end)
@@ -336,7 +349,7 @@ refreshBrowser=function()
         n=n+1
     end
     local function candidate(item)
-        return catalog.IsCandidate(item.id)
+        return catalog.IsEquipment(item.id)
             and (not selectedSlot or catalog.MatchesSlot(item.id,selectedSlot))
     end
     local function listItems(items,depth,emptyMessage,status)
@@ -345,9 +358,7 @@ refreshBrowser=function()
             if n>=170 then break end
             if candidate(item) then
                 shown=shown+1
-                local title=item.kind=="tierToken" and ("[티어 교환] "..item.name)
-                    or item.name
-                add(42,depth,title,"item",function()selectItem(item)end,item)
+                add(49,depth,item.name,"item",function()selectItem(item)end,item)
             end
         end
         if shown==0 then
@@ -390,23 +401,16 @@ refreshBrowser=function()
                 if n>=170 then break end
                 local id=instance.id
                 local opened=openInstance[id]==true
-                add(29,9,(opened and "[-] " or "[+] ")..instance.name,"instance",function()
-                    openInstance[id]=not openInstance[id];refreshBrowser()
-                end)
+                add(30,8,(opened and "[-] " or "[+] ")..instance.name,
+                    "instance",function()
+                        openInstance[id]=not openInstance[id]
+                        refreshBrowser()
+                    end)
                 if opened then
-                    local bosses=catalog.Encounters(id)
-                    for _,boss in ipairs(bosses) do
-                        if n>=170 then break end
-                        local key=tostring(id)..":"..tostring(boss.id)
-                        local bossOpened=openBoss[key]==true
-                        add(27,18,(bossOpened and "[-] " or "[+] ")..boss.name,"boss",function()
-                            openBoss[key]=not openBoss[key];refreshBrowser()
-                        end)
-                        if bossOpened then
-                            local items,status=catalog.Loot(id,boss.id)
-                            listItems(items,27,"선택 부위 전리품 없음",status)
-                        end
-                    end
+                    -- Raid section is one combined gear list, with boss source
+                    -- displayed on the second line of every item.
+                    local items,status=catalog.RaidLoot(id)
+                    listItems(items,14,"선택 부위 전리품 없음",status)
                 end
             end
         end
