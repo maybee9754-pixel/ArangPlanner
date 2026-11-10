@@ -1,4 +1,4 @@
--- ArangPlanner 1.4.1: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.4.2: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -134,7 +134,9 @@ local function modelRefresh()
         local ok=pcall(model.SetUnit,model,"player")
         modelFallback:SetShown(not ok)
         if ok then modelFallback:Hide();modelLoaded=true end
-        if ok and model.SetCamera then pcall(model.SetCamera,model,0) end
+        if ok and model.SetCamera then pcall(model.SetCamera,model,1) end
+        if ok and model.SetPortraitZoom then pcall(model.SetPortraitZoom,model,0) end
+        if ok and model.SetCamDistanceScale then pcall(model.SetCamDistanceScale,model,1.15) end
     end
 end
 local slots={
@@ -270,7 +272,7 @@ function AP.RefreshUI()
         r.name:SetText(name or "")
         local lvl
         if data and data.itemId and C_Item and C_Item.GetDetailedItemLevelInfo then
-            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.itemId or 0)
+            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.link or data.itemId or 0)
             if ok and type(v)=="number" then lvl=v end
         end
         r.lvl:SetText(lvl and tostring(lvl) or "")
