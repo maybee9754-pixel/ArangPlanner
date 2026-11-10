@@ -39,3 +39,6 @@ Add native raid boss subheaders within each expanded raid, keeping selectable it
 
 ## v1.10.0 standalone loot panel compact selection editor
 Raw item ID text field stays internal rather than occupying visible space. The selected gear name receives native Blizzard item-quality color. Upgrade track, enhancement rank, Venomstone/Catalyst flags and register button are grouped closer in the lower panel. No GearPlanner dependency.
+
+## v1.10.1 equipment editor popup fixes
+The track and upgrade selector list opens entirely within the lower option editor instead of obscuring the loot browser. Selecting a new unrelated candidate resets planning flags, and selected equipment names maintain readable item-quality text. Clear the icon and selection on slot/spec changes. No GearPlanner dependency.
