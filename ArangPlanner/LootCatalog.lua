@@ -159,7 +159,7 @@ function M.MakeTierReward(tokenID,boss)
  end
  return {id=rewardID,slot=slot,name=itemName or ("아이템 ID "..rewardID),
      link=link,icon=icon,kind="tierGear",sourceBoss=boss or "",
-     sourceText=(boss or "공격대").." · 티어 교환",tokenSourceID=tokenID}
+     sourceText=(boss or "공격대").." · 울라텍 (잠자는 똬리)",tokenSourceID=tokenID}
 end
 -- Stable, explicit boss-to-token mapping for this season. The encounter
 -- journal loot filter sometimes hides consumable-class tier tokens.
@@ -285,7 +285,7 @@ function M.RaidLoot(instance)
     seen[item.id]=true
     item.sourceBoss=boss.name
     item.sourceText=boss.name..
-      (item.kind=="tierGear" and " · 티어 교환" or "")
+      (item.kind=="tierGear" and " · 울라텍 (잠자는 똬리)" or "")
     all[#all+1]=item
    end
   end
