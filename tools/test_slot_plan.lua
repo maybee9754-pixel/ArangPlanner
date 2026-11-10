@@ -8,6 +8,11 @@ local itemTypes={
     [104]={"INVTYPE_FEET",4},
     [105]={"INVTYPE_HEAD",4,5}, -- armor subclass cosmetic
     [281227]={"INVTYPE_HEAD",4,0}, -- confirmed extra loot ID override
+    [271510]={"INVTYPE_HEAD",4,2}, -- actual rogue tier helm
+    [271508]={"INVTYPE_SHOULDER",4,2},
+    [271513]={"INVTYPE_CHEST",4,2},
+    [271511]={"INVTYPE_HAND",4,2}, -- actual rogue tier gloves
+    [271509]={"INVTYPE_LEGS",4,2},
 }
 C_Item={
     GetItemInfoInstant=function(id)
@@ -70,18 +75,36 @@ local sources=AP.LootCatalog.Instances()
 assert(#sources.raid==1 and #sources.dungeon==1)
 local loot,status=AP.LootCatalog.Loot(10,500)
 assert(status=="ready")
-assert(#loot==4,"expected 3 combat items + 1 rogue hands token, got "..#loot)
-local tokenFound=false
-for _,v in ipairs(loot) do
- if v.id==270911 and v.kind=="tierToken" then tokenFound=true end
+assert(#loot==4,"expected 3 normal items + 1 real tier wearable, got "..#loot)
+local foundTier=false
+for _,item in ipairs(loot) do
+ if item.id==271511 and item.kind=="tierGear" then
+  foundTier=true
+  assert(item.tokenSourceID==270911)
+ end
+ assert(item.kind~="tierToken" and item.id~=270911,"token leaked into visible list")
 end
-assert(tokenFound,"verified hands tier token was not shown")
-assert(AP.LootCatalog.IsTierTokenForClass(270911))
-assert(AP.LootCatalog.MatchesSlot(270911,10))
-assert(not AP.LootCatalog.MatchesSlot(270911,1))
-assert(not AP.LootCatalog.IsTierTokenForClass(270910),"wrong class token was included")
+assert(foundTier,"tier gloves must replace hands token")
+assert(AP.LootCatalog.MatchesSlot(271511,10))
+assert(not AP.LootCatalog.MatchesSlot(270911,10),
+    "non-wearable token must not be selectable gear")
+assert(AP.LootCatalog.MatchesSlot(271510,1))
+assert(not AP.LootCatalog.IsTierTokenForClass(270910),"wrong class token included")
+local raids,raidStatus=AP.LootCatalog.RaidLoot(10)
+assert(raidStatus=="ready" and #raids==4)
+local raidTier=false
+for _,item in ipairs(raids) do
+ if item.id==271511 then
+  raidTier=true
+  assert(item.sourceText=="매장된 파수꾼 · 티어 교환")
+ end
+end
+assert(raidTier,"raid-aggregated list missing tier source")
 local dungeonLoot=AP.LootCatalog.DungeonLoot(20)
-assert(#dungeonLoot==3,"expected deduped dungeon gear without token")
+assert(#dungeonLoot==3,"dungeon includes tier from another zone")
+for _,item in ipairs(dungeonLoot) do
+ assert(item.sourceText=="매장된 파수꾼")
+end
 assert(filterClass==0 and filterSpec==0,"journal filter not restored")
 assert(next(AP.GetSlotTargets())==nil,"fresh planner must be empty")
 assert(AP.GetSlotTarget(1)==nil)
@@ -90,8 +113,9 @@ assert(not AP.AssignSlotTarget(1,105),"cosmetic assigned to head")
 assert(not AP.AssignSlotTarget(1,281227),"known extra loot assigned to head")
 assert(not AP.AssignSlotTarget(1,102),"trinket accepted as head")
 assert(AP.AssignSlotTarget(1,100))
-assert(AP.AssignSlotTarget(10,270911))
-assert(not AP.AssignSlotTarget(1,270911),"tier hands token assigned to head")
+assert(AP.AssignSlotTarget(10,271511))
+assert(not AP.AssignSlotTarget(10,270911),"non-wearable token assigned to slot")
+assert(not AP.AssignSlotTarget(1,271511),"tier hands wearable assigned to head")
 assert(AP.AssignSlotTarget(13,102))
 assert(AP.GetSlotTarget(1)==100)
 assert(select(1,AP.SlotTargetCounts())==3)
@@ -101,4 +125,4 @@ assert(#rows==3 and rows[1].slot==1 and rows[2].slot==10 and rows[3].slot==13)
 assert(AP.ClearSlotTarget(1))
 assert(AP.GetSlotTarget(1)==nil)
 assert(AP.GetSlotTarget(13)==102)
-print("PASS: independent empty slot plan, class/equipment filters, slot selection & target records")
+print("PASS: tier actual gear mapped, token hidden, raid/dungeon sources, registered wearables")
