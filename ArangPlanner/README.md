@@ -27,3 +27,6 @@ Native ArangPlanner-only right panel: source multi-filter, dark themed category 
 
 ## 1.9.6 in-game visibility and layout corrections
 Fix the selected equipment slot title being hidden by the refresh button, default-open the first raid/dungeon loot sections, improve dropdown labels and readability, and prevent missing-item and bottom-slot labels from overlapping. Still a self-contained ArangPlanner implementation.
+
+## v1.9.7 dropdown refinement
+The rank and upgrade dropdowns use native, individually drawn dark menu rows with radio selection indicators instead of inherited red Blizzard buttons; the popup stays an overlay and does not move other fields. No GearPlanner code or asset is required.
