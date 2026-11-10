@@ -48,6 +48,7 @@ local function state()
     if type(record.targets) ~= "table" then record.targets = {} end
     if type(record.lastSeen) ~= "table" then record.lastSeen = {} end
     if type(record.slotTargets) ~= "table" then record.slotTargets = {} end
+    if type(record.slotTargetOptions) ~= "table" then record.slotTargetOptions = {} end
     return record, key, spec
 end
 
@@ -205,11 +206,46 @@ function AP.AssignSlotTarget(slot,itemID)
     end
     return true
 end
+-- Per-slot UI planning metadata. These preferences are intentionally not
+-- represented as acquired item upgrades or actual enchant/catalyst results.
+local TRACKS={탐험가=true,모험가=true,노련가=true,용사=true,영웅=true,신화=true}
+function AP.GetSlotOptions(slot)
+    local record=state()
+    local v=record.slotTargetOptions[tostring(tonumber(slot) or 0)]
+    if type(v)~="table" then
+        return {track="영웅",rank=1,venom=false,catalyst=false}
+    end
+    return {
+        track=TRACKS[v.track] and v.track or "영웅",
+        rank=type(v.rank)=="number" and math.max(1,math.min(9,math.floor(v.rank))) or 1,
+        venom=v.venom==true,catalyst=v.catalyst==true,
+    }
+end
+function AP.SetSlotOptions(slot,options)
+    slot=tonumber(slot)
+    if not slot or not PLAN_SLOTS[slot] or type(options)~="table" then
+        return false
+    end
+    local old=AP.GetSlotOptions(slot)
+    local track=TRACKS[options.track] and options.track or old.track
+    local rank=tonumber(options.rank)
+    rank=rank and math.max(1,math.min(9,math.floor(rank))) or old.rank
+    local record=state()
+    record.slotTargetOptions[tostring(slot)]={
+        track=track,rank=rank,
+        venom=options.venom==true,
+        catalyst=options.catalyst==true and
+            (slot==1 or slot==3 or slot==5 or slot==10 or slot==7),
+    }
+    return true
+end
+
 function AP.ClearSlotTarget(slot)
     slot=tonumber(slot)
     if not slot or not PLAN_SLOTS[slot] then return false end
     local record=state()
     record.slotTargets[tostring(slot)]=nil
+    record.slotTargetOptions[tostring(slot)]=nil
     return true
 end
 function AP.GetSlotTargetRows()
