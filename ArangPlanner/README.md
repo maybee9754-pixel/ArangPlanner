@@ -1,16 +1,16 @@
-# ArangPlanner 1.7.0-alpha
+# ArangPlanner v1.8.0-alpha
 
-This update preserves the original black/gold GUI, independently written core, existing spec-specific empty gear-target slots, current-slot filtering, registration and compact mode.
+UI: black/gold, with compact mode, slot-click gear targeting, and equipment-only registration. The right loot browser is now item-first like classic GearPlanner Arang: **category → raid/dungeon → actual wearable item → source boss / loot route**. Raid items are aggregated from all bosses and grouped at raid level (no nested boss rows). Dungeon items remain aggregated from all dungeon bosses. Each item row uses Blizzard item icon and a separate second line for its verified encounter source. Unverified delve/outdoor loot remains empty rather than fictional.
 
-Loot navigator is intentionally structured as:
-- 공격대 > 맹독 심연 > individual bosses > items
-- 공격대 > 님리사 (해일결속 동굴) > individual boss > items
-- 공격대 > 키식스 (키식스 해방) > individual boss > items
-- 쐐기돌 던전 > each dungeon > combined, deduplicated gear (no per-boss headers)
-- 구렁, 야외 > category headings; no invented items or repetitive placeholder rows.
+Season 2 tier bosses drop class/armor-group tokens, but **the browser displays the actual resulting tier armor item**, not the consumable token. Internal token ID is solely source metadata. v1.8 currently includes externally verified Rogue (class 4) armor IDs for the five Tier 36 slots:
+- Head 271510 (Chosen Bloodslayer's Spirit Shroud)
+- Shoulder 271508 (Chosen Bloodslayer's Voodoo Guards)
+- Chest 271513 (Chosen Bloodslayer's Banded Poncho)
+- Hands 271511 (Chosen Bloodslayer's Fanged Grips)
+- Legs 271509 (Chosen Bloodslayer's Reinforced Pants)
 
-Virtual EJ instance named '쐐기돌 던전' is explicitly excluded from the M+ dungeon list.
+The source is shown as “매장된 파수꾼 · 티어 교환” for gloves. Other classes' unverified tier item IDs are deliberately omitted rather than replaced with token items or guessed IDs; class coverage will be expanded once verified. Relevant non-tier items still come from the in-game Encounter Journal.
 
-Midnight Season 2 Tier 36 class-specific tokens are additional eligible gear-acquisition paths, mapped to tier head/shoulders/chest/hands/legs. A qualifying token appears under its verified raid boss in the relevant gear-slot filter even if Blizzard treats it as consumable. Registering saves *token ID as goal*, not claimed ownership of the resulting tier armor. This is not a catalyst-conversion or token redemption tracker. User may remove targets with Ctrl-click.
+The registered target ID is always a wearable gear item ID; **a tier token owned in bags does not count as possessing the tier armor**. Old season data, saved target slots, legacy GearPlanner databases and old tokens remain untouched.
 
-Cosmetic items and known additional-loot exclusions remain excluded. Season mapping is isolated in SeasonData.lua. Dungeon aggregation uses verified WoW encounter journal loot, not private GearPlanner source/data. Automated Lua mocked API tests cover token filtering, slot assignment, wrong-class exclusion and dungeon aggregation. WoW client runtime must be verified separately.
+Automated CI checks Lua syntax, native API mocks for actual tier gear and boss source, loot grouping, target-slot matching and release ZIP integrity. This test does not replace verification inside the WoW client.
