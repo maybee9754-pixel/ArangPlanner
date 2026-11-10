@@ -171,6 +171,7 @@ local selectedItem=nil
 local itemEntry
 local selectedTitle,selectedDetail
 local refreshOptions
+local choiceIcon
 local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
@@ -254,7 +255,7 @@ local function clear()
 end
 local optionPane=pane(right,11,486,529,246)
 bar(optionPane,"선택 장비 · 등록 설정")
-local choiceIcon=newIcon(right,22,526,40,40)
+choiceIcon=newIcon(right,22,526,40,40)
 choiceIcon:EnableMouse(false)
 choiceIcon.icon:SetTexture(nil)
 selectedTitle=label(right,"장비를 선택하세요.",72,531,"GameFontNormal",GOLD)
