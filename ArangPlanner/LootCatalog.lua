@@ -66,18 +66,23 @@ function M.Encounters(instance)
     end
     return rows
 end
+-- Return (rows,status). status is loading/empty/ready, avoiding false "no loot".
+-- Query both journal-modern and legacy APIs without invented item IDs.
 function M.Loot(instance,encounter)
-    if not ensure() then return {} end
+    if not ensure() then return {},"unavailable" end
     safe(EJ_SelectInstance,instance)
     safe(EJ_SelectEncounter,encounter)
-    local classBefore,specBefore=safe(EJ_GetLootFilter)
+    local oldClass,oldSpec=safe(EJ_GetLootFilter)
     local _,_,classID=UnitClass("player")
-    local specIndex=GetSpecialization and GetSpecialization()
-    local specID=specIndex and GetSpecializationInfo and GetSpecializationInfo(specIndex)
+    local idx=GetSpecialization and GetSpecialization()
+    local specID=idx and GetSpecializationInfo and GetSpecializationInfo(idx)
     if classID and specID then safe(EJ_SetLootFilter,classID,specID) end
-    local num=safe(EJ_GetNumLoot)
-    local rows,seen={},{}
-    for i=1,math.min(type(num)=="number" and num or 0,180) do
+
+    local count=safe(EJ_GetNumLoot)
+    local upper=math.min(type(count)=="number" and count>0 and count or 50,200)
+    local result,seen={},{}
+    local valid=0
+    for i=1,upper do
         local v
         if C_EncounterJournal and type(C_EncounterJournal.GetLootInfoByIndex)=="function" then
             v=safe(C_EncounterJournal.GetLootInfoByIndex,i)
@@ -85,13 +90,30 @@ function M.Loot(instance,encounter)
             local id,enc,name,icon,slot,armor,link=safe(EJ_GetLootInfoByIndex,i)
             if id then v={itemID=id,encounterID=enc,name=name,icon=icon,slot=slot,armorType=armor,link=link} end
         end
-        if type(v)=="table" and type(v.itemID)=="number" and not seen[v.itemID]
-            and (v.encounterID==nil or v.encounterID==encounter) then
-            seen[v.itemID]=true
-            rows[#rows+1]={id=v.itemID,name=v.name or ("아이템 "..v.itemID),
-                icon=v.icon,slot=v.slot,link=v.link}
+        if type(v)=="table" and type(v.itemID)=="number" then
+            valid=valid+1
+            if not seen[v.itemID] and (v.encounterID==nil or v.encounterID==encounter) then
+                seen[v.itemID]=true
+                result[#result+1]={id=v.itemID,
+                    name=v.name or ("아이템 "..v.itemID),
+                    icon=v.icon,slot=v.slot,filterType=v.filterType,link=v.link}
+            end
+        elseif (not count or count==0) and i>=6 then
+            break
         end
     end
-    if classBefore~=nil then safe(EJ_SetLootFilter,classBefore,specBefore) end
-    return rows
+    if oldClass~=nil then safe(EJ_SetLootFilter,oldClass,oldSpec) end
+    if #result>0 then return result,"ready" end
+    if (count==nil or count==0) and valid==0 then return result,"loading" end
+    return result,"empty"
+end
+function M.Diagnostics(instance,encounter)
+    if not ensure() then return "모험 안내서 없음" end
+    safe(EJ_SelectInstance,instance)
+    safe(EJ_SelectEncounter,encounter)
+    local count=safe(EJ_GetNumLoot)
+    local v=C_EncounterJournal and safe(C_EncounterJournal.GetLootInfoByIndex,1)
+    return string.format("지역 %s 보스 %s / EJ_GetNumLoot=%s / 첫 아이템=%s",
+        tostring(instance),tostring(encounter),tostring(count),
+        tostring(type(v)=="table" and v.itemID or "nil"))
 end
