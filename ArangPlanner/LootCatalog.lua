@@ -5,8 +5,8 @@ AP.LootCatalog=M
 local cache,key
 local function safe(fn,...)
     if type(fn)~="function" then return nil end
-    local ok,a,b,c,d,e=pcall(fn,...)
-    if ok then return a,b,c,d,e end
+    local ok,a,b,c,d,e,f,g,h=pcall(fn,...)
+    if ok then return a,b,c,d,e,f,g,h end
 end
 local function ensure()
     if type(EJ_GetInstanceByIndex)~="function" then
@@ -84,9 +84,11 @@ local TYPES={
     INVTYPE_HOLDABLE=true,INVTYPE_SHIELD=true},
 }
 function M.EquipmentType(itemID)
-    if type(itemID)~="number" or type(GetItemInfoInstant)~="function" then return nil end
+    if type(itemID)~="number" then return nil end
+    local fn=C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+    if type(fn)~="function" then return nil end
     -- (itemID, itemType, itemSubType, equipLoc, icon, classID, subclassID)
-    local _,_,_,equipLoc,icon,classID=safe(GetItemInfoInstant,itemID)
+    local _,_,_,equipLoc,icon,classID=safe(fn,itemID)
     if type(equipLoc)~="string" or equipLoc=="" then return nil end
     if classID~=2 and classID~=4 then return nil end
     return equipLoc,icon
