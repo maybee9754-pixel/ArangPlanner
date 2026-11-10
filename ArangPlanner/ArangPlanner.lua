@@ -208,7 +208,7 @@ function AP.AssignSlotTarget(slot,itemID)
 end
 -- Per-slot UI planning metadata. These preferences are intentionally not
 -- represented as acquired item upgrades or actual enchant/catalyst results.
-local TRACKS={탐험가=true,모험가=true,노련가=true,용사=true,영웅=true,신화=true}
+local TRACKS={["탐험가"]=true,["모험가"]=true,["노련가"]=true,["용사"]=true,["영웅"]=true,["신화"]=true}
 function AP.GetSlotOptions(slot)
     local record=state()
     local v=record.slotTargetOptions[tostring(tonumber(slot) or 0)]
