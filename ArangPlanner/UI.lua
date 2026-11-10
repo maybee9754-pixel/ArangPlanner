@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.2: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.3: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -179,6 +179,7 @@ function AP.SelectPlanSlot(slot)
     if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
     if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
     if refreshOptions then refreshOptions(slot) end
+    if AP.SyncGearPlannerSlot then AP.SyncGearPlannerSlot(slot) end
     if AP.RefreshUI then AP.RefreshUI() end
     if refreshBrowser then refreshBrowser() end
 end
@@ -684,6 +685,14 @@ function AP.ToggleUI()
             for i=2,#content do content[i]:Hide() end
         end
         AP.RefreshUI()
-        if not compact then refreshBrowser() end
+        if not compact then
+            refreshBrowser()
+            if AP.AttachGearPlannerPanel and AP.AttachGearPlannerPanel(ROOT,right) then
+                AP.SyncGearPlannerSlot(selectedSlot or 1)
+            end
+        end
     end
 end
+ROOT:HookScript("OnHide",function()
+    if AP.DetachGearPlannerPanel then AP.DetachGearPlannerPanel() end
+end)
