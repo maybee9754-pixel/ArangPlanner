@@ -289,7 +289,8 @@ local function selectItem(data)
     end
     selectedItem=data
     selectedTitle:SetText(data.name or ("아이템 "..data.id))
-    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot).." · 아이템 ID "..tostring(data.id))
+    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot)
+        ..(data.kind=="tierToken" and " · 티어 장비 교환 토큰" or " · 아이템 ID "..tostring(data.id)))
     itemEntry:SetText(tostring(data.id))
 end
 local function makeRow(y,h,depth,title,kind,action,item)
@@ -323,8 +324,9 @@ end
 refreshBrowser=function()
     if not ROOT:IsShown() or not right:IsShown() then return end
     if not AP.LootCatalog then return end
-    local sources,reason=AP.LootCatalog.Instances()
-    slotButton:SetText("부위: "..AP.LootCatalog.SlotLabel(selectedSlot))
+    local catalog=AP.LootCatalog
+    local sources,reason=catalog.Instances()
+    slotButton:SetText("부위: "..catalog.SlotLabel(selectedSlot))
     clear()
     local y,n=0,0
     local function add(h,depth,title,kind,fn,item)
@@ -333,67 +335,123 @@ refreshBrowser=function()
         y=y+h+3
         n=n+1
     end
+    local function candidate(item)
+        return catalog.IsCandidate(item.id)
+            and (not selectedSlot or catalog.MatchesSlot(item.id,selectedSlot))
+    end
+    local function listItems(items,depth,emptyMessage,status)
+        local shown=0
+        for _,item in ipairs(items or {}) do
+            if n>=170 then break end
+            if candidate(item) then
+                shown=shown+1
+                local title=item.kind=="tierToken" and ("[티어 교환] "..item.name)
+                    or item.name
+                add(42,depth,title,"item",function()selectItem(item)end,item)
+            end
+        end
+        if shown==0 then
+            local msg=status=="loading" and "전리품 불러오는 중 · 클릭해 새로고침"
+                or status=="filter-unavailable" and "전문화 필터 적용 실패"
+                or status=="unavailable" and "모험 안내서 연결 실패"
+                or emptyMessage or "선택 부위 전리품 없음"
+            add(27,depth,msg,"text",refreshBrowser)
+        end
+    end
     if not sources then
-        add(42,0,reason or "모험 안내서를 불러올 수 없습니다.","group")
+        add(38,0,reason or "모험 안내서를 불러올 수 없습니다.","group")
     else
-        local sections={{"raid","공격대"},{"dungeon","던전"},{"delve","구렁"},{"outdoor","야외"}}
-        for _,section in ipairs(sections) do
-            local category,labelName=section[1],section[2]
-            add(29,0,(expanded[category] and "[-]  " or "[+]  ")..labelName,"group",function()
-                expanded[category]=not expanded[category]
-                refreshBrowser()
-            end)
-            if expanded[category] then
-                local entries=sources[category] or {}
-                if #entries==0 then
-                    local empty=(category=="delve" or category=="outdoor")
-                        and "전리품 데이터 준비 중" or "모험 안내서 목록 없음"
-                    add(30,9,empty,"text")
+        local names={
+            {"맹독 심연",{"맹독 심연","The Venomous Abyss"}},
+            {"님리사",{"해일결속 동굴","The Tidebound Grotto"}},
+            {"키식스",{"키식스 해방","The Unbinding of Kithix"}},
+        }
+        local ordered={}
+        local taken={}
+        for _,wanted in ipairs(names) do
+            for _,instance in ipairs(sources.raid or {}) do
+                local found=false
+                local actual=(instance.name or ""):lower()
+                for _,alias in ipairs(wanted[2]) do
+                    if actual:find(alias:lower(),1,true) then found=true;break end
                 end
-                for _,place in ipairs(entries) do
-                    if n>=170 then break end
-                    local id=place.id
-                    local opened=openInstance[id]==true
-                    add(29,8,(opened and "[-] " or "[+] ")..place.name,"instance",function()
-                        openInstance[id]=not openInstance[id]
+                if found and not taken[instance.id] then
+                    taken[instance.id]=true
+                    ordered[#ordered+1]={id=instance.id,name=wanted[1]}
+                    break
+                end
+            end
+        end
+        add(31,0,(expanded.raid and "[-]  " or "[+]  ").."공격대","group",function()
+            expanded.raid=not expanded.raid;refreshBrowser()
+        end)
+        if expanded.raid then
+            for _,instance in ipairs(ordered) do
+                if n>=170 then break end
+                local id=instance.id
+                local opened=openInstance[id]==true
+                add(29,9,(opened and "[-] " or "[+] ")..instance.name,"instance",function()
+                    openInstance[id]=not openInstance[id];refreshBrowser()
+                end)
+                if opened then
+                    local bosses=catalog.Encounters(id)
+                    for _,boss in ipairs(bosses) do
+                        if n>=170 then break end
+                        local key=tostring(id)..":"..tostring(boss.id)
+                        local bossOpened=openBoss[key]==true
+                        add(27,18,(bossOpened and "[-] " or "[+] ")..boss.name,"boss",function()
+                            openBoss[key]=not openBoss[key];refreshBrowser()
+                        end)
+                        if bossOpened then
+                            local items,status=catalog.Loot(id,boss.id)
+                            listItems(items,27,"선택 부위 전리품 없음",status)
+                        end
+                    end
+                end
+            end
+        end
+        add(31,0,(expanded.dungeon and "[-]  " or "[+]  ").."쐐기돌 던전","group",function()
+            expanded.dungeon=not expanded.dungeon;refreshBrowser()
+        end)
+        if expanded.dungeon then
+            for _,instance in ipairs(sources.dungeon or {}) do
+                if n>=170 then break end
+                local title=instance.name or ""
+                -- EJ lists a virtual "Mythic+ Dungeons" instance; it must not
+                -- appear as another selectable dungeon under the category.
+                local lower=title:lower()
+                if title~="쐐기돌 던전" and lower~="mythic+ dungeons"
+                    and lower~="mythic dungeons" then
+                    local id=instance.id
+                    local opened=openInstance["d"..id]==true
+                    add(29,9,(opened and "[-] " or "[+] ")..title,"instance",function()
+                        openInstance["d"..id]=not openInstance["d"..id]
                         refreshBrowser()
                     end)
                     if opened then
-                        local bosses=AP.LootCatalog.Encounters(id)
-                        if #bosses==0 then add(27,17,"보스 정보 없음","text") end
-                        for _,boss in ipairs(bosses) do
-                            if n>=170 then break end
-                            local key=tostring(id)..":"..tostring(boss.id)
-                            local bossOpened=openBoss[key]==true
-                            add(26,17,(bossOpened and "[-] " or "[+] ")..boss.name,"boss",function()
-                                openBoss[key]=not openBoss[key];refreshBrowser()
-                            end)
-                            if bossOpened then
-                                local items,loadStatus=AP.LootCatalog.Loot(id,boss.id)
-                                local shown=0
-                                for _,item in ipairs(items) do
-                                    if n>=170 then break end
-                                    local matches=AP.LootCatalog.IsEquipment(item.id)
-                                        and (not selectedSlot or AP.LootCatalog.MatchesSlot(item.id,selectedSlot))
-                                    if matches then
-                                        shown=shown+1
-                                        add(42,25,item.name,"item",function()selectItem(item)end,item)
-                                    end
-                                end
-                                if shown==0 then
-                                    local message=loadStatus=="loading" and "전리품 로딩 중 · 다시 시도"
-                                        or loadStatus=="unavailable" and "모험 안내서 연결 실패"
-                                        or loadStatus=="filter-unavailable" and "전문화 필터 확인 실패"
-                                        or loadStatus=="empty" and "전문화 착용 장비 없음 · 진단"
-                                        or "선택 부위 장비 없음"
-                                    add(29,22,message,"text",function()
-                                        if loadStatus=="empty" and AP.LootCatalog.Diagnostics then
-                                            alert(AP.LootCatalog.Diagnostics(id,boss.id))
-                                        else refreshBrowser() end
-                                    end)
-                                end
-                            end
-                        end
+                        local items,status=catalog.DungeonLoot(id)
+                        listItems(items,22,"선택 부위 전리품 없음",status)
+                    end
+                end
+            end
+        end
+        -- Delve/outdoor source providers are unpopulated. Keep clean category
+        -- headers without repeating misleading "data preparation" rows.
+        for _,section in ipairs({{"delve","구렁"},{"outdoor","야외"}}) do
+            local key,title=section[1],section[2]
+            add(31,0,(expanded[key] and "[-]  " or "[+]  ")..title,"group",function()
+                expanded[key]=not expanded[key];refreshBrowser()
+            end)
+            if expanded[key] then
+                for _,instance in ipairs(sources[key] or {}) do
+                    local id=instance.id
+                    local opened=openInstance[key..id]==true
+                    add(29,9,(opened and "[-] " or "[+] ")..instance.name,"instance",function()
+                        openInstance[key..id]=not openInstance[key..id];refreshBrowser()
+                    end)
+                    if opened and catalog.DungeonLoot then
+                        local items,status=catalog.DungeonLoot(id)
+                        listItems(items,22,"전리품 없음",status)
                     end
                 end
             end

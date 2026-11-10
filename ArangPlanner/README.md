@@ -1,12 +1,16 @@
-# ArangPlanner 1.6.1-alpha
+# ArangPlanner 1.7.0-alpha
 
-Original black-gold WoW addon. The central pane now starts with **EMPTY, clickable target slots**, never automatically populated from the character's equipped inventory. Click a center slot to filter the right-hand list to items that fit that actual slot. Select loot under Raid → Instance → Boss or Dungeon → Instance → Boss, then press Register. The registered goal is shown only in the selected central slot. Ctrl+click clears a slot.
+This update preserves the original black/gold GUI, independently written core, existing spec-specific empty gear-target slots, current-slot filtering, registration and compact mode.
 
-The right-hand loot panel applies the **current specialization's Encounter Journal loot filter** and game-reported equipment inventory types. Non-equipment, such as food, reagents and consumables, is excluded. If the journal cannot verify the spec filter, the panel shows an error rather than unfiltered loot. Blizzard's C_Item.GetItemInfoInstant provides equip location, item class and icon. Items are still constrained by the game journal's loot data and available cached metadata.
+Loot navigator is intentionally structured as:
+- 공격대 > 맹독 심연 > individual bosses > items
+- 공격대 > 님리사 (해일결속 동굴) > individual boss > items
+- 공격대 > 키식스 (키식스 해방) > individual boss > items
+- 쐐기돌 던전 > each dungeon > combined, deduplicated gear (no per-boss headers)
+- 구렁, 야외 > category headings; no invented items or repetitive placeholder rows.
 
-Each character and specialization has an independent saved target-slot map in ArangPlannerDB. Legacy target IDs are retained in the DB unchanged but NOT automatically imported into the new planner (avoiding misleading counts and unexpected target slots). Existing GearPlanner data remains untouched. The left progress counts now use registered target slots only. SeasonData.lua / LootCatalog.lua remain separate for future seasons.
+Virtual EJ instance named '쐐기돌 던전' is explicitly excluded from the M+ dungeon list.
 
-Current raid/dungeon source list comes from Encounter Journal; delve and outdoor data mappings remain WIP. This version is an alpha: no WoW-client runtime verification has been performed. An automated Lua mock test checks empty slots, non-equipment exclusion, class/spec-filter calls, item slot compatibility and persistence data behaviors.
+Midnight Season 2 Tier 36 class-specific tokens are additional eligible gear-acquisition paths, mapped to tier head/shoulders/chest/hands/legs. A qualifying token appears under its verified raid boss in the relevant gear-slot filter even if Blizzard treats it as consumable. Registering saves *token ID as goal*, not claimed ownership of the resulting tier armor. This is not a catalyst-conversion or token redemption tracker. User may remove targets with Ctrl-click.
 
-## 1.6.1 additional-loot exclusion
-The normal loot browser excludes non-equipment and additionally excludes armor Cosmetic subclass (subclass ID 5), localized Cosmetic items, and season-verified extra-loot ID 281227 (Nek'zali cosmetic helm). These rules also apply when registering a slot, not just in list display. The season registry is independent, extensible and never relies on item name strings to exclude a verified item. WoW's EncounterJournal loot API does not directly expose a general 'additional loot' section marker, so other equipable supplemental rewards require verified season-specific IDs to exclude exhaustively. All prior targets remain stored and unaffected.
+Cosmetic items and known additional-loot exclusions remain excluded. Season mapping is isolated in SeasonData.lua. Dungeon aggregation uses verified WoW encounter journal loot, not private GearPlanner source/data. Automated Lua mocked API tests cover token filtering, slot assignment, wrong-class exclusion and dungeon aggregation. WoW client runtime must be verified separately.

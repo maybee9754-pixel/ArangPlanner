@@ -38,8 +38,8 @@ function EJ_SetLootFilter(c,s)filterClass,filterSpec=c,s end
 function EJ_SelectInstance()end
 function EJ_SelectEncounter()end
 function EJ_GetNumLoot()return 4 end
-function EJ_GetInstanceByIndex(i,raid)if i==1 then return raid and 10 or 20,raid and "Test Raid" or "Test Dungeon" end end
-function EJ_GetEncounterInfoByIndex(i)if i==1 then return "Test Boss",nil,500 end end
+function EJ_GetInstanceByIndex(i,raid)if i==1 then return raid and 10 or 20,raid and "맹독 심연" or "Test Dungeon" end end
+function EJ_GetEncounterInfoByIndex(i)if i==1 then return "매장된 파수꾼",nil,500 end end
 function EJ_GetNumTiers()return 2 end
 function EJ_GetCurrentTier()return 1 end
 function EJ_SelectTier()end
@@ -70,7 +70,18 @@ local sources=AP.LootCatalog.Instances()
 assert(#sources.raid==1 and #sources.dungeon==1)
 local loot,status=AP.LootCatalog.Loot(10,500)
 assert(status=="ready")
-assert(#loot==3,"expected 3 equip items, got "..#loot)
+assert(#loot==4,"expected 3 combat items + 1 rogue hands token, got "..#loot)
+local tokenFound=false
+for _,v in ipairs(loot) do
+ if v.id==270911 and v.kind=="tierToken" then tokenFound=true end
+end
+assert(tokenFound,"verified hands tier token was not shown")
+assert(AP.LootCatalog.IsTierTokenForClass(270911))
+assert(AP.LootCatalog.MatchesSlot(270911,10))
+assert(not AP.LootCatalog.MatchesSlot(270911,1))
+assert(not AP.LootCatalog.IsTierTokenForClass(270910),"wrong class token was included")
+local dungeonLoot=AP.LootCatalog.DungeonLoot(20)
+assert(#dungeonLoot==3,"expected deduped dungeon gear without token")
 assert(filterClass==0 and filterSpec==0,"journal filter not restored")
 assert(next(AP.GetSlotTargets())==nil,"fresh planner must be empty")
 assert(AP.GetSlotTarget(1)==nil)
@@ -79,12 +90,14 @@ assert(not AP.AssignSlotTarget(1,105),"cosmetic assigned to head")
 assert(not AP.AssignSlotTarget(1,281227),"known extra loot assigned to head")
 assert(not AP.AssignSlotTarget(1,102),"trinket accepted as head")
 assert(AP.AssignSlotTarget(1,100))
+assert(AP.AssignSlotTarget(10,270911))
+assert(not AP.AssignSlotTarget(1,270911),"tier hands token assigned to head")
 assert(AP.AssignSlotTarget(13,102))
 assert(AP.GetSlotTarget(1)==100)
-assert(select(1,AP.SlotTargetCounts())==2)
+assert(select(1,AP.SlotTargetCounts())==3)
 assert(select(1,AP.TargetCounts())==0,"legacy target counts leaked")
 local rows=AP.GetSlotTargetRows()
-assert(#rows==2 and rows[1].slot==1 and rows[2].slot==13)
+assert(#rows==3 and rows[1].slot==1 and rows[2].slot==10 and rows[3].slot==13)
 assert(AP.ClearSlotTarget(1))
 assert(AP.GetSlotTarget(1)==nil)
 assert(AP.GetSlotTarget(13)==102)
