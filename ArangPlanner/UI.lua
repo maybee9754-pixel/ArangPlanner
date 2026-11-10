@@ -1,11 +1,11 @@
--- ArangPlanner 1.9.1: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.2: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
 local IVORY={.94,.91,.83}
 local MUTED={.64,.62,.57}
 local ROOT=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
-ROOT:SetSize(1460,850)
+ROOT:SetSize(1565,850)
 ROOT:SetPoint("CENTER")
 ROOT:SetClampedToScreen(true)
 ROOT:SetFrameStrata("DIALOG")
@@ -72,7 +72,7 @@ local function alert(message)
 end
 
 -- Header: render the independently drawn AP mark, with no copied third-party emblem.
-local top=pane(ROOT,13,11,1434,66)
+local top=pane(ROOT,13,11,1539,66)
 local ap=top:CreateTexture(nil,"ARTWORK")
 ap:SetPoint("LEFT",18,0);ap:SetSize(49,49)
 ap:SetTexture("Interface\\AddOns\\ArangPlanner\\Textures\\ap-logo.tga")
@@ -92,12 +92,12 @@ end
 for i,name in ipairs(names) do
     tabs[i]=button(top,name,316+(i-1)*145,12,137,39,function()switch(i)end)
 end
-button(top,"X",1380,16,38,31,function()ROOT:Hide()end)
+button(top,"X",1485,16,38,31,function()ROOT:Hide()end)
 
 -- Fixed three-column hierarchy, matching the approved screenshot.
 local left=pane(ROOT,13,88,346,744)
 local mid=pane(ROOT,366,88,628,744)
-local right=pane(ROOT,1001,88,446,744)
+local right=pane(ROOT,1001,88,551,744)
 content[1]=CreateFrame("Frame",nil,ROOT)
 content[1]:SetAllPoints(ROOT)
 
@@ -227,26 +227,38 @@ local help=label(mid,"빈 슬롯 클릭 → 전리품 선택 → 등급·강화 
 help:SetWidth(575)
 
 -- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
-bar(right,"전리품 목록")
+bar(right,"획득 장비 탐색")
+-- The independent ArangPlanner browser has a compact source filter above a
+-- scrollable loot list; the lower panel is dedicated to item configuration.
+local sourceFilters={"전체","공격대","쐐기돌","구렁","야외"}
+local sourceFilterIndex=1
+local filterButton=button(right,"전체 획득처 ▾",370,44,160,28,nil)
+filterButton:SetScript("OnClick",function()
+    sourceFilterIndex=sourceFilterIndex%#sourceFilters+1
+    filterButton:SetText(sourceFilters[sourceFilterIndex].." 획득처 ▾")
+    if refreshBrowser then refreshBrowser() end
+end)
 local expanded={raid=true,dungeon=true,delve=true,outdoor=true}
 local openInstance,openBoss={},{}
 local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
-browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-59)
-browser:SetSize(400,444)
+browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-81)
+browser:SetSize(502,396)
 local child=CreateFrame("Frame",nil,browser)
-child:SetSize(374,444)
+child:SetSize(476,396)
 browser:SetScrollChild(child)
 local buttons={}
 local function clear()
     for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
     wipe(buttons)
 end
-selectedTitle=label(right,"장비를 선택하세요.",20,518,"GameFontNormal",GOLD)
-selectedTitle:SetWidth(404)
-selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",20,540,"GameFontHighlightSmall",MUTED)
-selectedDetail:SetWidth(405)
+local optionPane=pane(right,11,486,529,246)
+bar(optionPane,"선택 장비 · 등록 설정")
+selectedTitle=label(right,"장비를 선택하세요.",24,529,"GameFontNormal",GOLD)
+selectedTitle:SetWidth(494)
+selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",24,550,"GameFontHighlightSmall",MUTED)
+selectedDetail:SetWidth(493)
 itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
-itemEntry:SetPoint("TOPLEFT",25,-568);itemEntry:SetSize(302,28)
+itemEntry:SetPoint("TOPLEFT",29,-576);itemEntry:SetSize(482,26)
 itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
 
 -- Configuration is a saved *plan*, not evidence of an upgraded item.
@@ -255,18 +267,18 @@ local chosenTrack="영웅"
 local chosenRank=1
 local venomFlag=false
 local catalystFlag=false
-local trackLabel=label(right,"등급",20,612,"GameFontNormal",GOLD)
-local rankLabel=label(right,"강화 단계",20,647,"GameFontNormal",GOLD)
-local trackButton=button(right,"영웅 ▾",117,603,303,29,nil)
-local rankButton=button(right,"1/6 ▾",117,638,303,29,nil)
+local trackLabel=label(right,"등급",26,611,"GameFontNormal",GOLD)
+local rankLabel=label(right,"강화 단계",26,649,"GameFontNormal",GOLD)
+local trackButton=button(right,"영웅 ▾",139,606,377,29,nil)
+local rankButton=button(right,"1/6 ▾",139,642,377,29,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-venomCheck:SetPoint("TOPLEFT",18,-671)
+venomCheck:SetPoint("TOPLEFT",23,-675)
 venomCheck:SetSize(27,27)
-label(right,"맹독석 (계획)",52,675,"GameFontHighlight",IVORY)
+label(right,"맹독석 (계획)",57,680,"GameFontHighlight",IVORY)
 local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-catalystCheck:SetPoint("TOPLEFT",214,-671)
+catalystCheck:SetPoint("TOPLEFT",272,-675)
 catalystCheck:SetSize(27,27)
-label(right,"티어 변환 (계획)",248,675,"GameFontHighlight",IVORY)
+label(right,"티어 변환 (계획)",306,680,"GameFontHighlight",IVORY)
 local canCatalyst={ [1]=true,[3]=true,[5]=true,[7]=true,[10]=true }
 refreshOptions=function(slot)
     local v=AP.GetSlotOptions(slot or 1)
@@ -318,7 +330,7 @@ local function registerItem()
     itemEntry:SetText("")
     if AP.RefreshUI then AP.RefreshUI() end
 end
-button(right,"등록",16,700,410,33,registerItem)
+button(right,"선택 장비 등록",23,708,493,30,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
 itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
@@ -346,7 +358,7 @@ end
 local function makeRow(y,h,depth,title,kind,action,item)
     local f=CreateFrame("Button",nil,child,"BackdropTemplate")
     f:SetPoint("TOPLEFT",child,"TOPLEFT",depth,-y)
-    f:SetSize(374-depth,h)
+    f:SetSize(476-depth,h)
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
         edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     local group=(kind=="group")
@@ -356,7 +368,7 @@ local function makeRow(y,h,depth,title,kind,action,item)
     f:SetBackdropBorderColor(group and .7 or zone and .46 or .27,
         group and .51 or zone and .32 or .22,.13,
         group and 1 or zone and .85 or .42)
-    local textX=item and 43 or 10
+    local textX=item and 48 or 12
     local name=label(f,title,textX,item and 6 or 7,
         "GameFontHighlightSmall",group and GOLD or IVORY)
     name:SetWidth(f:GetWidth()-textX-7)
@@ -369,7 +381,7 @@ local function makeRow(y,h,depth,title,kind,action,item)
             and C_Item.GetItemIconByID(item.id)) or 134400)
         local source=label(f,"획득처: "..(item.sourceText or "미확인"),
             textX,25,"GameFontHighlightSmall",MUTED)
-        source:SetWidth(f:GetWidth()-textX-5)
+        source:SetWidth(f:GetWidth()-textX-8)
         source:SetWordWrap(false)
         f:SetScript("OnEnter",function()
             GameTooltip:SetOwner(f,"ANCHOR_RIGHT")
@@ -396,6 +408,13 @@ refreshBrowser=function()
         makeRow(y,h,depth,title,kind,fn or function()end,item)
         y=y+h+3
         n=n+1
+    end
+    local function sourceAllowed(section)
+        return sourceFilterIndex==1
+            or (sourceFilterIndex==2 and section=="raid")
+            or (sourceFilterIndex==3 and section=="dungeon")
+            or (sourceFilterIndex==4 and section=="delve")
+            or (sourceFilterIndex==5 and section=="outdoor")
     end
     local function candidate(item)
         return catalog.IsEquipment(item.id)
@@ -442,6 +461,7 @@ refreshBrowser=function()
                 end
             end
         end
+        if sourceAllowed("raid") then
         add(31,0,(expanded.raid and "[-]  " or "[+]  ").."공격대","group",function()
             expanded.raid=not expanded.raid;refreshBrowser()
         end)
@@ -463,6 +483,8 @@ refreshBrowser=function()
                 end
             end
         end
+        end
+        if sourceAllowed("dungeon") then
         add(31,0,(expanded.dungeon and "[-]  " or "[+]  ").."쐐기돌 던전","group",function()
             expanded.dungeon=not expanded.dungeon;refreshBrowser()
         end)
@@ -488,10 +510,12 @@ refreshBrowser=function()
                 end
             end
         end
+        end
         -- Delve/outdoor source providers are unpopulated. Keep clean category
         -- headers without repeating misleading "data preparation" rows.
         for _,section in ipairs({{"delve","구렁"},{"outdoor","야외"}}) do
             local key,title=section[1],section[2]
+            if sourceAllowed(key) then
             add(31,0,(expanded[key] and "[-]  " or "[+]  ")..title,"group",function()
                 expanded[key]=not expanded[key];refreshBrowser()
             end)
@@ -508,11 +532,12 @@ refreshBrowser=function()
                     end
                 end
             end
+            end
         end
     end
-    child:SetHeight(math.max(445,y))
+    child:SetHeight(math.max(396,y))
 end
-button(right,"새로고침",330,564,92,32,function()
+button(right,"새로고침",266,44,95,28,function()
     if AP.LootCatalog then AP.LootCatalog.Invalidate() end
     refreshBrowser()
 end)
@@ -530,7 +555,7 @@ end)
 
 -- Other top-level tabs are honest WIP panels, not made-up acquisition records.
 for i=2,#names do
-    local holder=pane(ROOT,13,88,1434,744)
+    local holder=pane(ROOT,13,88,1539,744)
     content[i]=holder
     bar(holder,names[i])
     label(holder,"이 화면은 개발 중입니다. 아직 실제 데이터와 연동되지 않았습니다.",40,86,"GameFontNormalLarge",IVORY)
@@ -631,7 +656,7 @@ local function setCompact(state)
     compact=not not state
     if compact then
         ROOT:SetSize(460,225)
-    else ROOT:SetSize(1460,850) end
+    else ROOT:SetSize(1565,850) end
     top:SetShown(not compact)
     left:SetShown(not compact)
     mid:SetShown(not compact)
