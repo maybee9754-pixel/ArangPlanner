@@ -111,6 +111,8 @@ end
 function M.MatchesSlot(itemID,slot)
     local allowed=TYPES[tonumber(slot)]
     if not allowed then return false end
+    local token=AP.TierTokens and AP.TierTokens[tonumber(itemID)]
+    if token then return M.IsTierTokenForClass(itemID) and token.slot==tonumber(slot) end
     local loc=M.EquipmentType(itemID)
     return loc and allowed[loc] or false
 end
@@ -120,6 +122,57 @@ function M.SlotLabel(slot)
         [11]="반지 1",[12]="반지 2",[13]="장신구 1",[14]="장신구 2",
         [15]="등",[16]="주무기",[17]="보조무기"}
     return names[tonumber(slot)] or "전체"
+end
+
+
+local function tierInfo(itemID)
+ return AP.TierTokens and AP.TierTokens[tonumber(itemID)]
+end
+function M.TierTokenInfo(itemID) return tierInfo(itemID) end
+function M.IsTierTokenForClass(itemID)
+ local t=tierInfo(itemID)
+ if not t then return false end
+ local _,_,classID=UnitClass("player")
+ return type(classID)=="number" and t.classes[classID]==true
+end
+function M.IsCandidate(itemID)
+ return M.IsEquipment(itemID) or M.IsTierTokenForClass(itemID)
+end
+-- Stable, explicit boss-to-token mapping for this season. The encounter
+-- journal loot filter sometimes hides consumable-class tier tokens.
+local function matchingBossToken(instance,encounter)
+ local source=M.Instances()
+ local validRaid=false
+ for _,raid in ipairs(source and source.raid or {}) do
+  local name=raid.name or ""
+  if raid.id==instance and
+    (name:find("맹독 심연",1,true) or name:lower():find("venomous abyss",1,true))
+  then validRaid=true;break end
+ end
+ if not validRaid then return {} end
+ local encounterName
+ for _,v in ipairs(M.Encounters(instance)) do
+  if v.id==encounter then encounterName=(v.name or ""):lower();break end
+ end
+ if not encounterName then return {} end
+ local result={}
+ for id,t in pairs(AP.TierTokens or {}) do
+  if M.IsTierTokenForClass(id) then
+   for _,name in ipairs(AP.TierTokenBossNames[t.boss] or {}) do
+    if encounterName:find(name:lower(),1,true) then
+     local icon
+     if C_Item and type(C_Item.GetItemIconByID)=="function" then
+      icon=safe(C_Item.GetItemIconByID,id)
+     end
+     result[#result+1]={id=id,slot=t.slot,name=t.name.." · 티어 "..M.SlotLabel(t.slot),
+       kind="tierToken",icon=icon,source="season-token"}
+     break
+    end
+   end
+  end
+ end
+ table.sort(result,function(a,b)return a.id<b.id end)
+ return result
 end
 
 -- Return (rows,status). status is loading/empty/ready, avoiding false "no loot".
@@ -157,16 +210,24 @@ function M.Loot(instance,encounter)
         end
         if type(v)=="table" and type(v.itemID)=="number" then
             valid=valid+1
-            if not seen[v.itemID] and M.IsEquipment(v.itemID)
+            if not seen[v.itemID] and M.IsCandidate(v.itemID)
                 and (v.encounterID==nil or v.encounterID==encounter) then
                 seen[v.itemID]=true
+                local token=tierInfo(v.itemID)
                 result[#result+1]={id=v.itemID,
-                    name=v.name or ("아이템 "..v.itemID),
-                    icon=v.icon,slot=v.slot,filterType=v.filterType,link=v.link}
+                    name=token and (token.name.." · 티어 "..M.SlotLabel(token.slot))
+                        or v.name or ("아이템 "..v.itemID),
+                    icon=v.icon,slot=v.slot,link=v.link,
+                    kind=token and "tierToken" or "equipment"}
             end
         elseif (not count or count==0) and i>=6 then
             break
         end
+    end
+    -- Add class-eligible boss tokens that the journal omitted from its
+    -- filtered item results. Never inject cosmetics or arbitrary extras.
+    for _,v in ipairs(matchingBossToken(instance,encounter)) do
+        if not seen[v.id] then seen[v.id]=true;result[#result+1]=v end
     end
     if oldClass~=nil then safe(EJ_SetLootFilter,oldClass,oldSpec) end
     if #result>0 then return result,"ready" end
@@ -182,4 +243,21 @@ function M.Diagnostics(instance,encounter)
     return string.format("지역 %s 보스 %s / EJ_GetNumLoot=%s / 첫 아이템=%s",
         tostring(instance),tostring(encounter),tostring(count),
         tostring(type(v)=="table" and v.itemID or "nil"))
+end
+
+
+-- M+ dungeon loot: one deduplicated list per dungeon, no boss headers.
+-- Use each encounter's filtered journal loot so we don't require EJ's
+-- instance-level aggregate to be available on all client builds.
+function M.DungeonLoot(instance)
+ local out,seen,loading={}, {}, false
+ for _,boss in ipairs(M.Encounters(instance)) do
+  local loot,status=M.Loot(instance,boss.id)
+  if status=="loading" then loading=true end
+  for _,item in ipairs(loot) do
+   if not seen[item.id] then seen[item.id]=true;out[#out+1]=item end
+  end
+ end
+ table.sort(out,function(a,b)return (a.name or "")<(b.name or "") end)
+ return out,#out>0 and "ready" or (loading and "loading" or "empty")
 end
