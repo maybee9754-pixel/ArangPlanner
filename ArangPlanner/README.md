@@ -30,3 +30,6 @@ Fix the selected equipment slot title being hidden by the refresh button, defaul
 
 ## v1.9.7 dropdown refinement
 The rank and upgrade dropdowns use native, individually drawn dark menu rows with radio selection indicators instead of inherited red Blizzard buttons; the popup stays an overlay and does not move other fields. No GearPlanner code or asset is required.
+
+## v1.9.8 style update
+Standalone bronze/stone right-panel controls, darker loot rows, purple raid groups, highlighted target selection and native custom dropdowns. Existing registered goals remain unchanged. No GearPlanner source/assets/dependency.
