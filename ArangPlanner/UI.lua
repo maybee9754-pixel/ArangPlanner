@@ -168,10 +168,15 @@ end
 local selectedSlot=nil
 local refreshBrowser
 local selectedItem=nil
+local itemEntry
+local selectedTitle,selectedDetail
 local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
     selectedItem=nil
+    if itemEntry then itemEntry:SetText("") end
+    if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
+    if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
     if AP.RefreshUI then AP.RefreshUI() end
     if refreshBrowser then refreshBrowser() end
 end
@@ -186,6 +191,7 @@ for _,sd in ipairs(slots) do
     local slot,x,y=sd[1],sd[2],sd[3]
     local f=newIcon(mid,x,y,54,49)
     f.slot=slot
+    f:RegisterForClicks("LeftButtonUp","RightButtonUp")
     f.icon:SetTexture(nil)
     local itemLevel=label(f,"",3,30,"GameFontNormalSmall",GOLD)
     local equippedName=label(mid,"",x+((x>440) and -92 or 60),y+12,"GameFontHighlightSmall",IVORY)
@@ -234,11 +240,11 @@ local function clear()
     for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
     wipe(buttons)
 end
-local selectedTitle=label(right,"가운데 장비 부위를 선택하세요.",18,466,"GameFontNormal",GOLD)
+selectedTitle=label(right,"가운데 장비 부위를 선택하세요.",18,466,"GameFontNormal",GOLD)
 selectedTitle:SetWidth(296)
-local selectedDetail=label(right,"현재 전문화에서 착용할 수 있는 장비만 표시",18,495,"GameFontHighlightSmall",MUTED)
+selectedDetail=label(right,"현재 전문화에서 착용할 수 있는 장비만 표시",18,495,"GameFontHighlightSmall",MUTED)
 selectedDetail:SetWidth(290)
-local itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
+itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
 itemEntry:SetPoint("TOPLEFT",25,-524);itemEntry:SetSize(183,29)
 itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
 local function registerItem()
