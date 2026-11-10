@@ -1,4 +1,4 @@
--- ArangPlanner 1.10.0: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.10.1: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -194,11 +194,13 @@ local refreshBrowser
 local selectedItem=nil
 local itemEntry
 local selectedTitle,selectedDetail
+local choiceIcon
 local refreshOptions
 local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
     selectedItem=nil
+    if choiceIcon then choiceIcon.icon:SetTexture(nil) end
     if itemEntry then itemEntry:SetText("") end
     if selectedTitle then
         selectedTitle:SetText("장비를 선택하세요.")
@@ -276,7 +278,9 @@ local function dropdown(anchor,choices,onChoose,width,selected)
     local frame=CreateFrame("Frame",nil,right,"BackdropTemplate")
     frame.anchor=anchor
     frame:SetSize(width or anchor:GetWidth(),#choices*24+8)
-    frame:SetPoint("BOTTOMRIGHT",anchor,"TOPRIGHT",0,3)
+    -- Keep all six choices inside the lower editor rather than covering
+    -- the equipment loot list. Fly out in the unused left editor column.
+    frame:SetPoint("TOPLEFT",right,"TOPLEFT",18,-548)
     frame:SetFrameStrata("TOOLTIP")
     frame:SetFrameLevel(ROOT:GetFrameLevel()+95)
     frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
@@ -455,7 +459,6 @@ separator:SetPoint("TOPLEFT",options,"TOPLEFT",7,-6)
 separator:SetPoint("TOPRIGHT",options,"TOPRIGHT",-7,-6)
 separator:SetHeight(2)
 separator:SetColorTexture(.65,.46,.13,1)
-local choiceIcon
 choiceIcon=newIcon(right,35,496,39,39)
 choiceIcon:EnableMouse(false)
 choiceIcon.icon:SetTexture(nil)
@@ -550,17 +553,33 @@ local function selectItem(item)
     if not AP.LootCatalog.MatchesSlot(item.id,selectedSlot or 1) then
         alert("선택한 부위와 일치하지 않는 장비입니다.");return
     end
+    local slot=selectedSlot or 1
+    if not selectedItem or selectedItem.id~=item.id then
+        -- Planning flags are not evidence of an item's upgrades. A newly
+        -- selected candidate must not inherit another item's flags.
+        if AP.GetSlotTarget(slot)==item.id then
+            refreshOptions(slot)
+        else
+            chosenTrack="영웅"
+            chosenRank=1
+            venomFlag=false
+            catalystFlag=false
+            updateOptions()
+        end
+    end
     selectedItem=item
     choiceIcon.icon:SetTexture(item.icon or (C_Item and C_Item.GetItemIconByID
         and C_Item.GetItemIconByID(item.id)) or 134400)
     selectedTitle:SetText(item.name or ("아이템 "..item.id))
+    selectedTitle:SetTextColor(IVORY[1],IVORY[2],IVORY[3])
     local itemInfo=C_Item and C_Item.GetItemInfo or GetItemInfo
     if type(itemInfo)=="function" then
         local ok,_,__,quality=pcall(itemInfo,item.id)
         if ok and type(quality)=="number" and ITEM_QUALITY_COLORS
             and ITEM_QUALITY_COLORS[quality] then
             local c=ITEM_QUALITY_COLORS[quality]
-            selectedTitle:SetTextColor(c.r,c.g,c.b)
+            selectedTitle:SetTextColor(math.max(.66,c.r),
+                math.max(.54,c.g),math.max(.73,c.b))
         end
     end
     selectedDetail:SetText(item.sourceText or "획득처 확인 중")
@@ -713,6 +732,7 @@ function AP.RefreshUI()
         selectedSlot=1
         selectedItem=nil
         if itemEntry then itemEntry:SetText("") end
+        if choiceIcon then choiceIcon.icon:SetTexture(nil) end
         if selectedTitle then
             selectedTitle:SetText("장비를 선택하세요.")
             selectedTitle:SetTextColor(IVORY[1],IVORY[2],IVORY[3])
