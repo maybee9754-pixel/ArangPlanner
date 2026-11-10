@@ -1,4 +1,4 @@
--- ArangPlanner 1.5.0: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.5.1: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -123,16 +123,21 @@ missingText:SetWidth(280);missingText:SetJustifyH("LEFT")
 bar(mid,"장비 관리")
 local specText=label(mid,"현재 장비",20,50,"GameFontNormal",GOLD)
 -- Specialization-responsive visual backdrop, no 3D model or proprietary art.
+-- WoW provided specialization backgrounds only. Never stretch a low-res
+-- 64x64 specialization icon into a large 3D panel.
 local specBacking=CreateFrame("Frame",nil,mid)
-specBacking:SetPoint("TOPLEFT",137,-105)
-specBacking:SetSize(285,362)
+specBacking:SetPoint("TOPLEFT",118,-92)
+specBacking:SetSize(320,399)
 local specTexture=specBacking:CreateTexture(nil,"BACKGROUND")
 specTexture:SetAllPoints()
-specTexture:SetAlpha(.14)
+specTexture:SetAlpha(.15)
 local specShade=specBacking:CreateTexture(nil,"BORDER")
 specShade:SetAllPoints()
-specShade:SetColorTexture(.03,.025,.035,.52)
-local lastSpec
+specShade:SetColorTexture(.025,.02,.028,.72)
+local specSmallIcon=mid:CreateTexture(nil,"ARTWORK")
+specSmallIcon:SetPoint("TOPLEFT",mid,"TOPLEFT",480,-46)
+specSmallIcon:SetSize(19,19)
+local specLoaded
 local function modelRefresh()
     local index=GetSpecialization and GetSpecialization()
     if not index then return end
@@ -145,18 +150,17 @@ local function modelRefresh()
         local ok,a,_,__,d=pcall(GetSpecializationInfo,index)
         if ok then id,icon=a,d end
     end
-    if lastSpec==id then return end
-    lastSpec=id
+    if type(id)=="number" and specLoaded==id then return end
+    specLoaded=id
+    specSmallIcon:SetTexture(icon or 134400)
     if type(background)=="string" and background~="" then
-        local path=background:find("\\",1,true) and background or ("Interface\\TALENTFRAME\\"..background)
+        local path=background:find("\\",1,true) and background
+            or ("Interface\\TALENTFRAME\\"..background)
         specTexture:SetTexture(path)
-        specTexture:SetAlpha(.28)
-    elseif icon then
-        specTexture:SetTexture(icon)
-        specTexture:SetAlpha(.17)
+        specTexture:SetAlpha(.18)
     else
-        specTexture:SetTexture("Interface\\TalentFrame\\TalentFrame-TopLeft")
-        specTexture:SetAlpha(.13)
+        -- Leave as dark stone when Blizzard gives no high-resolution art.
+        specTexture:SetTexture(nil)
     end
 end
 local slots={
@@ -309,7 +313,7 @@ refreshBrowser=function()
                                 openBoss[key]=not openBoss[key];refreshBrowser()
                             end)
                             if bossOpened then
-                                local items=AP.LootCatalog.Loot(id,boss.id)
+                                local items,loadStatus=AP.LootCatalog.Loot(id,boss.id)
                                 local shown=0
                                 for _,item in ipairs(items) do
                                     if n>=170 then break end
@@ -320,7 +324,17 @@ refreshBrowser=function()
                                         add(42,25,item.name,"item",function()selectItem(item)end,item)
                                     end
                                 end
-                                if shown==0 then add(29,22,"목록 없음 / 데이터 로딩 중","text") end
+                                if shown==0 then
+                                    local message=loadStatus=="loading" and "전리품 로딩 중 · 다시 시도"
+                                        or loadStatus=="unavailable" and "모험 안내서 연결 실패"
+                                        or loadStatus=="empty" and "전리품 없음 · 진단 클릭"
+                                        or "선택 부위의 아이템 없음"
+                                    add(29,22,message,"text",function()
+                                        if loadStatus=="empty" and AP.LootCatalog.Diagnostics then
+                                            alert(AP.LootCatalog.Diagnostics(id,boss.id))
+                                        else refreshBrowser() end
+                                    end)
+                                end
                             end
                         end
                     end
