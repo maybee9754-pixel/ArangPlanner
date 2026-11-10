@@ -21,3 +21,6 @@ The in-game wide right-hand panel separates its source-filtered equipment browse
 
 ## 1.9.4 standalone right panel
 ArangPlanner now renders its own native raid/dungeon loot browser, selection preview and target-registration options with no GearPlanner dependency. The previous optional runtime panel bridge is no longer loaded. Existing specialization targets remain in ArangPlannerDB.
+
+## v1.9.5-alpha standalone equipment browser
+Native ArangPlanner-only right panel: source multi-filter, dark themed category rows, quality-colored loot, highlighted selection, item preview, upgrade track/rank dropdowns and target registration. No GearPlanner install or its files are required. WoW Encounter Journal supplies available loot; unimplemented providers are not falsely populated.
