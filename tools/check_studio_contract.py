@@ -13,7 +13,7 @@ web=(root/"docs/index.html").read_text(encoding="utf-8")
 assert "## Version: 1.4.1-alpha" in toc
 assert "ArangPlanner.lua\nUIContract.lua\nUI.lua" in toc
 assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
-assert "PlayerModel" in ui and "SetInventoryItem" in ui
+assert "DressUpModel" in ui and "SetInventoryItem" in ui
 assert "AP.GetTargetRows" in ui and "AP.TargetCounts" in ui
 assert "AP.AddTarget" in ui and "AP.RemoveTarget" in ui
 assert "ChatEdit_InsertLink" in ui and "AP.ToggleUI" in ui
