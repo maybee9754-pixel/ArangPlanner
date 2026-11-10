@@ -1,4 +1,4 @@
--- ArangPlanner 1.5.1: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.6.0: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -121,7 +121,7 @@ local missingText=label(missing,"",18,55,"GameFontHighlightSmall",IVORY)
 missingText:SetWidth(280);missingText:SetJustifyH("LEFT")
 
 bar(mid,"장비 관리")
-local specText=label(mid,"현재 장비",20,50,"GameFontNormal",GOLD)
+local specText=label(mid,"목표 장비 등록 | 부위를 선택하세요",20,50,"GameFontNormal",GOLD)
 -- Specialization-responsive visual backdrop, no 3D model or proprietary art.
 -- WoW provided specialization backgrounds only. Never stretch a low-res
 -- 64x64 specialization icon into a large 3D panel.
@@ -163,6 +163,18 @@ local function modelRefresh()
         specTexture:SetTexture(nil)
     end
 end
+-- A target can be assigned only after the user selects a slot and registers
+-- an eligible item from the loot panel. No inventory item is auto imported.
+local selectedSlot=nil
+local refreshBrowser
+local selectedItem=nil
+local planSpec=nil
+function AP.SelectPlanSlot(slot)
+    selectedSlot=slot
+    selectedItem=nil
+    if AP.RefreshUI then AP.RefreshUI() end
+    if refreshBrowser then refreshBrowser() end
+end
 local slots={
     {1,15,105},{3,15,163},{5,15,221},{9,15,279},{10,15,337},
     {15,481,105},{6,481,163},{7,481,221},{8,481,279},{11,481,337},
@@ -170,32 +182,46 @@ local slots={
     {16,140,539},{17,350,539}
 }
 local equipIcons={}
-for _,sd in ipairs(slots)do
-    local f=newIcon(mid,sd[2],sd[3],54,49)
-    f.slot=sd[1]
+for _,sd in ipairs(slots) do
+    local slot,x,y=sd[1],sd[2],sd[3]
+    local f=newIcon(mid,x,y,54,49)
+    f.slot=slot
+    f.icon:SetTexture(nil)
     local itemLevel=label(f,"",3,30,"GameFontNormalSmall",GOLD)
-    local equippedName=label(mid,"",sd[2]+((sd[2]>440) and -92 or 60),sd[3]+13,"GameFontHighlightSmall",IVORY)
-    equippedName:SetWidth(90);equippedName:SetWordWrap(false)
-    if sd[2]>440 then equippedName:SetJustifyH("RIGHT") end
+    local equippedName=label(mid,"",x+((x>440) and -92 or 60),y+12,"GameFontHighlightSmall",IVORY)
+    equippedName:SetWidth(90)
+    equippedName:SetWordWrap(false)
+    if x>440 then equippedName:SetJustifyH("RIGHT") end
+    f:SetScript("OnClick",function(self)
+        if IsControlKeyDown and IsControlKeyDown() then
+            if AP.ClearSlotTarget(self.slot) then
+                alert(AP.LootCatalog.SlotLabel(self.slot).." 목표를 비웠습니다.")
+            end
+            AP.RefreshUI()
+        else
+            AP.SelectPlanSlot(self.slot)
+        end
+    end)
     f:SetScript("OnEnter",function(self)
+        local id=AP.GetSlotTarget(self.slot)
         GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
-        GameTooltip:SetInventoryItem("player",self.slot)
+        if id then
+            local ok=pcall(GameTooltip.SetItemByID,GameTooltip,id)
+            if not ok then GameTooltip:SetText(AP.LootCatalog.SlotLabel(self.slot)) end
+        else GameTooltip:SetText(AP.LootCatalog.SlotLabel(self.slot).." · 미등록") end
+        GameTooltip:AddLine("클릭: 부위 선택 / Ctrl+클릭: 목표 제거",.9,.8,.4)
         GameTooltip:Show()
     end)
     f:SetScript("OnLeave",function()GameTooltip:Hide()end)
     equipIcons[#equipIcons+1]={f=f,lvl=itemLevel,name=equippedName}
 end
-local help=label(mid,"장비 아이콘에 마우스를 올리면 실제 아이템 툴팁이 표시됩니다.",24,595,"GameFontHighlightSmall",MUTED)
+local help=label(mid,"빈 슬롯 클릭 → 오른쪽 전리품 선택 → 등록     |     Ctrl+클릭: 목표 제거",24,595,"GameFontHighlightSmall",MUTED)
 help:SetWidth(513)
 
 -- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
 bar(right,"전리품 목록")
-local slotNames={"전체","머리","목","어깨","가슴","손","허리","다리","발","반지","장신구","무기"}
-local slotKeys={"","Head","Neck","Shoulder","Chest","Hand","Waist","Legs","Feet","Finger","Trinket","Hand"}
-local slotFilter=1
 local expanded={raid=true,dungeon=true,delve=true,outdoor=true}
 local openInstance,openBoss={},{}
-local refreshBrowser
 local slotButton=button(right,"부위: 전체",186,48,126,27,nil)
 local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
 browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-85)
@@ -208,19 +234,33 @@ local function clear()
     for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
     wipe(buttons)
 end
-local selectedTitle=label(right,"전리품을 선택하세요.",18,466,"GameFontNormal",GOLD)
+local selectedTitle=label(right,"가운데 장비 부위를 선택하세요.",18,466,"GameFontNormal",GOLD)
 selectedTitle:SetWidth(296)
-local selectedDetail=label(right,"보스 및 아이템을 펼쳐 확인할 수 있습니다.",18,495,"GameFontHighlightSmall",MUTED)
+local selectedDetail=label(right,"현재 전문화에서 착용할 수 있는 장비만 표시",18,495,"GameFontHighlightSmall",MUTED)
 selectedDetail:SetWidth(290)
 local itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
 itemEntry:SetPoint("TOPLEFT",25,-524);itemEntry:SetSize(183,29)
 itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
 local function registerItem()
-    if AP.AddTarget(itemEntry:GetText()) then
-        alert("목표 등록 완료")
-        itemEntry:SetText("")
-        if AP.RefreshUI then AP.RefreshUI() end
-    else alert("아이템 ID 또는 링크를 입력하세요.") end
+    if not selectedSlot then
+        alert("가운데에서 등록할 장비 부위를 먼저 선택하세요.")
+        return
+    end
+    local id=AP.GetItemIDFromText(itemEntry:GetText())
+    if not id then
+        alert("오른쪽에서 아이템을 선택한 뒤 등록하세요.")
+        return
+    end
+    if not AP.LootCatalog or not AP.LootCatalog.MatchesSlot(id,selectedSlot) then
+        alert("선택한 부위에 착용할 수 있는 장비만 등록할 수 있습니다.")
+        return
+    end
+    local ok,reason=AP.AssignSlotTarget(selectedSlot,id)
+    if not ok then alert(reason or "등록 실패");return end
+    alert(AP.LootCatalog.SlotLabel(selectedSlot).." 목표 등록 완료")
+    selectedItem=nil
+    itemEntry:SetText("")
+    if AP.RefreshUI then AP.RefreshUI() end
 end
 button(right,"등록",213,521,96,30,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
@@ -233,8 +273,17 @@ if type(ChatEdit_InsertLink)=="function" then
     end)
 end
 local function selectItem(data)
+    if not selectedSlot then
+        alert("가운데 목표 장비 부위를 먼저 선택하세요.")
+        return
+    end
+    if not AP.LootCatalog.MatchesSlot(data.id,selectedSlot) then
+        alert("선택한 부위와 일치하지 않는 장비입니다.")
+        return
+    end
+    selectedItem=data
     selectedTitle:SetText(data.name or ("아이템 "..data.id))
-    selectedDetail:SetText("아이템 ID "..tostring(data.id))
+    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot).." · 아이템 ID "..tostring(data.id))
     itemEntry:SetText(tostring(data.id))
 end
 local function makeRow(y,h,depth,title,kind,action,item)
@@ -269,6 +318,7 @@ refreshBrowser=function()
     if not ROOT:IsShown() or not right:IsShown() then return end
     if not AP.LootCatalog then return end
     local sources,reason=AP.LootCatalog.Instances()
+    slotButton:SetText("부위: "..AP.LootCatalog.SlotLabel(selectedSlot))
     clear()
     local y,n=0,0
     local function add(h,depth,title,kind,fn,item)
@@ -317,8 +367,8 @@ refreshBrowser=function()
                                 local shown=0
                                 for _,item in ipairs(items) do
                                     if n>=170 then break end
-                                    local matches=slotFilter==1
-                                        or (type(item.slot)=="string" and item.slot:lower():find(slotKeys[slotFilter]:lower(),1,true))
+                                    local matches=AP.LootCatalog.IsEquipment(item.id)
+                                        and (not selectedSlot or AP.LootCatalog.MatchesSlot(item.id,selectedSlot))
                                     if matches then
                                         shown=shown+1
                                         add(42,25,item.name,"item",function()selectItem(item)end,item)
@@ -327,8 +377,9 @@ refreshBrowser=function()
                                 if shown==0 then
                                     local message=loadStatus=="loading" and "전리품 로딩 중 · 다시 시도"
                                         or loadStatus=="unavailable" and "모험 안내서 연결 실패"
-                                        or loadStatus=="empty" and "전리품 없음 · 진단 클릭"
-                                        or "선택 부위의 아이템 없음"
+                                        or loadStatus=="filter-unavailable" and "전문화 필터 확인 실패"
+                                        or loadStatus=="empty" and "전문화 착용 장비 없음 · 진단"
+                                        or "선택 부위 장비 없음"
                                     add(29,22,message,"text",function()
                                         if loadStatus=="empty" and AP.LootCatalog.Diagnostics then
                                             alert(AP.LootCatalog.Diagnostics(id,boss.id))
@@ -345,8 +396,13 @@ refreshBrowser=function()
     child:SetHeight(math.max(370,y))
 end
 slotButton:SetScript("OnClick",function()
-    slotFilter=slotFilter%#slotNames+1
-    slotButton:SetText("부위: "..slotNames[slotFilter])
+    -- Reset the filter, not the registered target slot data.
+    selectedSlot=nil
+    selectedItem=nil
+    itemEntry:SetText("")
+    selectedTitle:SetText("가운데 장비 부위를 선택하세요.")
+    selectedDetail:SetText("현재 전문화의 착용 가능 장비만 표시")
+    AP.RefreshUI()
     refreshBrowser()
 end)
 button(right,"전리품 갱신",20,567,290,31,function()
@@ -388,57 +444,47 @@ local function statValue(index)
 end
 function AP.RefreshUI()
     if not ROOT or not ROOT:IsShown() then return end
-    local total,have=AP.TargetCounts()
+    local total,have=AP.SlotTargetCounts()
     rate:SetText(string.format("%.1f%%  달성률",total>0 and have*100/total or 0))
     counts:SetText(string.format("등록 %d     보유 %d     미보유 %d",total,have,total-have))
     special:SetText("현재 전문화: "..AP.GetSpecName())
-    specText:SetText(AP.GetSpecName().." · 현재 장비")
-    for _,r in ipairs(statRows)do r.value:SetText(statValue(r.index)) end
-    local equipped=AP.GetDisplayRows()
-    local mapped={}
-    for _,r in ipairs(equipped)do mapped[r.slot]=r end
-    for _,r in ipairs(equipIcons)do
+    local specIndex=GetSpecialization and GetSpecialization()
+    local currentSpec=specIndex and GetSpecializationInfo and GetSpecializationInfo(specIndex)
+    if planSpec~=currentSpec then
+        planSpec=currentSpec
+        selectedSlot=nil
+        selectedItem=nil
+        if itemEntry then itemEntry:SetText("") end
+    end
+    specText:SetText(AP.GetSpecName().." · 목표 장비 등록"
+        ..(selectedSlot and (" | "..AP.LootCatalog.SlotLabel(selectedSlot)) or " | 부위를 선택하세요"))
+    for _,r in ipairs(statRows) do r.value:SetText(statValue(r.index)) end
+    local targets=AP.GetSlotTargets()
+    local details=AP.GetSlotTargetRows()
+    local bySlot={}
+    for _,data in ipairs(details) do bySlot[data.slot]=data end
+    for _,r in ipairs(equipIcons) do
         local slot=r.f.slot
-        local data=mapped[slot]
-        local icon=data and data.icon
-        -- The 12.x WoW client may expose restricted item links in a UI context.
-        -- Do not call GetItemInfo(link) unprotected: one failed lookup used to
-        -- abort RefreshUI on the first slot and leave all others as red '?'.
-        if icon then
-            local ok=pcall(r.f.icon.SetTexture,r.f.icon,icon)
-            if not ok then r.f.icon:SetTexture("Interface\\PaperDoll\\UI-Backpack-EmptySlot") end
-        else
-            local fallback
-            if GetInventorySlotInfo then
-                local nameByID={[1]="HeadSlot",[2]="NeckSlot",[3]="ShoulderSlot",[5]="ChestSlot",[6]="WaistSlot",[7]="LegsSlot",[8]="FeetSlot",[9]="WristSlot",[10]="HandsSlot",[11]="Finger0Slot",[12]="Finger1Slot",[13]="Trinket0Slot",[14]="Trinket1Slot",[15]="BackSlot",[16]="MainHandSlot",[17]="SecondaryHandSlot"}
-                local slotName=nameByID[slot]
-                if slotName then
-                    local safe,_,tex=pcall(GetInventorySlotInfo,slotName)
-                    if safe then fallback=tex end
-                end
-            end
-            r.f.icon:SetTexture(fallback or "Interface\\PaperDoll\\UI-Backpack-EmptySlot")
-        end
-        local name
-        if data and data.itemId then
-            local ok,n=pcall(GetItemInfo,data.itemId)
-            if ok and type(n)=="string" then name=n end
-        end
-        r.name:SetText(name or "")
-        local lvl
-        if data and data.itemId and C_Item and C_Item.GetDetailedItemLevelInfo then
-            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.link or data.itemId or 0)
-            if ok and type(v)=="number" then lvl=v end
-        end
-        r.lvl:SetText(lvl and tostring(lvl) or "")
+        local data=bySlot[slot]
+        local active=selectedSlot==slot
+        r.f:SetBackdropBorderColor(active and 1 or .64,active and .83 or .48,
+            active and .25 or .16,1)
+        r.f:SetBackdropColor(active and .18 or .045,active and .13 or .04,
+            active and .045 or .06,1)
+        r.f.icon:SetTexture(data and data.icon or nil)
+        r.lvl:SetText("")
+        r.name:SetText(data and data.name or (AP.LootCatalog.SlotLabel(slot).." · 미등록"))
+        if data and data.status=="착용" then r.lvl:SetText("✓") end
     end
     modelRefresh()
-    local rows=AP.GetTargetRows()
     local missingNames={}
-    for _,data in ipairs(rows) do
-        if data.status=="미확인" then missingNames[#missingNames+1]=data.name end
+    for _,data in ipairs(details) do
+        if data.status=="미확인" then
+            missingNames[#missingNames+1]=AP.LootCatalog.SlotLabel(data.slot)..": "..data.name
+        end
     end
-    missingText:SetText(#missingNames>0 and table.concat(missingNames,"\n") or "미확인 목표 아이템 없음")
+    missingText:SetText(#missingNames>0 and table.concat(missingNames,"\n")
+        or "미획득 목표 아이템 없음")
 end
 function AP.ToggleUI()
     if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI();refreshBrowser() end
@@ -476,7 +522,7 @@ local function setCompact(state)
     for i=2,#content do content[i]:SetShown(not compact and current==i) end
     compactFrame:SetShown(compact)
     if compact then
-        local total,have=AP.TargetCounts()
+        local total,have=AP.SlotTargetCounts()
         compactSpec:SetText("전문화: "..AP.GetSpecName())
         compactCount:SetText(string.format("목표 %d   보유 %d   미보유 %d",total,have,total-have))
     end
