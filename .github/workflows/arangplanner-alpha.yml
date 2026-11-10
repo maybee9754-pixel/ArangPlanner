@@ -1,4 +1,4 @@
-name: Build ArangPlanner v1.9.1 expanded planning dashboard
+name: Build ArangPlanner v1.9.2 expanded planning dashboard
 on:
   push:
     branches: [main]
@@ -65,7 +65,7 @@ jobs:
           root=Path('ArangPlanner')
           expected=['ArangPlanner.toc','ArangPlanner.lua','UIContract.lua','SeasonData.lua','LootCatalog.lua','UI.lua','README.md']
           toc=(root/'ArangPlanner.toc').read_text(encoding='utf-8')
-          assert '## Version: 1.9.1-alpha' in toc
+          assert '## Version: 1.9.2-alpha' in toc
           assert '## SavedVariables: ArangPlannerDB' in toc
           assert [line.strip() for line in toc.splitlines() if line.strip().endswith('.lua')]==['ArangPlanner.lua','UIContract.lua','SeasonData.lua','LootCatalog.lua','UI.lua']
           for f in expected: assert (root/f).is_file(), f
@@ -97,7 +97,7 @@ jobs:
           files+=sorted((root/'Fonts').glob('*.ttf'))
           files.append(root/'Fonts'/'OFL.txt')
           files+=sorted((root/'Textures').glob('*.tga'))
-          target=Path('ArangPlanner_v1.9.1-alpha.zip')
+          target=Path('ArangPlanner_v1.9.2-alpha.zip')
           with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
               for file in files:z.write(file,file.as_posix())
           with zipfile.ZipFile(target,'r') as z:
@@ -119,17 +119,17 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ArangPlanner-v1.9.1-alpha
+          name: ArangPlanner-v1.9.2-alpha
           path: |
-            ArangPlanner_v1.9.1-alpha.zip
-            ArangPlanner_v1.9.1-alpha.zip.sha256
+            ArangPlanner_v1.9.2-alpha.zip
+            ArangPlanner_v1.9.2-alpha.zip.sha256
           retention-days: 30
 
       - name: Publish downloadable Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.9.1-alpha
-          name: 'ArangPlanner v1.9.1-alpha | Black and Gold Equipment Dashboard'
+          tag_name: v1.9.2-alpha
+          name: 'ArangPlanner v1.9.2-alpha | Black and Gold Equipment Dashboard'
           prerelease: false
           draft: false
           body: |
@@ -140,5 +140,5 @@ jobs:
             Back up your current ArangPlanner folder. Keep GearPlanner and SavedVariables untouched.
             Fully exit and restart WoW after installing. Use /arang.
           files: |
-            ArangPlanner_v1.9.1-alpha.zip
-            ArangPlanner_v1.9.1-alpha.zip.sha256
+            ArangPlanner_v1.9.2-alpha.zip
+            ArangPlanner_v1.9.2-alpha.zip.sha256
