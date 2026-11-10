@@ -217,7 +217,7 @@ function AP.GetSlotOptions(slot)
     end
     return {
         track=TRACKS[v.track] and v.track or "영웅",
-        rank=type(v.rank)=="number" and math.max(1,math.min(9,math.floor(v.rank))) or 1,
+        rank=type(v.rank)=="number" and math.max(1,math.min(6,math.floor(v.rank))) or 1,
         venom=v.venom==true,catalyst=v.catalyst==true,
     }
 end
@@ -229,7 +229,7 @@ function AP.SetSlotOptions(slot,options)
     local old=AP.GetSlotOptions(slot)
     local track=TRACKS[options.track] and options.track or old.track
     local rank=tonumber(options.rank)
-    rank=rank and math.max(1,math.min(9,math.floor(rank))) or old.rank
+    rank=rank and math.max(1,math.min(6,math.floor(rank))) or old.rank
     local record=state()
     record.slotTargetOptions[tostring(slot)]={
         track=track,rank=rank,
