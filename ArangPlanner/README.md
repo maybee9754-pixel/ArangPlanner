@@ -33,3 +33,6 @@ The rank and upgrade dropdowns use native, individually drawn dark menu rows wit
 
 ## v1.9.8 style update
 Standalone bronze/stone right-panel controls, darker loot rows, purple raid groups, highlighted target selection and native custom dropdowns. Existing registered goals remain unchanged. No GearPlanner source/assets/dependency.
+
+## 1.9.9 right panel grouping
+Add native raid boss subheaders within each expanded raid, keeping selectable item rows, the GearPlanner-like nested layout, and the existing independent options dropdown. No dependency on GearPlanner.
