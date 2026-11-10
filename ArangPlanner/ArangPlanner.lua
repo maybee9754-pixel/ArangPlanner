@@ -47,6 +47,7 @@ local function state()
     end
     if type(record.targets) ~= "table" then record.targets = {} end
     if type(record.lastSeen) ~= "table" then record.lastSeen = {} end
+    if type(record.slotTargets) ~= "table" then record.slotTargets = {} end
     return record, key, spec
 end
 
@@ -161,6 +162,83 @@ function AP.GetTargetRows()
     end
     table.sort(rows,function(x,y) return x.id < y.id end)
     return rows
+end
+
+-- The equipment planning UI is intentionally EMPTY until users register an
+-- item to a specific slot. Legacy targets stay untouched for data preservation,
+-- but are not silently imported into the new slot plan.
+local PLAN_SLOTS={ [1]=true,[2]=true,[3]=true,[5]=true,[6]=true,[7]=true,
+    [8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[13]=true,
+    [14]=true,[15]=true,[16]=true,[17]=true }
+function AP.GetSlotTargets()
+    local record=state()
+    local result={}
+    for k,id in pairs(record.slotTargets) do
+        local slot=tonumber(k)
+        if PLAN_SLOTS[slot] and type(id)=="number" and id>0 then
+            result[slot]=id
+        end
+    end
+    return result
+end
+function AP.GetSlotTarget(slot)
+    slot=tonumber(slot)
+    if not slot or not PLAN_SLOTS[slot] then return nil end
+    local record=state()
+    local id=record.slotTargets[tostring(slot)]
+    return type(id)=="number" and id or nil
+end
+function AP.AssignSlotTarget(slot,itemID)
+    slot=tonumber(slot)
+    itemID=AP.GetItemIDFromText(tostring(itemID or ""))
+    if not slot or not PLAN_SLOTS[slot] or not itemID or itemID%1~=0 then
+        return false,"올바른 슬롯 또는 아이템 ID가 아닙니다."
+    end
+    if AP.LootCatalog and AP.LootCatalog.MatchesSlot and
+        not AP.LootCatalog.MatchesSlot(itemID,slot) then
+        return false,"선택한 부위에 착용하는 장비가 아닙니다."
+    end
+    local record=state()
+    record.slotTargets[tostring(slot)]=itemID
+    if C_Item and C_Item.RequestLoadItemDataByID then
+        pcall(C_Item.RequestLoadItemDataByID,itemID)
+    end
+    return true
+end
+function AP.ClearSlotTarget(slot)
+    slot=tonumber(slot)
+    if not slot or not PLAN_SLOTS[slot] then return false end
+    local record=state()
+    record.slotTargets[tostring(slot)]=nil
+    return true
+end
+function AP.GetSlotTargetRows()
+    local result={}
+    local equipped,bags=AP.GetPossession()
+    for slot,id in pairs(AP.GetSlotTargets()) do
+        local name,link,icon
+        local ok,n,l,_,__,___,____,_____,______,_______,i=pcall(GetItemInfo,id)
+        if ok then name,link,icon=n,l,i end
+        if not icon and C_Item and C_Item.GetItemIconByID then
+            local found,v=pcall(C_Item.GetItemIconByID,id)
+            if found then icon=v end
+        end
+        local key=tostring(id)
+        result[#result+1]={slot=slot,id=id,name=name or ("아이템 ID "..id),
+            icon=icon,status=equipped[key] and "착용" or
+                (bags[key] and "가방 보유" or "미확인")}
+    end
+    table.sort(result,function(a,b)return a.slot<b.slot end)
+    return result
+end
+function AP.SlotTargetCounts()
+    local total,owned=0,0
+    local equipped,bags=AP.GetPossession()
+    for _,id in pairs(AP.GetSlotTargets()) do
+        total=total+1
+        if equipped[tostring(id)] or bags[tostring(id)] then owned=owned+1 end
+    end
+    return total,owned
 end
 
 function AP.TargetCounts()
