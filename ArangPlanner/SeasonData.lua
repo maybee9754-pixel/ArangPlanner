@@ -43,4 +43,18 @@ AP.TierTokenBossNames={
  explorers={"길 잃은 탐험가","Lost Explorers"},
  vashnik={"바쉬니크","Vashnik"},
 }
+-- The browser lists the actual wearable tier armor, never its source token.
+-- Verified live 12.1 Rogue tier-set item IDs, one actual equip item per slot.
+-- Do not guess other classes' item IDs: unverified mappings remain hidden.
+AP.TierRewardItems={
+ [4]={ -- Rogue: Chosen Bloodslayer's Hexweave
+  [1]=271510, -- Chosen Bloodslayer's Spirit Shroud
+  [3]=271508, -- Chosen Bloodslayer's Voodoo Guards
+  [5]=271513, -- Chosen Bloodslayer's Banded Poncho
+  [10]=271511, -- Chosen Bloodslayer's Fanged Grips
+  [7]=271509, -- Chosen Bloodslayer's Reinforced Pants
+ },
+}
+-- Season token IDs are acquisition-source metadata. Never use token itemID
+-- as the displayed or registered target if a wearable result exists.
 -- Only explicitly confirmed additional-loot cosmetic IDs are excluded.
