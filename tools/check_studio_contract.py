@@ -16,7 +16,7 @@ assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
 assert "specBacking" in ui and "SetInventoryItem" in ui
 assert "AP.LootCatalog.Instances" in ui and "AP.LootCatalog.Loot" in ui
 assert "AP.GetTargetRows" in ui and "AP.TargetCounts" in ui
-assert "AP.AddTarget" in ui and "AP.RemoveTarget" in ui
+assert "AP.AddTarget" in ui and "refreshBrowser" in ui
 assert "ChatEdit_InsertLink" in ui and "AP.ToggleUI" in ui
 assert 'ap-logo.tga' in ui
 assert "ArangPlannerUIContract" in contract
