@@ -10,7 +10,7 @@ core=(root/"ArangPlanner/ArangPlanner.lua").read_text(encoding="utf-8")
 contract=(root/"ArangPlanner/UIContract.lua").read_text(encoding="utf-8")
 css=(root/"docs/ui-contract.css").read_text(encoding="utf-8")
 web=(root/"docs/index.html").read_text(encoding="utf-8")
-assert "## Version: 1.9.0-alpha" in toc
+assert "## Version: 1.9.2-alpha" in toc
 assert "ArangPlanner.lua\nUIContract.lua\nSeasonData.lua\nLootCatalog.lua\nUI.lua" in toc
 assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
 assert "specBacking" in ui and "SetInventoryItem" not in ui
@@ -29,4 +29,4 @@ for font in ["NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-Extra
     assert font in css
     p=root/"ArangPlanner/Fonts"/font
     if p.exists():assert p.stat().st_size>100000
-print("PASS: v1.6 empty slot planner, spec loot filtering and legacy web independently")
+print("PASS: v1.9.2 game UI contract, spec loot filtering and legacy web")
