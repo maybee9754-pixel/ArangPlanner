@@ -1,4 +1,4 @@
--- ArangPlanner 1.4: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.4.1: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -14,8 +14,8 @@ ROOT:EnableMouse(true)
 ROOT:RegisterForDrag("LeftButton")
 ROOT:SetScript("OnDragStart",function(self)self:StartMoving()end)
 ROOT:SetScript("OnDragStop",function(self)self:StopMovingOrSizing()end)
-ROOT:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileSize=32,edgeSize=27,insets={left=8,right=8,top=8,bottom=8}})
-ROOT:SetBackdropColor(.055,.05,.055,.99)
+ROOT:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileSize=32,edgeSize=27,insets={left=8,right=8,top=8,bottom=8}})
+ROOT:SetBackdropColor(.025,.022,.03,1)
 ROOT:SetBackdropBorderColor(.82,.65,.29,1)
 ROOT:Hide()
 
@@ -39,7 +39,7 @@ local function pane(parent,x,y,w,h)
     p:SetPoint("TOPLEFT",x,-y)
     p:SetSize(w,h)
     p:SetBackdrop({bgFile="Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile="Interface\\DialogFrame\\UI-DialogBox-Border",tile=true,tileSize=32,edgeSize=20,insets={left=5,right=5,top=5,bottom=5}})
-    p:SetBackdropColor(.065,.06,.075,.98)
+    p:SetBackdropColor(.035,.031,.040,.99)
     p:SetBackdropBorderColor(.67,.52,.21,.95)
     return p
 end
@@ -64,7 +64,7 @@ local function newIcon(parent,x,y,w,h)
     f:SetBackdropBorderColor(.64,.48,.16,1)
     f.icon=f:CreateTexture(nil,"ARTWORK")
     f.icon:SetPoint("TOPLEFT",2,-2);f.icon:SetPoint("BOTTOMRIGHT",-2,2)
-    f.icon:SetTexture(134400)
+    f.icon:SetTexture("Interface\\PaperDoll\\UI-Backpack-EmptySlot")
     return f
 end
 local function alert(message)
@@ -84,7 +84,7 @@ local current=1
 local content={}
 local function switch(n)
     current=n
-    for i,p in ipairs(content)do p:SetShown(i==n) end
+    for i,p in ipairs(content)do p:SetShown(i==n and not (ROOT:GetWidth()<600)) end
     for i,b in ipairs(tabs)do
         if i==n then b:LockHighlight() else b:UnlockHighlight() end
     end
@@ -125,13 +125,15 @@ local specText=label(mid,"현재 장비",20,50,"GameFontNormal",GOLD)
 local modelBacking=CreateFrame("Frame",nil,mid)
 modelBacking:SetPoint("TOPLEFT",137,-105);modelBacking:SetSize(285,362)
 tint(modelBacking,.08,.07,.11,.55)
-local model=CreateFrame("PlayerModel",nil,modelBacking)
+local model=CreateFrame("DressUpModel",nil,modelBacking)
 model:SetAllPoints()
 local modelFallback=label(modelBacking,"캐릭터 모델 불러오는 중",42,166,"GameFontHighlightSmall",MUTED)
+local modelLoaded=false
 local function modelRefresh()
     if model.SetUnit then
         local ok=pcall(model.SetUnit,model,"player")
         modelFallback:SetShown(not ok)
+        if ok then modelFallback:Hide();modelLoaded=true end
         if ok and model.SetCamera then pcall(model.SetCamera,model,0) end
     end
 end
@@ -241,17 +243,39 @@ function AP.RefreshUI()
     for _,r in ipairs(equipIcons)do
         local slot=r.f.slot
         local data=mapped[slot]
-        r.f.icon:SetTexture(data and data.icon or 134400)
-        local name=data and data.link and GetItemInfo(data.link)
+        local icon=data and data.icon
+        -- The 12.x WoW client may expose restricted item links in a UI context.
+        -- Do not call GetItemInfo(link) unprotected: one failed lookup used to
+        -- abort RefreshUI on the first slot and leave all others as red '?'.
+        if icon then
+            local ok=pcall(r.f.icon.SetTexture,r.f.icon,icon)
+            if not ok then r.f.icon:SetTexture("Interface\\PaperDoll\\UI-Backpack-EmptySlot") end
+        else
+            local fallback
+            if GetInventorySlotInfo then
+                local nameByID={[1]="HeadSlot",[2]="NeckSlot",[3]="ShoulderSlot",[5]="ChestSlot",[6]="WaistSlot",[7]="LegsSlot",[8]="FeetSlot",[9]="WristSlot",[10]="HandsSlot",[11]="Finger0Slot",[12]="Finger1Slot",[13]="Trinket0Slot",[14]="Trinket1Slot",[15]="BackSlot",[16]="MainHandSlot",[17]="SecondaryHandSlot"}
+                local slotName=nameByID[slot]
+                if slotName then
+                    local safe,_,tex=pcall(GetInventorySlotInfo,slotName)
+                    if safe then fallback=tex end
+                end
+            end
+            r.f.icon:SetTexture(fallback or "Interface\\PaperDoll\\UI-Backpack-EmptySlot")
+        end
+        local name
+        if data and data.itemId then
+            local ok,n=pcall(GetItemInfo,data.itemId)
+            if ok and type(n)=="string" then name=n end
+        end
         r.name:SetText(name or "")
         local lvl
-        if data and data.link and C_Item and C_Item.GetDetailedItemLevelInfo then
-            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.link)
-            if ok then lvl=v end
+        if data and data.itemId and C_Item and C_Item.GetDetailedItemLevelInfo then
+            local ok,v=pcall(C_Item.GetDetailedItemLevelInfo,data.itemId or 0)
+            if ok and type(v)=="number" then lvl=v end
         end
         r.lvl:SetText(lvl and tostring(lvl) or "")
     end
-    modelRefresh()
+    if not modelLoaded then modelRefresh() end
     local rows=AP.GetTargetRows()
     local missingNames={}
     for i=1,6 do
@@ -273,3 +297,56 @@ function AP.ToggleUI()
 end
 ROOT:SetScript("OnShow",function()if AP.RefreshUI then AP.RefreshUI()end end)
 switch(1)
+
+-- Compact mode keeps one installation and one character-specific data source.
+-- It changes only the display, never scan or season tracking records.
+local compactFrame=CreateFrame("Frame",nil,ROOT)
+compactFrame:SetAllPoints()
+compactFrame:Hide()
+local compactHeader=label(compactFrame,"아랑플래너  |  요약",27,24,"GameFontNormalLarge",GOLD)
+local compactSpec=label(compactFrame,"",27,82,"GameFontHighlight",IVORY)
+local compactCount=label(compactFrame,"",27,121,"GameFontNormalLarge",GOLD)
+local compactHint=label(compactFrame,"현재 착용 및 가방 보유 기준 · 자세히 보기로 복원",27,161,"GameFontHighlightSmall",MUTED)
+compactHint:SetWidth(400)
+local compact=false
+local compactButton=button(top,"-",1138,16,38,31,nil)
+local function saveCompact()
+    if type(ArangPlannerDB)=="table" then
+        ArangPlannerDB.settings=ArangPlannerDB.settings or {}
+        ArangPlannerDB.settings.compact=compact
+    end
+end
+local function setCompact(state)
+    compact=not not state
+    if compact then
+        ROOT:SetSize(460,225)
+    else ROOT:SetSize(1280,720) end
+    top:SetShown(not compact)
+    left:SetShown(not compact)
+    mid:SetShown(not compact)
+    right:SetShown(not compact)
+    for i=2,#content do content[i]:SetShown(not compact and current==i) end
+    compactFrame:SetShown(compact)
+    if compact then
+        local total,have=AP.TargetCounts()
+        compactSpec:SetText("전문화: "..AP.GetSpecName())
+        compactCount:SetText(string.format("목표 %d   보유 %d   미보유 %d",total,have,total-have))
+    end
+    saveCompact()
+end
+compactButton:SetScript("OnClick",function()setCompact(true)end)
+button(compactFrame,"복원",360,18,76,32,function()setCompact(false);switch(current);AP.RefreshUI()end)
+button(compactFrame,"X",360,177,76,30,function()ROOT:Hide()end)
+local previousToggle=AP.ToggleUI
+function AP.ToggleUI()
+    if ROOT:IsShown() then ROOT:Hide() else
+        ROOT:Show()
+        local saved=type(ArangPlannerDB)=="table" and ArangPlannerDB.settings and ArangPlannerDB.settings.compact
+        setCompact(saved==true)
+        switch(current)
+        if compact then
+            for i=2,#content do content[i]:Hide() end
+        end
+        AP.RefreshUI()
+    end
+end
