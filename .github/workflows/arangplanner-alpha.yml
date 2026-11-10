@@ -73,7 +73,7 @@ jobs:
                   assert im.height in (64,128,256,512)
           ui=(root/'UI.lua').read_text(encoding='utf-8')
           assert 'ChatEdit_InsertLink' in ui
-          assert 'PlayerModel' in ui
+          assert 'DressUpModel' in ui
           assert 'AP.TargetCounts' in ui
           assert 'AP.GetTargetRows' in ui
           assert 'button-active.tga' not in ui or True
