@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.7: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.8: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -53,6 +53,22 @@ end
 local function button(parent,txt,x,y,w,h,fn)
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
     b:SetPoint("TOPLEFT",x,-y);b:SetSize(w,h);b:SetText(txt)
+    b:SetScript("OnClick",function()if fn then fn()end end)
+    return b
+end
+-- Original ArangPlanner bronze-stone controls, no third-party textures.
+local function stoneButton(parent,txt,x,y,w,h,fn)
+    local b=CreateFrame("Button",nil,parent,"BackdropTemplate")
+    b:SetPoint("TOPLEFT",x,-y);b:SetSize(w,h)
+    b:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    b:SetBackdropColor(.09,.07,.065,1)
+    b:SetBackdropBorderColor(.46,.35,.25,1)
+    local title=b:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+    title:SetPoint("CENTER");title:SetWidth(w-15)
+    title:SetText(txt);title:SetTextColor(.96,.83,.52)
+    b.SetText=function(_,v)title:SetText(v)end
+    b:SetScript("OnEnter",function(self)self:SetBackdropColor(.19,.14,.1,1)end)
+    b:SetScript("OnLeave",function(self)self:SetBackdropColor(.09,.07,.065,1)end)
     b:SetScript("OnClick",function()if fn then fn()end end)
     return b
 end
@@ -298,7 +314,7 @@ heading:SetWidth(258)
 heading:SetTextColor(1,.96,.85)
 local sourceCaption=label(right,"전리품 목록",20,55,"GameFontHighlightSmall",GOLD)
 sourceCaption:SetWidth(280)
-local filterButton=button(right,"획득처 선택 v",373,15,160,29,nil)
+local filterButton=stoneButton(right,"획득처 선택 ▾",373,15,160,29,nil)
 local filterMenu=CreateFrame("Frame",nil,right,"BackdropTemplate")
 filterMenu:SetPoint("TOPRIGHT",filterButton,"BOTTOMRIGHT",0,0)
 filterMenu:SetSize(190,137)
@@ -328,7 +344,7 @@ filterButton:SetScript("OnClick",function()
     closePopup()
     filterMenu:SetShown(not filterMenu:IsShown())
 end)
-local reload=button(right,"새로고침",280,15,89,29,function()
+local reload=stoneButton(right,"새로고침",280,15,89,29,function()
     if AP.LootCatalog then AP.LootCatalog.Invalidate() end
     if refreshBrowser then refreshBrowser() end
 end)
@@ -358,27 +374,27 @@ local function makeRow(y,h,depth,title,kind,action,item)
     local region=(kind=="instance")
     local active=item and selectedItem and selectedItem.id==item.id
     if main then
-        f:SetBackdropColor(.10,.09,.16,.96)
+        f:SetBackdropColor(.07,.06,.11,1)
         f:SetBackdropBorderColor(.33,.33,.56,1)
     elseif region then
-        f:SetBackdropColor(.19,.135,.087,.97)
+        f:SetBackdropColor(.17,.13,.10,1)
         f:SetBackdropBorderColor(.30,.24,.17,1)
     elseif active then
-        f:SetBackdropColor(.09,.22,.38,1)
+        f:SetBackdropColor(.075,.19,.34,1)
         f:SetBackdropBorderColor(.34,.75,1,1)
     else
-        f:SetBackdropColor(.13,.095,.088,.98)
+        f:SetBackdropColor(.11,.075,.065,1)
         f:SetBackdropBorderColor(.23,.17,.12,.7)
     end
     if kind=="group" then
         local dot=f:CreateTexture(nil,"ARTWORK")
         dot:SetPoint("LEFT",9,0)
         dot:SetSize(16,16)
-        dot:SetColorTexture(.26,.68,.48,1)
+        dot:SetTexture("Interface\\COMMON\\Indicator-Green")
     end
     local tx=item and 50 or main and 35 or 12
     local txt=label(f,title,tx,item and 6 or 8,
-        main and "GameFontNormal" or "GameFontHighlightSmall",
+        main and "GameFontNormalLarge" or region and "GameFontNormal" or "GameFontHighlight",
         main and GOLD or region and GOLD or IVORY)
     txt:SetWidth(f:GetWidth()-tx-(item and 78 or 14))
     txt:SetWordWrap(false)
@@ -404,7 +420,7 @@ local function makeRow(y,h,depth,title,kind,action,item)
         source:SetWordWrap(false)
         if type(subtype)=="string" and subtype~="" then
             local armor=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-            armor:SetPoint("RIGHT",f,"RIGHT",-9,5)
+            armor:SetPoint("RIGHT",f,"RIGHT",-9,0)
             armor:SetText(subtype)
             armor:SetTextColor(.72,.68,.62)
         end
@@ -425,6 +441,8 @@ local function makeRow(y,h,depth,title,kind,action,item)
     browserButtons[#browserButtons+1]=f
 end
 local options=pane(right,10,480,532,253)
+options:SetBackdropColor(.018,.013,.014,1)
+options:SetBackdropBorderColor(.4,.3,.19,1)
 local separator=options:CreateTexture(nil,"ARTWORK")
 separator:SetPoint("TOPLEFT",options,"TOPLEFT",7,-6)
 separator:SetPoint("TOPRIGHT",options,"TOPRIGHT",-7,-6)
@@ -434,7 +452,7 @@ local choiceIcon
 choiceIcon=newIcon(right,35,496,39,39)
 choiceIcon:EnableMouse(false)
 choiceIcon.icon:SetTexture(nil)
-selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormal",IVORY)
+selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormalLarge",IVORY)
 selectedTitle:SetWidth(431)
 selectedDetail=label(right,"목표 장비를 선택하세요",84,526,"GameFontHighlightSmall",IVORY)
 selectedDetail:SetWidth(425)
@@ -449,8 +467,8 @@ local rankLabel=label(right,"강화 단계:",120,612,"GameFontNormal",GOLD)
 local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
 local chosenTrack,chosenRank="영웅",1
 local venomFlag,catalystFlag=false,false
-local trackButton=button(right,"영웅  v",241,577,273,27,nil)
-local rankButton=button(right,"1/6  v",241,607,273,27,nil)
+local trackButton=stoneButton(right,"영웅  ▾",241,577,273,27,nil)
+local rankButton=stoneButton(right,"1/6  ▾",241,607,273,27,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
 venomCheck:SetPoint("TOPLEFT",155,-638);venomCheck:SetSize(26,26)
 local venomLabel=label(right,"맹독석 강화 (계획)",185,643,"GameFontHighlightSmall",GOLD)
@@ -461,8 +479,8 @@ local originalText=label(right,"원본 장비: 선택한 장비",34,697,"GameFon
 originalText:SetWidth(476)
 local canCatalyst={[1]=true,[3]=true,[5]=true,[7]=true,[10]=true}
 local function updateOptions()
-    trackButton:SetText(chosenTrack.."  v")
-    rankButton:SetText(chosenRank.."/6  v")
+    trackButton:SetText(chosenTrack.."  ▾")
+    rankButton:SetText(chosenRank.."/6  ▾")
     venomCheck:SetChecked(venomFlag)
     catalystCheck:SetChecked(catalystFlag)
     catalystCheck:SetEnabled(canCatalyst[selectedSlot or 1]==true)
@@ -509,7 +527,7 @@ local function registerItem()
     alert(AP.LootCatalog.SlotLabel(slot).." 목표 등록 완료")
     if AP.RefreshUI then AP.RefreshUI() end
 end
-button(right,"등록",151,710,245,24,registerItem)
+stoneButton(right,"등록",151,710,245,24,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
 itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
