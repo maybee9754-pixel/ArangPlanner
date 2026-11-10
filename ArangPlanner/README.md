@@ -1,16 +1,17 @@
-# ArangPlanner v1.8.0-alpha
+# ArangPlanner 1.9.0-alpha
 
-UI: black/gold, with compact mode, slot-click gear targeting, and equipment-only registration. The right loot browser is now item-first like classic GearPlanner Arang: **category → raid/dungeon → actual wearable item → source boss / loot route**. Raid items are aggregated from all bosses and grouped at raid level (no nested boss rows). Dungeon items remain aggregated from all dungeon bosses. Each item row uses Blizzard item icon and a separate second line for its verified encounter source. Unverified delve/outdoor loot remains empty rather than fictional.
+Independent WoW addon using a gold-black native-inspired visual style, now built as a wider 1460 × 850 responsive planning interface. Layout auto-scales to fit the WoW UI viewport. Compact mode is retained.
 
-Season 2 tier bosses drop class/armor-group tokens, but **the browser displays the actual resulting tier armor item**, not the consumable token. Internal token ID is solely source metadata. v1.8 currently includes externally verified Rogue (class 4) armor IDs for the five Tier 36 slots:
-- Head 271510 (Chosen Bloodslayer's Spirit Shroud)
-- Shoulder 271508 (Chosen Bloodslayer's Voodoo Guards)
-- Chest 271513 (Chosen Bloodslayer's Banded Poncho)
-- Hands 271511 (Chosen Bloodslayer's Fanged Grips)
-- Legs 271509 (Chosen Bloodslayer's Reinforced Pants)
+## User-visible changes
+- Removed the top right "부위" filter button. The selected plan slot defaults to **머리** whenever a specialization is first opened or changed; clicking another equipment slot automatically changes loot filtering.
+- Larger three-column UI, with a taller right-hand loot list and a new bottom configuration panel.
+- Below item details: track (탐험가/모험가/노련가/용사/영웅/신화), upgrade rank (1–9), "맹독석 (계획)", "티어 변환 (계획)", and the Register button.
+- Configuration is stored per character, per specialization and per slot, separately from the item ID. These are **planning preferences only**. They do not actually upgrade gear, apply enchantments, change an item variant, or imply that a tier conversion occurred.
+- Catalyst flag is only available for head, shoulder, chest, hands and legs.
+- Where tier loot is listed, its source now names both the boss token route and **울라텍 (잠자는 똬리)** as a potential alternative. "티어 교환" wording was removed.
+- Raid/dungeon list continues to show actual equipped gear IDs rather than unwearable token IDs and item-specific sources. New season can replace data providers without resetting registered targets.
 
-The source is shown as “매장된 파수꾼 · 티어 교환” for gloves. Other classes' unverified tier item IDs are deliberately omitted rather than replaced with token items or guessed IDs; class coverage will be expanded once verified. Relevant non-tier items still come from the in-game Encounter Journal.
+## Validation
+GitHub Actions compiles all Lua files and runs mock tests verifying tier reward mapping, separate plan data, configuration rank/track/flags, slot safeguards, class filter and combat-equipment-only loot, plus ZIP structure. Only an actual WoW session can verify the final positioning and game API behavior.
 
-The registered target ID is always a wearable gear item ID; **a tier token owned in bags does not count as possessing the tier armor**. Old season data, saved target slots, legacy GearPlanner databases and old tokens remain untouched.
-
-Automated CI checks Lua syntax, native API mocks for actual tier gear and boss source, loot grouping, target-slot matching and release ZIP integrity. This test does not replace verification inside the WoW client.
+Existing GearPlanner data and previous ArangPlanner goal IDs are not removed.
