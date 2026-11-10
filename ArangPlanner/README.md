@@ -15,3 +15,6 @@ Independent WoW addon using a gold-black native-inspired visual style, now built
 GitHub Actions compiles all Lua files and runs mock tests verifying tier reward mapping, separate plan data, configuration rank/track/flags, slot safeguards, class filter and combat-equipment-only loot, plus ZIP structure. Only an actual WoW session can verify the final positioning and game API behavior.
 
 Existing GearPlanner data and previous ArangPlanner goal IDs are not removed.
+
+## 1.9.2 right panel layout
+The in-game wide right-hand panel separates its source-filtered equipment browser from the selection, upgrade track, rank, Venomstone, Catalyst and registration editor. All code and art are independent ArangPlanner assets; GearPlanner code/art is not bundled.
