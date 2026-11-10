@@ -5,7 +5,7 @@ local GOLD={.96,.76,.22}
 local IVORY={.94,.91,.83}
 local MUTED={.64,.62,.57}
 local ROOT=CreateFrame("Frame","ArangPlannerWindow",UIParent,"BackdropTemplate")
-ROOT:SetSize(1280,720)
+ROOT:SetSize(1460,850)
 ROOT:SetPoint("CENTER")
 ROOT:SetClampedToScreen(true)
 ROOT:SetFrameStrata("DIALOG")
@@ -72,7 +72,7 @@ local function alert(message)
 end
 
 -- Header: render the independently drawn AP mark, with no copied third-party emblem.
-local top=pane(ROOT,13,11,1254,66)
+local top=pane(ROOT,13,11,1434,66)
 local ap=top:CreateTexture(nil,"ARTWORK")
 ap:SetPoint("LEFT",18,0);ap:SetSize(49,49)
 ap:SetTexture("Interface\\AddOns\\ArangPlanner\\Textures\\ap-logo.tga")
@@ -92,12 +92,12 @@ end
 for i,name in ipairs(names) do
     tabs[i]=button(top,name,316+(i-1)*145,12,137,39,function()switch(i)end)
 end
-button(top,"X",1183,16,38,31,function()ROOT:Hide()end)
+button(top,"X",1380,16,38,31,function()ROOT:Hide()end)
 
 -- Fixed three-column hierarchy, matching the approved screenshot.
-local left=pane(ROOT,13,88,346,620)
-local mid=pane(ROOT,366,88,559,620)
-local right=pane(ROOT,932,88,335,620)
+local left=pane(ROOT,13,88,346,744)
+local mid=pane(ROOT,366,88,628,744)
+local right=pane(ROOT,1001,88,446,744)
 content[1]=CreateFrame("Frame",nil,ROOT)
 content[1]:SetAllPoints(ROOT)
 
@@ -165,11 +165,12 @@ local function modelRefresh()
 end
 -- A target can be assigned only after the user selects a slot and registers
 -- an eligible item from the loot panel. No inventory item is auto imported.
-local selectedSlot=nil
+local selectedSlot=1
 local refreshBrowser
 local selectedItem=nil
 local itemEntry
 local selectedTitle,selectedDetail
+local refreshOptions
 local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
@@ -177,6 +178,7 @@ function AP.SelectPlanSlot(slot)
     if itemEntry then itemEntry:SetText("") end
     if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
     if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
+    if refreshOptions then refreshOptions(slot) end
     if AP.RefreshUI then AP.RefreshUI() end
     if refreshBrowser then refreshBrowser() end
 end
@@ -221,32 +223,77 @@ for _,sd in ipairs(slots) do
     f:SetScript("OnLeave",function()GameTooltip:Hide()end)
     equipIcons[#equipIcons+1]={f=f,lvl=itemLevel,name=equippedName}
 end
-local help=label(mid,"빈 슬롯 클릭 → 오른쪽 전리품 선택 → 등록     |     Ctrl+클릭: 목표 제거",24,595,"GameFontHighlightSmall",MUTED)
-help:SetWidth(513)
+local help=label(mid,"빈 슬롯 클릭 → 전리품 선택 → 등급·강화 설정 → 등록    |    Ctrl+클릭: 제거",24,719,"GameFontHighlightSmall",MUTED)
+help:SetWidth(575)
 
 -- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
 bar(right,"전리품 목록")
 local expanded={raid=true,dungeon=true,delve=true,outdoor=true}
 local openInstance,openBoss={},{}
-local slotButton=button(right,"부위: 전체",186,48,126,27,nil)
 local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
-browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-85)
-browser:SetSize(290,369)
+browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-59)
+browser:SetSize(400,444)
 local child=CreateFrame("Frame",nil,browser)
-child:SetSize(266,370)
+child:SetSize(374,444)
 browser:SetScrollChild(child)
 local buttons={}
 local function clear()
     for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
     wipe(buttons)
 end
-selectedTitle=label(right,"가운데 장비 부위를 선택하세요.",18,466,"GameFontNormal",GOLD)
-selectedTitle:SetWidth(296)
-selectedDetail=label(right,"현재 전문화에서 착용할 수 있는 장비만 표시",18,495,"GameFontHighlightSmall",MUTED)
-selectedDetail:SetWidth(290)
+selectedTitle=label(right,"장비를 선택하세요.",20,518,"GameFontNormal",GOLD)
+selectedTitle:SetWidth(404)
+selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",20,540,"GameFontHighlightSmall",MUTED)
+selectedDetail:SetWidth(405)
 itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
-itemEntry:SetPoint("TOPLEFT",25,-524);itemEntry:SetSize(183,29)
+itemEntry:SetPoint("TOPLEFT",25,-568);itemEntry:SetSize(302,28)
 itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
+
+-- Configuration is a saved *plan*, not evidence of an upgraded item.
+local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
+local chosenTrack="영웅"
+local chosenRank=1
+local venomFlag=false
+local catalystFlag=false
+local trackLabel=label(right,"등급",20,612,"GameFontNormal",GOLD)
+local rankLabel=label(right,"강화 단계",20,647,"GameFontNormal",GOLD)
+local trackButton=button(right,"영웅 ▾",117,603,303,29,nil)
+local rankButton=button(right,"1/6 ▾",117,638,303,29,nil)
+local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
+venomCheck:SetPoint("TOPLEFT",18,-671)
+venomCheck:SetSize(27,27)
+label(right,"맹독석 (계획)",52,675,"GameFontHighlight",IVORY)
+local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
+catalystCheck:SetPoint("TOPLEFT",214,-671)
+catalystCheck:SetSize(27,27)
+label(right,"티어 변환 (계획)",248,675,"GameFontHighlight",IVORY)
+local canCatalyst={ [1]=true,[3]=true,[5]=true,[7]=true,[10]=true }
+refreshOptions=function(slot)
+    local v=AP.GetSlotOptions(slot or 1)
+    chosenTrack=v.track
+    chosenRank=v.rank
+    venomFlag=v.venom
+    catalystFlag=v.catalyst
+    trackButton:SetText(chosenTrack.." ▾")
+    rankButton:SetText(chosenRank.."/6 ▾")
+    venomCheck:SetChecked(venomFlag)
+    catalystCheck:SetChecked(catalystFlag)
+    catalystCheck:SetEnabled(canCatalyst[slot or 1]==true)
+end
+trackButton:SetScript("OnClick",function()
+    local index=1
+    for i,v in ipairs(tracks) do if v==chosenTrack then index=i;break end end
+    chosenTrack=tracks[index%#tracks+1]
+    trackButton:SetText(chosenTrack.." ▾")
+end)
+rankButton:SetScript("OnClick",function()
+    chosenRank=chosenRank%6+1
+    rankButton:SetText(chosenRank.."/6 ▾")
+end)
+venomCheck:SetScript("OnClick",function(self)venomFlag=self:GetChecked()==true end)
+catalystCheck:SetScript("OnClick",function(self)catalystFlag=self:GetChecked()==true end)
+refreshOptions(1)
+
 local function registerItem()
     if not selectedSlot then
         alert("가운데에서 등록할 장비 부위를 먼저 선택하세요.")
@@ -263,12 +310,15 @@ local function registerItem()
     end
     local ok,reason=AP.AssignSlotTarget(selectedSlot,id)
     if not ok then alert(reason or "등록 실패");return end
+    AP.SetSlotOptions(selectedSlot,{
+        track=chosenTrack,rank=chosenRank,
+        venom=venomFlag,catalyst=catalystFlag})
     alert(AP.LootCatalog.SlotLabel(selectedSlot).." 목표 등록 완료")
     selectedItem=nil
     itemEntry:SetText("")
     if AP.RefreshUI then AP.RefreshUI() end
 end
-button(right,"등록",213,521,96,30,registerItem)
+button(right,"등록",16,700,410,33,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
 itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
@@ -296,7 +346,7 @@ end
 local function makeRow(y,h,depth,title,kind,action,item)
     local f=CreateFrame("Button",nil,child,"BackdropTemplate")
     f:SetPoint("TOPLEFT",child,"TOPLEFT",depth,-y)
-    f:SetSize(266-depth,h)
+    f:SetSize(374-depth,h)
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
         edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     local group=(kind=="group")
@@ -339,7 +389,6 @@ refreshBrowser=function()
     if not AP.LootCatalog then return end
     local catalog=AP.LootCatalog
     local sources,reason=catalog.Instances()
-    slotButton:SetText("부위: "..catalog.SlotLabel(selectedSlot))
     clear()
     local y,n=0,0
     local function add(h,depth,title,kind,fn,item)
@@ -461,19 +510,9 @@ refreshBrowser=function()
             end
         end
     end
-    child:SetHeight(math.max(370,y))
+    child:SetHeight(math.max(445,y))
 end
-slotButton:SetScript("OnClick",function()
-    -- Reset the filter, not the registered target slot data.
-    selectedSlot=nil
-    selectedItem=nil
-    itemEntry:SetText("")
-    selectedTitle:SetText("가운데 장비 부위를 선택하세요.")
-    selectedDetail:SetText("현재 전문화의 착용 가능 장비만 표시")
-    AP.RefreshUI()
-    refreshBrowser()
-end)
-button(right,"전리품 갱신",20,567,290,31,function()
+button(right,"새로고침",330,564,92,32,function()
     if AP.LootCatalog then AP.LootCatalog.Invalidate() end
     refreshBrowser()
 end)
@@ -491,7 +530,7 @@ end)
 
 -- Other top-level tabs are honest WIP panels, not made-up acquisition records.
 for i=2,#names do
-    local holder=pane(ROOT,13,88,1254,620)
+    local holder=pane(ROOT,13,88,1434,744)
     content[i]=holder
     bar(holder,names[i])
     label(holder,"이 화면은 개발 중입니다. 아직 실제 데이터와 연동되지 않았습니다.",40,86,"GameFontNormalLarge",IVORY)
@@ -520,7 +559,7 @@ function AP.RefreshUI()
     local currentSpec=specIndex and GetSpecializationInfo and GetSpecializationInfo(specIndex)
     if planSpec~=currentSpec then
         planSpec=currentSpec
-        selectedSlot=nil
+        selectedSlot=1
         selectedItem=nil
         if itemEntry then itemEntry:SetText("") end
     end
@@ -557,7 +596,15 @@ end
 function AP.ToggleUI()
     if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI();refreshBrowser() end
 end
-ROOT:SetScript("OnShow",function()if AP.RefreshUI then AP.RefreshUI()end end)
+ROOT:SetScript("OnShow",function()
+    if UIParent and UIParent.GetWidth and UIParent.GetHeight then
+        local w,h=UIParent:GetWidth(),UIParent:GetHeight()
+        if w and h and w>0 and h>0 then
+            ROOT:SetScale(math.min(1,(w-20)/1460,(h-20)/850))
+        end
+    end
+    if AP.RefreshUI then AP.RefreshUI() end
+end)
 switch(1)
 
 -- Compact mode keeps one installation and one character-specific data source.
@@ -571,7 +618,7 @@ local compactCount=label(compactFrame,"",27,121,"GameFontNormalLarge",GOLD)
 local compactHint=label(compactFrame,"현재 착용 및 가방 보유 기준 · 자세히 보기로 복원",27,161,"GameFontHighlightSmall",MUTED)
 compactHint:SetWidth(400)
 local compact=false
-local compactButton=button(top,"-",1138,16,38,31,nil)
+local compactButton=button(top,"-",1331,16,38,31,nil)
 local function saveCompact()
     if type(ArangPlannerDB)=="table" then
         ArangPlannerDB.settings=ArangPlannerDB.settings or {}
@@ -582,7 +629,7 @@ local function setCompact(state)
     compact=not not state
     if compact then
         ROOT:SetSize(460,225)
-    else ROOT:SetSize(1280,720) end
+    else ROOT:SetSize(1460,850) end
     top:SetShown(not compact)
     left:SetShown(not compact)
     mid:SetShown(not compact)
