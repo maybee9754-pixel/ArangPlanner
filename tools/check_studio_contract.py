@@ -10,13 +10,13 @@ core=(root/"ArangPlanner/ArangPlanner.lua").read_text(encoding="utf-8")
 contract=(root/"ArangPlanner/UIContract.lua").read_text(encoding="utf-8")
 css=(root/"docs/ui-contract.css").read_text(encoding="utf-8")
 web=(root/"docs/index.html").read_text(encoding="utf-8")
-assert "## Version: 1.5.1-alpha" in toc
+assert "## Version: 1.6.0-alpha" in toc
 assert "ArangPlanner.lua\nUIContract.lua\nSeasonData.lua\nLootCatalog.lua\nUI.lua" in toc
 assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
-assert "specBacking" in ui and "SetInventoryItem" in ui
+assert "specBacking" in ui and "SetInventoryItem" not in ui
 assert "AP.LootCatalog.Instances" in ui and "AP.LootCatalog.Loot" in ui
-assert "AP.GetTargetRows" in ui and "AP.TargetCounts" in ui
-assert "AP.AddTarget" in ui and "refreshBrowser" in ui
+assert "AP.GetSlotTargetRows" in ui and "AP.SlotTargetCounts" in ui
+assert "AP.AssignSlotTarget" in ui and "AP.SelectPlanSlot" in ui and "refreshBrowser" in ui
 assert "ChatEdit_InsertLink" in ui and "AP.ToggleUI" in ui
 assert 'ap-logo.tga' in ui
 assert "ArangPlannerUIContract" in contract
@@ -27,4 +27,4 @@ for font in ["NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-Extra
     assert font in css
     p=root/"ArangPlanner/Fonts"/font
     if p.exists():assert p.stat().st_size>100000
-print("PASS: Native v1.4 gameplay UI, AP skin, target operations and legacy web v1.3 separately")
+print("PASS: v1.6 empty slot planner, spec loot filtering and legacy web independently")

@@ -1,10 +1,9 @@
-# ArangPlanner 1.5.1-alpha
+# ArangPlanner 1.6.0-alpha
 
-The independently authored black-and-gold UI now uses **Blizzard Encounter Journal** for collapsible Raid -> Instance -> Boss -> Loot lists and Dungeon -> Instance -> Boss -> Loot lists. Filtering for current specialization is applied where the API supports it. Click loot to fill the target registration field. Categories for Delve and Outdoor are present but await verified source mappings. No GearPlanner proprietary assets, source, or private loot history are used.
+Original black-gold WoW addon. The central pane now starts with **EMPTY, clickable target slots**, never automatically populated from the character's equipped inventory. Click a center slot to filter the right-hand list to items that fit that actual slot. Select loot under Raid → Instance → Boss or Dungeon → Instance → Boss, then press Register. The registered goal is shown only in the selected central slot. Ctrl+click clears a slot.
 
-Central DressUpModel removed, replaced with dim class specialization art supplied by WoW (fallback to spec icon), while actual equipped items remain visible. UI layout, AP logo, existing target records and compact mode preserved.
+The right-hand loot panel applies the **current specialization's Encounter Journal loot filter** and game-reported equipment inventory types. Non-equipment, such as food, reagents and consumables, is excluded. If the journal cannot verify the spec filter, the panel shows an error rather than unfiltered loot. Blizzard's C_Item.GetItemInfoInstant provides equip location, item class and icon. Items are still constrained by the game journal's loot data and available cached metadata.
 
-Season providers `SeasonData.lua` and `LootCatalog.lua` are separate modules and can be replaced without rewriting UI. The currently active expansion journal tier is read from game data, rather than hard-coding season item IDs. Runtime API compatibility still requires in-game user verification.
+Each character and specialization has an independent saved target-slot map in ArangPlannerDB. Legacy target IDs are retained in the DB unchanged but NOT automatically imported into the new planner (avoiding misleading counts and unexpected target slots). Existing GearPlanner data remains untouched. The left progress counts now use registered target slots only. SeasonData.lua / LootCatalog.lua remain separate for future seasons.
 
-## 1.5.1
-No giant specialization icon when high-res background absent. Journal loot now distinguishes pending, unavailable, empty and nonempty responses; includes manual diagnostic on empty boss results. In-game runtime verification still required.
+Current raid/dungeon source list comes from Encounter Journal; delve and outdoor data mappings remain WIP. This version is an alpha: no WoW-client runtime verification has been performed. An automated Lua mock test checks empty slots, non-equipment exclusion, class/spec-filter calls, item slot compatibility and persistence data behaviors.
