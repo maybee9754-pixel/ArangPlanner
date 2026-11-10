@@ -36,3 +36,6 @@ Standalone bronze/stone right-panel controls, darker loot rows, purple raid grou
 
 ## 1.9.9 right panel grouping
 Add native raid boss subheaders within each expanded raid, keeping selectable item rows, the GearPlanner-like nested layout, and the existing independent options dropdown. No dependency on GearPlanner.
+
+## v1.10.0 standalone loot panel compact selection editor
+Raw item ID text field stays internal rather than occupying visible space. The selected gear name receives native Blizzard item-quality color. Upgrade track, enhancement rank, Venomstone/Catalyst flags and register button are grouped closer in the lower panel. No GearPlanner dependency.
