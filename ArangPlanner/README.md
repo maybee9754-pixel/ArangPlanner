@@ -1,4 +1,4 @@
-# ArangPlanner 1.6.0-alpha
+# ArangPlanner 1.6.1-alpha
 
 Original black-gold WoW addon. The central pane now starts with **EMPTY, clickable target slots**, never automatically populated from the character's equipped inventory. Click a center slot to filter the right-hand list to items that fit that actual slot. Select loot under Raid → Instance → Boss or Dungeon → Instance → Boss, then press Register. The registered goal is shown only in the selected central slot. Ctrl+click clears a slot.
 
@@ -7,3 +7,6 @@ The right-hand loot panel applies the **current specialization's Encounter Journ
 Each character and specialization has an independent saved target-slot map in ArangPlannerDB. Legacy target IDs are retained in the DB unchanged but NOT automatically imported into the new planner (avoiding misleading counts and unexpected target slots). Existing GearPlanner data remains untouched. The left progress counts now use registered target slots only. SeasonData.lua / LootCatalog.lua remain separate for future seasons.
 
 Current raid/dungeon source list comes from Encounter Journal; delve and outdoor data mappings remain WIP. This version is an alpha: no WoW-client runtime verification has been performed. An automated Lua mock test checks empty slots, non-equipment exclusion, class/spec-filter calls, item slot compatibility and persistence data behaviors.
+
+## 1.6.1 additional-loot exclusion
+The normal loot browser excludes non-equipment and additionally excludes armor Cosmetic subclass (subclass ID 5), localized Cosmetic items, and season-verified extra-loot ID 281227 (Nek'zali cosmetic helm). These rules also apply when registering a slot, not just in list display. The season registry is independent, extensible and never relies on item name strings to exclude a verified item. WoW's EncounterJournal loot API does not directly expose a general 'additional loot' section marker, so other equipable supplemental rewards require verified season-specific IDs to exclude exhaustively. All prior targets remain stored and unaffected.

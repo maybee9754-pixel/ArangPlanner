@@ -6,12 +6,14 @@ local itemTypes={
     [102]={"INVTYPE_TRINKET",4},
     [103]={"INVTYPE_WEAPON",2},
     [104]={"INVTYPE_FEET",4},
+    [105]={"INVTYPE_HEAD",4,5}, -- armor subclass cosmetic
+    [281227]={"INVTYPE_HEAD",4,0}, -- confirmed extra loot ID override
 }
 C_Item={
     GetItemInfoInstant=function(id)
         local a=itemTypes[id]
         if not a then return nil end
-        return id,"type","subtype",a[1],134400,a[2],0
+        return id,"type",a[3]==5 and "Cosmetic" or "Armor",a[1],134400,a[2],a[3] or 0
     end,
     GetItemInfo=function(id)
         return "Item "..id,"|Hitem:"..id.."|h[Item]|h",4,100,1,
@@ -55,6 +57,10 @@ dofile("ArangPlanner/LootCatalog.lua")
 local AP=_G.ArangPlanner
 assert(AP.LootCatalog.IsEquipment(100))
 assert(not AP.LootCatalog.IsEquipment(101),"nongear in loot")
+assert(not AP.LootCatalog.IsEquipment(105),"cosmetic subclass equip-slot item leaked")
+assert(not AP.LootCatalog.IsEquipment(281227),"verified additional cosmetic loot leaked")
+assert(not AP.LootCatalog.MatchesSlot(105,1),"cosmetic helm matched head")
+assert(not AP.LootCatalog.MatchesSlot(281227,1),"extra loot matched head")
 assert(AP.LootCatalog.MatchesSlot(100,1))
 assert(not AP.LootCatalog.MatchesSlot(102,1))
 assert(AP.LootCatalog.MatchesSlot(102,13))
@@ -69,6 +75,8 @@ assert(filterClass==0 and filterSpec==0,"journal filter not restored")
 assert(next(AP.GetSlotTargets())==nil,"fresh planner must be empty")
 assert(AP.GetSlotTarget(1)==nil)
 assert(not AP.AssignSlotTarget(1,101),"non-gear assigned")
+assert(not AP.AssignSlotTarget(1,105),"cosmetic assigned to head")
+assert(not AP.AssignSlotTarget(1,281227),"known extra loot assigned to head")
 assert(not AP.AssignSlotTarget(1,102),"trinket accepted as head")
 assert(AP.AssignSlotTarget(1,100))
 assert(AP.AssignSlotTarget(13,102))

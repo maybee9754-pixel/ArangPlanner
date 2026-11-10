@@ -88,9 +88,16 @@ function M.EquipmentType(itemID)
     local fn=C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
     if type(fn)~="function" then return nil end
     -- (itemID, itemType, itemSubType, equipLoc, icon, classID, subclassID)
-    local _,_,_,equipLoc,icon,classID=safe(fn,itemID)
+    -- Extra loot/cosmetic reward overrides are maintained per season.
+    if AP.ExtraLootExcludedItems and AP.ExtraLootExcludedItems[itemID] then return nil end
+    local _,_,itemSubType,equipLoc,icon,classID,subclassID=safe(fn,itemID)
     if type(equipLoc)~="string" or equipLoc=="" then return nil end
     if classID~=2 and classID~=4 then return nil end
+    -- WoW armor subclass 5 is Cosmetic. These can have INVTYPE_HEAD etc.
+    -- but have no combat equipment value (e.g. Nek'zali's cosmetic helm).
+    if classID==4 and subclassID==5 then return nil end
+    if classID==4 and type(itemSubType)=="string"
+        and (itemSubType=="Cosmetic" or itemSubType=="장식용") then return nil end
     return equipLoc,icon
 end
 function M.IsEquipment(itemID)
