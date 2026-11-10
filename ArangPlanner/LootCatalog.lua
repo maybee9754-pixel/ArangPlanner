@@ -159,7 +159,7 @@ function M.MakeTierReward(tokenID,boss)
  end
  return {id=rewardID,slot=slot,name=itemName or ("아이템 ID "..rewardID),
      link=link,icon=icon,kind="tierGear",sourceBoss=boss or "",
-     sourceText=(boss or "공격대").." · 울라텍 (잠자는 똬리)",tokenSourceID=tokenID}
+     sourceText=boss or "공격대",tokenSourceID=tokenID}
 end
 -- Stable, explicit boss-to-token mapping for this season. The encounter
 -- journal loot filter sometimes hides consumable-class tier tokens.
@@ -177,11 +177,17 @@ local function matchingBossTierGear(instance,encounter)
   if boss.id==encounter then bossName=boss.name;break end
  end
  if type(bossName)~="string" then return {} end
+ -- Ulratek's Slumbering Coil Curio may yield a class-eligible tier piece
+ -- from any of the five tier slots. It is not itself wearable gear and
+ -- must remain excluded from the Voidcore equipment tracker.
+ local lower=bossName:lower()
+ local isUlratek=lower:find("울라텍",1,true)
+     or lower:find("ulratek",1,true)
  local matches={}
  for tokenID,t in pairs(AP.TierTokens or {}) do
   if M.IsTierTokenForClass(tokenID) then
    for _,alias in ipairs(AP.TierTokenBossNames[t.boss] or {}) do
-    if bossName:lower():find(alias:lower(),1,true) then
+    if isUlratek or lower:find(alias:lower(),1,true) then
      local entry=M.MakeTierReward(tokenID,bossName)
      if entry then matches[#matches+1]=entry end
      break
@@ -281,13 +287,38 @@ function M.RaidLoot(instance)
   local loot,status=M.Loot(instance,boss.id)
   if status=="loading" then loading=true end
   for _,item in ipairs(loot) do
-   if not seen[item.id] then
-    seen[item.id]=true
+   local existing=seen[item.id]
+   if not existing then
     item.sourceBoss=boss.name
-    item.sourceText=boss.name..
-      (item.kind=="tierGear" and " · 울라텍 (잠자는 똬리)" or "")
+    item.sourceText=boss.name
+    if item.kind=="tierGear" then
+     item.sourceBosses={boss.name}
+    end
+    seen[item.id]=item
     all[#all+1]=item
+   elseif existing.kind=="tierGear" and item.kind=="tierGear" then
+    local found=false
+    for _,source in ipairs(existing.sourceBosses or {}) do
+     if source==boss.name then found=true;break end
+    end
+    if not found then
+     existing.sourceBosses[#existing.sourceBosses+1]=boss.name
+    end
    end
+  end
+ end
+ for _,item in ipairs(all) do
+  if item.kind=="tierGear" and item.sourceBosses then
+   local sources={}
+   for _,source in ipairs(item.sourceBosses) do
+    if source:lower():find("울라텍",1,true)
+       or source:lower():find("ulratek",1,true) then
+     sources[#sources+1]=source.." (잠자는 똬리)"
+    else
+     sources[#sources+1]=source
+    end
+   end
+   item.sourceText=table.concat(sources," / ")
   end
  end
  table.sort(all,function(a,b)
