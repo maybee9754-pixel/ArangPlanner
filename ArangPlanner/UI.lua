@@ -1,4 +1,4 @@
--- ArangPlanner 1.6.0: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.0: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -258,7 +258,7 @@ local catalystFlag=false
 local trackLabel=label(right,"등급",20,612,"GameFontNormal",GOLD)
 local rankLabel=label(right,"강화 단계",20,647,"GameFontNormal",GOLD)
 local trackButton=button(right,"영웅 ▾",117,603,303,29,nil)
-local rankButton=button(right,"1/6 ▾",117,638,303,29,nil)
+local rankButton=button(right,"1/9 ▾",117,638,303,29,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
 venomCheck:SetPoint("TOPLEFT",18,-671)
 venomCheck:SetSize(27,27)
@@ -275,7 +275,7 @@ refreshOptions=function(slot)
     venomFlag=v.venom
     catalystFlag=v.catalyst
     trackButton:SetText(chosenTrack.." ▾")
-    rankButton:SetText(chosenRank.."/6 ▾")
+    rankButton:SetText(chosenRank.."/9 ▾")
     venomCheck:SetChecked(venomFlag)
     catalystCheck:SetChecked(catalystFlag)
     catalystCheck:SetEnabled(canCatalyst[slot or 1]==true)
@@ -287,7 +287,7 @@ trackButton:SetScript("OnClick",function()
     trackButton:SetText(chosenTrack.." ▾")
 end)
 rankButton:SetScript("OnClick",function()
-    chosenRank=chosenRank%6+1
+    chosenRank=chosenRank%9+1
     rankButton:SetText(chosenRank.."/6 ▾")
 end)
 venomCheck:SetScript("OnClick",function(self)venomFlag=self:GetChecked()==true end)
