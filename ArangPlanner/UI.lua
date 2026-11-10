@@ -1,4 +1,4 @@
--- ArangPlanner 1.4.2: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.5.0: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -122,21 +122,41 @@ missingText:SetWidth(280);missingText:SetJustifyH("LEFT")
 
 bar(mid,"장비 관리")
 local specText=label(mid,"현재 장비",20,50,"GameFontNormal",GOLD)
-local modelBacking=CreateFrame("Frame",nil,mid)
-modelBacking:SetPoint("TOPLEFT",137,-105);modelBacking:SetSize(285,362)
-tint(modelBacking,.08,.07,.11,.55)
-local model=CreateFrame("DressUpModel",nil,modelBacking)
-model:SetAllPoints()
-local modelFallback=label(modelBacking,"캐릭터 모델 불러오는 중",42,166,"GameFontHighlightSmall",MUTED)
-local modelLoaded=false
+-- Specialization-responsive visual backdrop, no 3D model or proprietary art.
+local specBacking=CreateFrame("Frame",nil,mid)
+specBacking:SetPoint("TOPLEFT",137,-105)
+specBacking:SetSize(285,362)
+local specTexture=specBacking:CreateTexture(nil,"BACKGROUND")
+specTexture:SetAllPoints()
+specTexture:SetAlpha(.14)
+local specShade=specBacking:CreateTexture(nil,"BORDER")
+specShade:SetAllPoints()
+specShade:SetColorTexture(.03,.025,.035,.52)
+local lastSpec
 local function modelRefresh()
-    if model.SetUnit then
-        local ok=pcall(model.SetUnit,model,"player")
-        modelFallback:SetShown(not ok)
-        if ok then modelFallback:Hide();modelLoaded=true end
-        if ok and model.SetCamera then pcall(model.SetCamera,model,1) end
-        if ok and model.SetPortraitZoom then pcall(model.SetPortraitZoom,model,0) end
-        if ok and model.SetCamDistanceScale then pcall(model.SetCamDistanceScale,model,1.15) end
+    local index=GetSpecialization and GetSpecialization()
+    if not index then return end
+    local id,icon,background
+    if C_SpecializationInfo and type(C_SpecializationInfo.GetSpecializationInfo)=="function" then
+        local ok,a,_,__,d,___,____,_____,h=pcall(C_SpecializationInfo.GetSpecializationInfo,index)
+        if ok then id,icon,background=a,d,h end
+    end
+    if not id and GetSpecializationInfo then
+        local ok,a,_,__,d=pcall(GetSpecializationInfo,index)
+        if ok then id,icon=a,d end
+    end
+    if lastSpec==id then return end
+    lastSpec=id
+    if type(background)=="string" and background~="" then
+        local path=background:find("\\",1,true) and background or ("Interface\\TALENTFRAME\\"..background)
+        specTexture:SetTexture(path)
+        specTexture:SetAlpha(.28)
+    elseif icon then
+        specTexture:SetTexture(icon)
+        specTexture:SetAlpha(.17)
+    else
+        specTexture:SetTexture("Interface\\TalentFrame\\TalentFrame-TopLeft")
+        specTexture:SetAlpha(.13)
     end
 end
 local slots={
@@ -164,51 +184,172 @@ end
 local help=label(mid,"장비 아이콘에 마우스를 올리면 실제 아이템 툴팁이 표시됩니다.",24,595,"GameFontHighlightSmall",MUTED)
 help:SetWidth(513)
 
-bar(right,"전리품")
-local warning=label(right,"공격대·쐐기돌 전리품 연동은 개발 중입니다.",20,60,"GameFontHighlightSmall",IVORY)
-warning:SetWidth(286)
-warning:SetWordWrap(true)
-local targetSummary=label(right,"전문화별 목표 아이템",20,112,"GameFontNormal",GOLD)
-local selectedRows={}
-local selectedIds={}
-for i=1,6 do
-    local y=144+(i-1)*51
-    local icon=newIcon(right,16,y,38,38)
-    local txt=label(right,"",61,y+5,"GameFontHighlightSmall",IVORY)
-    txt:SetWidth(244);txt:SetWordWrap(false)
-    local status=label(right,"",61,y+23,"GameFontHighlightSmall",MUTED)
-    icon:SetScript("OnClick",function()
-        local id=selectedIds[i]
-        if id then
-            AP.RemoveTarget(id)
-            alert("목표 제외: "..id)
-            if AP.RefreshUI then AP.RefreshUI() end
-        end
-    end)
-    selectedRows[i]={icon=icon,txt=txt,status=status}
+-- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
+bar(right,"전리품 목록")
+local slotNames={"전체","머리","목","어깨","가슴","손","허리","다리","발","반지","장신구","무기"}
+local slotKeys={"","Head","Neck","Shoulder","Chest","Hand","Waist","Legs","Feet","Finger","Trinket","Hand"}
+local slotFilter=1
+local expanded={raid=true,dungeon=true,delve=true,outdoor=true}
+local openInstance,openBoss={},{}
+local refreshBrowser
+local slotButton=button(right,"부위: 전체",186,48,126,27,nil)
+local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
+browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-85)
+browser:SetSize(290,369)
+local child=CreateFrame("Frame",nil,browser)
+child:SetSize(266,370)
+browser:SetScrollChild(child)
+local buttons={}
+local function clear()
+    for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
+    wipe(buttons)
 end
-local input=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
-input:SetPoint("TOPLEFT",26,-477);input:SetSize(195,28)
-input:SetAutoFocus(false);input:SetMaxLetters(256);input:EnableMouse(true)
-local function add()
-    if AP.AddTarget(input:GetText()) then
-        input:SetText("");alert("목표 아이템 등록 완료")
+local selectedTitle=label(right,"전리품을 선택하세요.",18,466,"GameFontNormal",GOLD)
+selectedTitle:SetWidth(296)
+local selectedDetail=label(right,"보스 및 아이템을 펼쳐 확인할 수 있습니다.",18,495,"GameFontHighlightSmall",MUTED)
+selectedDetail:SetWidth(290)
+local itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
+itemEntry:SetPoint("TOPLEFT",25,-524);itemEntry:SetSize(183,29)
+itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
+local function registerItem()
+    if AP.AddTarget(itemEntry:GetText()) then
+        alert("목표 등록 완료")
+        itemEntry:SetText("")
         if AP.RefreshUI then AP.RefreshUI() end
-    else alert("유효한 아이템 ID 또는 아이템 링크를 입력하세요.") end
+    else alert("아이템 ID 또는 링크를 입력하세요.") end
 end
-button(right,"등록",230,472,84,32,add)
-input:SetScript("OnEnterPressed",function(self)add();self:ClearFocus()end)
-input:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
+button(right,"등록",213,521,96,30,registerItem)
+itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
+itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
     hooksecurefunc("ChatEdit_InsertLink",function(link)
         if ROOT:IsShown() and type(link)=="string" and IsShiftKeyDown() and AP.GetItemIDFromText(link) then
-            input:SetText(link);input:SetFocus()
+            itemEntry:SetText(link);itemEntry:SetFocus()
         end
     end)
 end
-local note=label(right,"아이템 ID 입력 또는 가방 아이템 Shift+클릭",19,518,"GameFontHighlightSmall",MUTED)
-note:SetWidth(300)
-button(right,"목표 새로고침",20,550,288,32,function()AP.ScanEquipped();AP.RefreshUI()end)
+local function selectItem(data)
+    selectedTitle:SetText(data.name or ("아이템 "..data.id))
+    selectedDetail:SetText("아이템 ID "..tostring(data.id))
+    itemEntry:SetText(tostring(data.id))
+end
+local function makeRow(y,h,depth,title,kind,action,item)
+    local f=CreateFrame("Button",nil,child,"BackdropTemplate")
+    f:SetPoint("TOPLEFT",child,"TOPLEFT",depth,-y)
+    f:SetSize(266-depth,h)
+    f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    local isGroup=kind=="group"
+    f:SetBackdropColor(isGroup and .22 or .095,isGroup and .16 or .078,.05,.94)
+    f:SetBackdropBorderColor(.53,.38,.13,isGroup and .95 or .38)
+    local x=item and 39 or 9
+    local text=label(f,title,x,item and 6 or 6,"GameFontHighlightSmall",isGroup and GOLD or IVORY)
+    text:SetWidth(f:GetWidth()-x-3)
+    text:SetWordWrap(false)
+    if item then
+        local icon=f:CreateTexture(nil,"ARTWORK")
+        icon:SetSize(30,30)
+        icon:SetPoint("LEFT",4,0)
+        icon:SetTexture(item.icon or 134400)
+        f:SetScript("OnEnter",function()
+            GameTooltip:SetOwner(f,"ANCHOR_RIGHT")
+            if item.link then pcall(GameTooltip.SetHyperlink,GameTooltip,item.link)
+            elseif GameTooltip.SetItemByID then pcall(GameTooltip.SetItemByID,GameTooltip,item.id) end
+            GameTooltip:Show()
+        end)
+        f:SetScript("OnLeave",function()GameTooltip:Hide()end)
+    end
+    f:SetScript("OnClick",action)
+    buttons[#buttons+1]=f
+end
+refreshBrowser=function()
+    if not ROOT:IsShown() or not right:IsShown() then return end
+    if not AP.LootCatalog then return end
+    local sources,reason=AP.LootCatalog.Instances()
+    clear()
+    local y,n=0,0
+    local function add(h,depth,title,kind,fn,item)
+        if n>=170 then return end
+        makeRow(y,h,depth,title,kind,fn or function()end,item)
+        y=y+h+3
+        n=n+1
+    end
+    if not sources then
+        add(42,0,reason or "모험 안내서를 불러올 수 없습니다.","group")
+    else
+        local sections={{"raid","공격대"},{"dungeon","던전"},{"delve","구렁"},{"outdoor","야외"}}
+        for _,section in ipairs(sections) do
+            local category,labelName=section[1],section[2]
+            add(29,0,(expanded[category] and "[-]  " or "[+]  ")..labelName,"group",function()
+                expanded[category]=not expanded[category]
+                refreshBrowser()
+            end)
+            if expanded[category] then
+                local entries=sources[category] or {}
+                if #entries==0 then
+                    local empty=(category=="delve" or category=="outdoor")
+                        and "전리품 데이터 준비 중" or "모험 안내서 목록 없음"
+                    add(30,9,empty,"text")
+                end
+                for _,place in ipairs(entries) do
+                    if n>=170 then break end
+                    local id=place.id
+                    local opened=openInstance[id]==true
+                    add(29,8,(opened and "[-] " or "[+] ")..place.name,"instance",function()
+                        openInstance[id]=not openInstance[id]
+                        refreshBrowser()
+                    end)
+                    if opened then
+                        local bosses=AP.LootCatalog.Encounters(id)
+                        if #bosses==0 then add(27,17,"보스 정보 없음","text") end
+                        for _,boss in ipairs(bosses) do
+                            if n>=170 then break end
+                            local key=tostring(id)..":"..tostring(boss.id)
+                            local bossOpened=openBoss[key]==true
+                            add(26,17,(bossOpened and "[-] " or "[+] ")..boss.name,"boss",function()
+                                openBoss[key]=not openBoss[key];refreshBrowser()
+                            end)
+                            if bossOpened then
+                                local items=AP.LootCatalog.Loot(id,boss.id)
+                                local shown=0
+                                for _,item in ipairs(items) do
+                                    if n>=170 then break end
+                                    local matches=slotFilter==1
+                                        or (type(item.slot)=="string" and item.slot:lower():find(slotKeys[slotFilter]:lower(),1,true))
+                                    if matches then
+                                        shown=shown+1
+                                        add(42,25,item.name,"item",function()selectItem(item)end,item)
+                                    end
+                                end
+                                if shown==0 then add(29,22,"목록 없음 / 데이터 로딩 중","text") end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    child:SetHeight(math.max(370,y))
+end
+slotButton:SetScript("OnClick",function()
+    slotFilter=slotFilter%#slotNames+1
+    slotButton:SetText("부위: "..slotNames[slotFilter])
+    refreshBrowser()
+end)
+button(right,"전리품 갱신",20,567,290,31,function()
+    if AP.LootCatalog then AP.LootCatalog.Invalidate() end
+    refreshBrowser()
+end)
+local journalEvents=CreateFrame("Frame")
+journalEvents:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+journalEvents:RegisterEvent("EJ_LOOT_DATA_RECIEVED")
+journalEvents:SetScript("OnEvent",function()
+    if not ROOT:IsShown() or not right:IsShown() then return end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(.35,function()
+            if ROOT:IsShown() and right:IsShown() then refreshBrowser() end
+        end)
+    end
+end)
 
 -- Other top-level tabs are honest WIP panels, not made-up acquisition records.
 for i=2,#names do
@@ -277,25 +418,16 @@ function AP.RefreshUI()
         end
         r.lvl:SetText(lvl and tostring(lvl) or "")
     end
-    if not modelLoaded then modelRefresh() end
+    modelRefresh()
     local rows=AP.GetTargetRows()
     local missingNames={}
-    for i=1,6 do
-        local data=rows[i]
-        local c=selectedRows[i]
-        selectedIds[i]=data and data.id
-        c.icon:SetShown(data~=nil)
-        c.txt:SetText(data and data.name or (i==1 and "등록된 목표 아이템이 없습니다." or ""))
-        c.status:SetText(data and (tostring(data.id).."  ·  "..data.status) or "")
-        if data then
-            c.icon.icon:SetTexture(data.icon or 134400)
-            if data.status=="미확인" then missingNames[#missingNames+1]=data.name end
-        end
+    for _,data in ipairs(rows) do
+        if data.status=="미확인" then missingNames[#missingNames+1]=data.name end
     end
     missingText:SetText(#missingNames>0 and table.concat(missingNames,"\n") or "미확인 목표 아이템 없음")
 end
 function AP.ToggleUI()
-    if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI() end
+    if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI();refreshBrowser() end
 end
 ROOT:SetScript("OnShow",function()if AP.RefreshUI then AP.RefreshUI()end end)
 switch(1)
@@ -350,5 +482,6 @@ function AP.ToggleUI()
             for i=2,#content do content[i]:Hide() end
         end
         AP.RefreshUI()
+        if not compact then refreshBrowser() end
     end
 end
