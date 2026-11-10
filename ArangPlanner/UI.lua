@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.5: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.6: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -118,7 +118,15 @@ end
 local missing=pane(left,11,445,324,163)
 bar(missing,"미획득 아이템")
 local missingText=label(missing,"",18,55,"GameFontHighlightSmall",IVORY)
-missingText:SetWidth(280);missingText:SetJustifyH("LEFT")
+missingText:SetWidth(280)
+missingText:SetJustifyH("LEFT")
+local missingRows={}
+for i=1,5 do
+    missingRows[i]=label(missing,"",18,52+(i-1)*24,"GameFontHighlightSmall",IVORY)
+    missingRows[i]:SetWidth(289)
+    missingRows[i]:SetWordWrap(false)
+end
+missingText:Hide()
 
 bar(mid,"장비 관리")
 local specText=label(mid,"목표 장비 등록 | 부위를 선택하세요",20,50,"GameFontNormal",GOLD)
@@ -196,10 +204,12 @@ for _,sd in ipairs(slots) do
     f:RegisterForClicks("LeftButtonUp","RightButtonUp")
     f.icon:SetTexture(nil)
     local itemLevel=label(f,"",3,30,"GameFontNormalSmall",GOLD)
-    local equippedName=label(mid,"",x+((x>440) and -92 or 60),y+12,"GameFontHighlightSmall",IVORY)
-    equippedName:SetWidth(90)
+    local lower=y>=470
+    local equippedName=label(mid,"",lower and (x-7) or (x+((x>440) and -92 or 60)),
+        lower and (y+54) or (y+12),"GameFontHighlightSmall",IVORY)
+    equippedName:SetWidth(lower and 80 or 90)
     equippedName:SetWordWrap(false)
-    if x>440 then equippedName:SetJustifyH("RIGHT") end
+    if x>440 and not lower then equippedName:SetJustifyH("RIGHT") end
     f:SetScript("OnClick",function(self)
         if IsControlKeyDown and IsControlKeyDown() then
             if AP.ClearSlotTarget(self.slot) then
@@ -232,6 +242,7 @@ local filters={raid=true,dungeon=true,delve=true,outdoor=true}
 local filterNames={{"raid","공격대"},{"dungeon","던전"},{"delve","구렁"},{"outdoor","기타"}}
 local expanded={raid=true,dungeon=true,delve=true,outdoor=false}
 local openInstance={}
+local expandedInitialized=false
 local browserButtons={}
 local popup
 local function closePopup()
@@ -260,9 +271,12 @@ local function dropdown(anchor,choices,onChoose,width)
     end
     popup=frame
 end
-local heading=label(right,"머리",18,16,"GameFontNormalLarge",IVORY)
-local sourceCaption=label(right,"전리품 목록",20,56,"GameFontHighlightSmall",GOLD)
-local filterButton=button(right,"획득처 선택 ▾",340,15,193,29,nil)
+local heading=label(right,"머리",20,14,"GameFontNormalLarge",IVORY)
+heading:SetWidth(258)
+heading:SetTextColor(1,.96,.85)
+local sourceCaption=label(right,"전리품 목록",20,55,"GameFontHighlightSmall",GOLD)
+sourceCaption:SetWidth(280)
+local filterButton=button(right,"획득처 선택 v",373,15,160,29,nil)
 local filterMenu=CreateFrame("Frame",nil,right,"BackdropTemplate")
 filterMenu:SetPoint("TOPRIGHT",filterButton,"BOTTOMRIGHT",0,0)
 filterMenu:SetSize(190,137)
@@ -292,7 +306,7 @@ filterButton:SetScript("OnClick",function()
     closePopup()
     filterMenu:SetShown(not filterMenu:IsShown())
 end)
-local reload=button(right,"↻",15,15,31,29,function()
+local reload=button(right,"새로고침",280,15,89,29,function()
     if AP.LootCatalog then AP.LootCatalog.Invalidate() end
     if refreshBrowser then refreshBrowser() end
 end)
@@ -398,9 +412,9 @@ local choiceIcon
 choiceIcon=newIcon(right,35,496,39,39)
 choiceIcon:EnableMouse(false)
 choiceIcon.icon:SetTexture(nil)
-selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormal",GOLD)
+selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormal",IVORY)
 selectedTitle:SetWidth(431)
-selectedDetail=label(right,"목표 장비를 선택하세요",84,526,"GameFontHighlightSmall",MUTED)
+selectedDetail=label(right,"목표 장비를 선택하세요",84,526,"GameFontHighlightSmall",IVORY)
 selectedDetail:SetWidth(425)
 itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
 itemEntry:SetPoint("TOPLEFT",28,-549)
@@ -413,8 +427,8 @@ local rankLabel=label(right,"강화 단계:",120,612,"GameFontNormal",GOLD)
 local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
 local chosenTrack,chosenRank="영웅",1
 local venomFlag,catalystFlag=false,false
-local trackButton=button(right,"영웅 ▾",241,577,273,27,nil)
-local rankButton=button(right,"1/6 ▾",241,607,273,27,nil)
+local trackButton=button(right,"영웅  v",241,577,273,27,nil)
+local rankButton=button(right,"1/6  v",241,607,273,27,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
 venomCheck:SetPoint("TOPLEFT",155,-638);venomCheck:SetSize(26,26)
 local venomLabel=label(right,"맹독석 강화 (계획)",185,643,"GameFontHighlightSmall",GOLD)
@@ -425,8 +439,8 @@ local originalText=label(right,"원본 장비: 선택한 장비",34,697,"GameFon
 originalText:SetWidth(476)
 local canCatalyst={[1]=true,[3]=true,[5]=true,[7]=true,[10]=true}
 local function updateOptions()
-    trackButton:SetText(chosenTrack.." ▾")
-    rankButton:SetText(chosenRank.."/6 ▾")
+    trackButton:SetText(chosenTrack.."  v")
+    rankButton:SetText(chosenRank.."/6  v")
     venomCheck:SetChecked(venomFlag)
     catalystCheck:SetChecked(catalystFlag)
     catalystCheck:SetEnabled(canCatalyst[selectedSlot or 1]==true)
@@ -572,6 +586,15 @@ refreshBrowser=function()
                 end
             end
         end
+        -- Open the first actual raid and dungeon on first display, so users
+        -- immediately see selectable equipment rather than empty closed rows.
+        if not expandedInitialized then
+            expandedInitialized=true
+            if raids[1] then openInstance["raid"..tostring(raids[1].id)]=true end
+            if sources.dungeon and sources.dungeon[1] then
+                openInstance["dungeon"..tostring(sources.dungeon[1].id)]=true
+            end
+        end
         section("raid","공격대",raids,function(id)return catalog.RaidLoot(id)end)
         section("dungeon","던전",sources.dungeon,function(id)return catalog.DungeonLoot(id)end)
         section("delve","구렁",sources.delve or {},function(id)return catalog.DungeonLoot(id)end)
@@ -645,7 +668,12 @@ function AP.RefreshUI()
             active and .045 or .06,1)
         r.f.icon:SetTexture(data and data.icon or nil)
         r.lvl:SetText("")
-        r.name:SetText(data and data.name or (AP.LootCatalog.SlotLabel(slot).." · 미등록"))
+        if slot==2 or slot==12 or slot==13 or slot==14 or slot==16 or slot==17 then
+            r.name:SetText(AP.LootCatalog.SlotLabel(slot))
+        else
+            local text=data and data.name or (AP.LootCatalog.SlotLabel(slot).." · 미등록")
+            r.name:SetText(text)
+        end
         if data and data.status=="착용" then r.lvl:SetText("✓") end
     end
     modelRefresh()
@@ -655,8 +683,11 @@ function AP.RefreshUI()
             missingNames[#missingNames+1]=AP.LootCatalog.SlotLabel(data.slot)..": "..data.name
         end
     end
-    missingText:SetText(#missingNames>0 and table.concat(missingNames,"\n")
-        or "미획득 목표 아이템 없음")
+    for i,cell in ipairs(missingRows) do
+        local value=missingNames[i] or (i==1 and #missingNames==0
+            and "미획득 목표 아이템 없음" or "")
+        cell:SetText(value)
+    end
 end
 function AP.ToggleUI()
     if ROOT:IsShown() then ROOT:Hide() else ROOT:Show();switch(current);AP.RefreshUI();refreshBrowser() end
