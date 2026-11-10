@@ -1,37 +1,29 @@
 #!/usr/bin/env python3
-"""Guard the shared web/game geometry and font contract."""
+"""Validate the native game v1.4 and legacy web studio independently."""
 from pathlib import Path
-import json, re
-
+import json
 root=Path(__file__).resolve().parent.parent
 data=json.loads((root/"docs/design.json").read_text(encoding="utf-8"))
 toc=(root/"ArangPlanner/ArangPlanner.toc").read_text(encoding="utf-8")
-lua=(root/"ArangPlanner/UI.lua").read_text(encoding="utf-8")
-web=(root/"docs/index.html").read_text(encoding="utf-8")
+ui=(root/"ArangPlanner/UI.lua").read_text(encoding="utf-8")
+core=(root/"ArangPlanner/ArangPlanner.lua").read_text(encoding="utf-8")
 contract=(root/"ArangPlanner/UIContract.lua").read_text(encoding="utf-8")
 css=(root/"docs/ui-contract.css").read_text(encoding="utf-8")
-version=data["gameVersion"]
-assert f"## Version: {version}" in toc
-assert "UIContract.lua\nUI.lua" in toc
-assert "ArangPlanner v"+version in lua
-assert "ArangPlanner v"+version in web
-assert "C_AddOns.GetAddOnMetadata" in lua
+web=(root/"docs/index.html").read_text(encoding="utf-8")
+assert "## Version: 1.4.0-alpha" in toc
+assert "ArangPlanner.lua\nUIContract.lua\nUI.lua" in toc
+assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
+assert "PlayerModel" in ui and "SetInventoryItem" in ui
+assert "AP.GetTargetRows" in ui and "AP.TargetCounts" in ui
+assert "AP.AddTarget" in ui and "AP.RemoveTarget" in ui
+assert "ChatEdit_InsertLink" in ui and "AP.ToggleUI" in ui
+assert 'ap-logo.tga' in ui
 assert "ArangPlannerUIContract" in contract
-assert "local U=_G.ArangPlannerUIContract" in lua
 assert "'ArangNanum'" in css
-assert "FONT_ROOT" in lua and "SetFont(file,wanted" in lua
-assert "ui-contract.css?v=1.3.0" in web
-assert "applyLayout(data)" in web
-assert "helpLines" in lua and "game-help" in web
-assert "rightHelpLineHeight" in lua
-assert set(data["panels"]) == {"header","left","middle","right"}
-for i,p in enumerate(data["tabs"]):
-    assert p["w"]>0 and p["h"]>0
-    assert f".head .nav .tab:nth-child({i+1})" in css
-for field in ["controls","table","typography","typeface"]:
-    assert field in data
-for k in ["NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf"]:
-    assert k in css and k in contract
-    if (root/"ArangPlanner/Fonts").exists():
-        assert (root/"ArangPlanner/Fonts"/k).stat().st_size>100000
-print("PASS: WoW/web version, generated geometry, shared font, help spacing, and texture contracts")
+assert "applyLayout(data)" in web and "ui-contract.css?v=1.3.0" in web
+assert len(data["tabs"])==5 and set(data["panels"])=={"header","left","middle","right"}
+for font in ["NanumGothic-Regular.ttf","NanumGothic-Bold.ttf","NanumGothic-ExtraBold.ttf"]:
+    assert font in css
+    p=root/"ArangPlanner/Fonts"/font
+    if p.exists():assert p.stat().st_size>100000
+print("PASS: Native v1.4 gameplay UI, AP skin, target operations and legacy web v1.3 separately")

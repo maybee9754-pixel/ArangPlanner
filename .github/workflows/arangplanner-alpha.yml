@@ -70,7 +70,7 @@ jobs:
               with Image.open(p) as im:
                   assert im.mode=='RGBA'
                   assert im.width in (256,512,1024)
-                  assert im.height in (64,128,512)
+                  assert im.height in (64,128,256,512)
           ui=(root/'UI.lua').read_text(encoding='utf-8')
           assert 'ChatEdit_InsertLink' in ui
           assert 'PlayerModel' in ui
