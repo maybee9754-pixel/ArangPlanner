@@ -96,7 +96,7 @@ local raidTier=false
 for _,item in ipairs(raids) do
  if item.id==271511 then
   raidTier=true
-  assert(item.sourceText=="매장된 파수꾼 · 울라텍 (잠자는 똬리)")
+  assert(item.sourceText=="매장된 파수꾼", "single boss loot must not invent an Ulratek source")
  end
 end
 assert(raidTier,"raid-aggregated list missing tier source")
@@ -133,7 +133,7 @@ assert(options.venom and options.catalyst)
 assert(AP.GetSlotOptions(13).catalyst==false)
 assert(AP.SetSlotOptions(13,{track="영웅",rank=20,venom=false,catalyst=true}))
 local trinket=AP.GetSlotOptions(13)
-assert(trinket.rank==9 and not trinket.catalyst)
+assert(trinket.rank==6 and not trinket.catalyst)
 assert(AP.ClearSlotTarget(10))
 assert(AP.GetSlotOptions(10).track=="영웅" and not AP.GetSlotOptions(10).venom)
 print("PASS: tier actual gear mapped, token hidden, raid/dungeon sources, registered wearables")
