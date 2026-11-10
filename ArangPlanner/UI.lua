@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.4: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.5: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -171,12 +171,10 @@ local selectedItem=nil
 local itemEntry
 local selectedTitle,selectedDetail
 local refreshOptions
-local choiceIcon
 local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
     selectedItem=nil
-    if choiceIcon then choiceIcon.icon:SetTexture(nil) end
     if itemEntry then itemEntry:SetText("") end
     if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
     if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
@@ -228,187 +226,156 @@ end
 local help=label(mid,"빈 슬롯 클릭 → 전리품 선택 → 등급·강화 설정 → 등록    |    Ctrl+클릭: 제거",24,719,"GameFontHighlightSmall",MUTED)
 help:SetWidth(575)
 
--- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
-bar(right,"전리품 목록 · ".."")
--- The independent ArangPlanner browser has a compact source filter above a
--- scrollable loot list; the lower panel is dedicated to item configuration.
-local sourceFilters={"전체","공격대","쐐기돌","구렁","야외"}
-local sourceFilterIndex=1
-local filterButton=button(right,"전체 획득처 ▾",370,44,160,28,nil)
-filterButton:SetScript("OnClick",function()
-    sourceFilterIndex=sourceFilterIndex%#sourceFilters+1
-    filterButton:SetText(sourceFilters[sourceFilterIndex].." 획득처 ▾")
-    if refreshBrowser then refreshBrowser() end
-end)
-local expanded={raid=true,dungeon=true,delve=true,outdoor=true}
-local openInstance,openBoss={},{}
-local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
-browser:SetPoint("TOPLEFT",right,"TOPLEFT",16,-81)
-browser:SetSize(502,396)
-local child=CreateFrame("Frame",nil,browser)
-child:SetSize(476,396)
-browser:SetScrollChild(child)
-local buttons={}
-local function clear()
-    for _,f in ipairs(buttons) do f:Hide();f:SetParent(nil) end
-    wipe(buttons)
+-- Independent loot explorer. Layout mirrors the familiar planning workflow,
+-- but every frame, dropdown, selection and state handler is ArangPlanner code.
+local filters={raid=true,dungeon=true,delve=true,outdoor=true}
+local filterNames={{"raid","공격대"},{"dungeon","던전"},{"delve","구렁"},{"outdoor","기타"}}
+local expanded={raid=true,dungeon=true,delve=true,outdoor=false}
+local openInstance={}
+local browserButtons={}
+local popup
+local function closePopup()
+    if popup then popup:Hide();popup=nil end
 end
-local optionPane=pane(right,11,486,529,246)
-bar(optionPane,"선택 장비 · 등록 설정")
-choiceIcon=newIcon(right,22,526,40,40)
-choiceIcon:EnableMouse(false)
-choiceIcon.icon:SetTexture(nil)
-selectedTitle=label(right,"장비를 선택하세요.",72,531,"GameFontNormal",GOLD)
-selectedTitle:SetWidth(434)
-selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",72,553,"GameFontHighlightSmall",MUTED)
-selectedDetail:SetWidth(444)
-itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
-itemEntry:SetPoint("TOPLEFT",29,-578);itemEntry:SetSize(482,23)
-itemEntry:SetText("")
-local itemHelp=label(right,"아이템 ID 또는 Shift+클릭 아이템 링크",31,601,"GameFontHighlightSmall",MUTED)
-itemHelp:SetWidth(475)
-itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
-
--- Configuration is a saved *plan*, not evidence of an upgraded item.
-local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
-local chosenTrack="영웅"
-local chosenRank=1
-local venomFlag=false
-local catalystFlag=false
-local trackLabel=label(right,"등급",26,624,"GameFontNormal",GOLD)
-local rankLabel=label(right,"강화 단계",26,658,"GameFontNormal",GOLD)
-local trackButton=button(right,"영웅 ▾",139,618,377,29,nil)
-local rankButton=button(right,"1/6 ▾",139,652,377,29,nil)
-local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-venomCheck:SetPoint("TOPLEFT",23,-680)
-venomCheck:SetSize(27,27)
-label(right,"맹독석 (계획)",57,685,"GameFontHighlight",IVORY)
-local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-catalystCheck:SetPoint("TOPLEFT",272,-680)
-catalystCheck:SetSize(27,27)
-label(right,"티어 변환 (계획)",306,685,"GameFontHighlight",IVORY)
-local canCatalyst={ [1]=true,[3]=true,[5]=true,[7]=true,[10]=true }
-refreshOptions=function(slot)
-    local v=AP.GetSlotOptions(slot or 1)
-    chosenTrack=v.track
-    chosenRank=v.rank
-    venomFlag=v.venom
-    catalystFlag=v.catalyst
-    trackButton:SetText(chosenTrack.." ▾")
-    rankButton:SetText(chosenRank.."/6 ▾")
-    venomCheck:SetChecked(venomFlag)
-    catalystCheck:SetChecked(catalystFlag)
-    catalystCheck:SetEnabled(canCatalyst[slot or 1]==true)
+local function dropdown(anchor,choices,onChoose,width)
+    if popup and popup.anchor==anchor then closePopup();return end
+    closePopup()
+    local frame=CreateFrame("Frame",nil,right,"BackdropTemplate")
+    frame.anchor=anchor
+    frame:SetSize(width or anchor:GetWidth(),#choices*25+10)
+    frame:SetPoint("BOTTOMRIGHT",anchor,"TOPRIGHT",0,0)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetFrameLevel(ROOT:GetFrameLevel()+95)
+    frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
+        edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+    frame:SetBackdropColor(.045,.035,.055,.98)
+    frame:SetBackdropBorderColor(.68,.52,.19,1)
+    frame:EnableMouse(true)
+    for i,choice in ipairs(choices) do
+        local b=button(frame,choice.label,5,5+(i-1)*25,frame:GetWidth()-10,24,function()
+            onChoose(choice.value)
+            closePopup()
+        end)
+        b:SetFrameLevel(frame:GetFrameLevel()+1)
+    end
+    popup=frame
 end
-trackButton:SetScript("OnClick",function()
-    local index=1
-    for i,v in ipairs(tracks) do if v==chosenTrack then index=i;break end end
-    chosenTrack=tracks[index%#tracks+1]
-    trackButton:SetText(chosenTrack.." ▾")
-end)
-rankButton:SetScript("OnClick",function()
-    chosenRank=chosenRank%6+1
-    rankButton:SetText(chosenRank.."/6 ▾")
-end)
-venomCheck:SetScript("OnClick",function(self)venomFlag=self:GetChecked()==true end)
-catalystCheck:SetScript("OnClick",function(self)catalystFlag=self:GetChecked()==true end)
-refreshOptions(1)
-
-local function registerItem()
-    if not selectedSlot then
-        alert("가운데에서 등록할 장비 부위를 먼저 선택하세요.")
-        return
-    end
-    local id=AP.GetItemIDFromText(itemEntry:GetText())
-    if not id then
-        alert("오른쪽에서 아이템을 선택한 뒤 등록하세요.")
-        return
-    end
-    if not AP.LootCatalog or not AP.LootCatalog.MatchesSlot(id,selectedSlot) then
-        alert("선택한 부위에 착용할 수 있는 장비만 등록할 수 있습니다.")
-        return
-    end
-    local ok,reason=AP.AssignSlotTarget(selectedSlot,id)
-    if not ok then alert(reason or "등록 실패");return end
-    AP.SetSlotOptions(selectedSlot,{
-        track=chosenTrack,rank=chosenRank,
-        venom=venomFlag,catalyst=catalystFlag})
-    alert(AP.LootCatalog.SlotLabel(selectedSlot).." 목표 등록 완료")
-    selectedItem=nil
-    itemEntry:SetText("")
-    if AP.RefreshUI then AP.RefreshUI() end
-end
-button(right,"선택 장비 등록",23,707,493,30,registerItem)
-itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
-itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
-if type(ChatEdit_InsertLink)=="function" then
-    hooksecurefunc("ChatEdit_InsertLink",function(link)
-        if ROOT:IsShown() and type(link)=="string" and IsShiftKeyDown() and AP.GetItemIDFromText(link) then
-            itemEntry:SetText(link);itemEntry:SetFocus()
-        end
+local heading=label(right,"머리",18,16,"GameFontNormalLarge",IVORY)
+local sourceCaption=label(right,"전리품 목록",20,56,"GameFontHighlightSmall",GOLD)
+local filterButton=button(right,"획득처 선택 ▾",340,15,193,29,nil)
+local filterMenu=CreateFrame("Frame",nil,right,"BackdropTemplate")
+filterMenu:SetPoint("TOPRIGHT",filterButton,"BOTTOMRIGHT",0,0)
+filterMenu:SetSize(190,137)
+filterMenu:SetFrameStrata("DIALOG")
+filterMenu:SetFrameLevel(ROOT:GetFrameLevel()+110)
+filterMenu:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
+    edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
+filterMenu:SetBackdropColor(.035,.028,.035,.99)
+filterMenu:SetBackdropBorderColor(.67,.52,.2,1)
+filterMenu:EnableMouse(true)
+local filterCount=label(filterMenu,"표시할 획득처",12,8,"GameFontHighlightSmall",GOLD)
+local refreshBrowser
+local filterChecks={}
+for i,entry in ipairs(filterNames) do
+    local cb=CreateFrame("CheckButton",nil,filterMenu,"UICheckButtonTemplate")
+    cb:SetSize(23,23)
+    cb:SetPoint("TOPLEFT",filterMenu,"TOPLEFT",10,-28-(i-1)*25)
+    cb:SetChecked(filters[entry[1]])
+    label(filterMenu,entry[2],39,30+(i-1)*25,"GameFontHighlightSmall",IVORY)
+    cb:SetScript("OnClick",function(self)
+        filters[entry[1]]=self:GetChecked()==true
+        if refreshBrowser then refreshBrowser() end
     end)
+    filterChecks[i]=cb
 end
-local function selectItem(data)
-    if not selectedSlot then
-        alert("가운데 목표 장비 부위를 먼저 선택하세요.")
-        return
-    end
-    if not AP.LootCatalog.MatchesSlot(data.id,selectedSlot) then
-        alert("선택한 부위와 일치하지 않는 장비입니다.")
-        return
-    end
-    selectedItem=data
+filterMenu:Hide()
+filterButton:SetScript("OnClick",function()
+    closePopup()
+    filterMenu:SetShown(not filterMenu:IsShown())
+end)
+local reload=button(right,"↻",15,15,31,29,function()
+    if AP.LootCatalog then AP.LootCatalog.Invalidate() end
     if refreshBrowser then refreshBrowser() end
-    choiceIcon.icon:SetTexture(data.icon or (C_Item and C_Item.GetItemIconByID
-        and C_Item.GetItemIconByID(data.id)) or 134400)
-    selectedTitle:SetText(data.name or ("아이템 "..data.id))
-    selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot).." · "
-        ..(data.sourceText or "획득처 확인 필요"))
-    itemEntry:SetText(tostring(data.id))
+end)
+reload:SetScript("OnEnter",function(self)
+    GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
+    GameTooltip:SetText("전리품 목록 새로고침")
+    GameTooltip:Show()
+end)
+reload:SetScript("OnLeave",function() GameTooltip:Hide() end)
+local browser=CreateFrame("ScrollFrame",nil,right,"UIPanelScrollFrameTemplate")
+browser:SetPoint("TOPLEFT",right,"TOPLEFT",15,-84)
+browser:SetSize(502,387)
+local child=CreateFrame("Frame",nil,browser)
+child:SetSize(474,387)
+browser:SetScrollChild(child)
+local function clearRows()
+    for _,f in ipairs(browserButtons) do f:Hide();f:SetParent(nil) end
+    wipe(browserButtons)
 end
 local function makeRow(y,h,depth,title,kind,action,item)
     local f=CreateFrame("Button",nil,child,"BackdropTemplate")
     f:SetPoint("TOPLEFT",child,"TOPLEFT",depth,-y)
-    f:SetSize(476-depth,h)
+    f:SetSize(474-depth,h)
     f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
         edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    local group=(kind=="group")
-    local zone=(kind=="instance")
-    f:SetBackdropColor(group and .21 or zone and .15 or .075,
-        group and .155 or zone and .105 or .065,.04,.96)
-    f:SetBackdropBorderColor(group and .7 or zone and .46 or .27,
-        group and .51 or zone and .32 or .22,.13,
-        group and 1 or zone and .85 or .42)
-    local textX=item and 48 or 12
-    local name=label(f,title,textX,item and 6 or 7,
-        "GameFontHighlightSmall",group and GOLD or IVORY)
-    if item and item.id then
-        local info=C_Item and C_Item.GetItemInfo or GetItemInfo
-        if type(info)=="function" then
-            local ok,_,__,quality=pcall(info,item.id)
-            if ok and type(quality)=="number" and ITEM_QUALITY_COLORS
-                and ITEM_QUALITY_COLORS[quality] then
-                local c=ITEM_QUALITY_COLORS[quality]
-                name:SetTextColor(c.r,c.g,c.b)
-            end
-        end
-        if selectedItem and selectedItem.id==item.id then
-            f:SetBackdropBorderColor(1,.82,.25,1)
-            f:SetBackdropColor(.22,.15,.055,1)
-        end
+    local main=(kind=="group")
+    local region=(kind=="instance")
+    local active=item and selectedItem and selectedItem.id==item.id
+    if main then
+        f:SetBackdropColor(.10,.09,.16,.96)
+        f:SetBackdropBorderColor(.33,.33,.56,1)
+    elseif region then
+        f:SetBackdropColor(.19,.135,.087,.97)
+        f:SetBackdropBorderColor(.30,.24,.17,1)
+    elseif active then
+        f:SetBackdropColor(.09,.22,.38,1)
+        f:SetBackdropBorderColor(.34,.75,1,1)
+    else
+        f:SetBackdropColor(.13,.095,.088,.98)
+        f:SetBackdropBorderColor(.23,.17,.12,.7)
     end
-    name:SetWidth(f:GetWidth()-textX-7)
-    name:SetWordWrap(false)
+    if kind=="group" then
+        local dot=f:CreateTexture(nil,"ARTWORK")
+        dot:SetPoint("LEFT",9,0)
+        dot:SetSize(16,16)
+        dot:SetColorTexture(.26,.68,.48,1)
+    end
+    local tx=item and 50 or main and 35 or 12
+    local txt=label(f,title,tx,item and 6 or 8,
+        main and "GameFontNormal" or "GameFontHighlightSmall",
+        main and GOLD or region and GOLD or IVORY)
+    txt:SetWidth(f:GetWidth()-tx-(item and 78 or 14))
+    txt:SetWordWrap(false)
     if item then
         local icon=f:CreateTexture(nil,"ARTWORK")
-        icon:SetSize(34,34)
-        icon:SetPoint("LEFT",5,0)
+        icon:SetSize(38,38)
+        icon:SetPoint("LEFT",6,0)
         icon:SetTexture(item.icon or (C_Item and C_Item.GetItemIconByID
             and C_Item.GetItemIconByID(item.id)) or 134400)
-        local source=label(f,"획득처: "..(item.sourceText or "미확인"),
-            textX,25,"GameFontHighlightSmall",MUTED)
-        source:SetWidth(f:GetWidth()-textX-8)
+        local name,_,quality,_,_,subtype
+        if C_Item and C_Item.GetItemInfo then
+            name,_,quality,_,_,subtype=C_Item.GetItemInfo(item.id)
+        elseif GetItemInfo then
+            name,_,quality,_,_,subtype=GetItemInfo(item.id)
+        end
+        if type(quality)=="number" and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality] then
+            local c=ITEM_QUALITY_COLORS[quality]
+            txt:SetTextColor(c.r,c.g,c.b)
+        end
+        local source=label(f,item.sourceBoss or item.sourceText or "획득처 확인 중",
+            tx,27,"GameFontHighlightSmall",MUTED)
+        source:SetWidth(f:GetWidth()-tx-13)
         source:SetWordWrap(false)
+        if type(subtype)=="string" and subtype~="" then
+            local armor=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+            armor:SetPoint("RIGHT",f,"RIGHT",-9,5)
+            armor:SetText(subtype)
+            armor:SetTextColor(.72,.68,.62)
+        end
+        if item.kind=="tierGear" then
+            local tier=label(f,"T",30,31,"GameFontHighlightSmall",GOLD)
+        end
         f:SetScript("OnEnter",function()
             GameTooltip:SetOwner(f,"ANCHOR_RIGHT")
             if item.link then pcall(GameTooltip.SetHyperlink,GameTooltip,item.link)
@@ -417,162 +384,208 @@ local function makeRow(y,h,depth,title,kind,action,item)
             end
             GameTooltip:Show()
         end)
-        f:SetScript("OnLeave",function()GameTooltip:Hide()end)
+        f:SetScript("OnLeave",function() GameTooltip:Hide() end)
     end
-    f:SetScript("OnClick",action)
-    buttons[#buttons+1]=f
+    f:SetScript("OnClick",function() closePopup();filterMenu:Hide();if action then action() end end)
+    browserButtons[#browserButtons+1]=f
+end
+local options=pane(right,10,480,532,253)
+local separator=options:CreateTexture(nil,"ARTWORK")
+separator:SetPoint("TOPLEFT",options,"TOPLEFT",7,-6)
+separator:SetPoint("TOPRIGHT",options,"TOPRIGHT",-7,-6)
+separator:SetHeight(2)
+separator:SetColorTexture(.65,.46,.13,1)
+local choiceIcon
+choiceIcon=newIcon(right,35,496,39,39)
+choiceIcon:EnableMouse(false)
+choiceIcon.icon:SetTexture(nil)
+selectedTitle=label(right,"장비를 선택하세요",84,502,"GameFontNormal",GOLD)
+selectedTitle:SetWidth(431)
+selectedDetail=label(right,"목표 장비를 선택하세요",84,526,"GameFontHighlightSmall",MUTED)
+selectedDetail:SetWidth(425)
+itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
+itemEntry:SetPoint("TOPLEFT",28,-549)
+itemEntry:SetSize(484,23)
+itemEntry:SetAutoFocus(false)
+itemEntry:SetMaxLetters(256)
+itemEntry:EnableMouse(true)
+local trackLabel=label(right,"등급:",120,581,"GameFontNormal",GOLD)
+local rankLabel=label(right,"강화 단계:",120,612,"GameFontNormal",GOLD)
+local tracks={"탐험가","모험가","노련가","용사","영웅","신화"}
+local chosenTrack,chosenRank="영웅",1
+local venomFlag,catalystFlag=false,false
+local trackButton=button(right,"영웅 ▾",241,577,273,27,nil)
+local rankButton=button(right,"1/6 ▾",241,607,273,27,nil)
+local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
+venomCheck:SetPoint("TOPLEFT",155,-638);venomCheck:SetSize(26,26)
+local venomLabel=label(right,"맹독석 강화 (계획)",185,643,"GameFontHighlightSmall",GOLD)
+local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
+catalystCheck:SetPoint("TOPLEFT",155,-667);catalystCheck:SetSize(26,26)
+local catalystLabel=label(right,"티어 변환 (계획)",185,672,"GameFontHighlightSmall",GOLD)
+local originalText=label(right,"원본 장비: 선택한 장비",34,697,"GameFontHighlightSmall",MUTED)
+originalText:SetWidth(476)
+local canCatalyst={[1]=true,[3]=true,[5]=true,[7]=true,[10]=true}
+local function updateOptions()
+    trackButton:SetText(chosenTrack.." ▾")
+    rankButton:SetText(chosenRank.."/6 ▾")
+    venomCheck:SetChecked(venomFlag)
+    catalystCheck:SetChecked(catalystFlag)
+    catalystCheck:SetEnabled(canCatalyst[selectedSlot or 1]==true)
+end
+refreshOptions=function(slot)
+    local v=AP.GetSlotOptions(slot or 1)
+    chosenTrack=v.track or "영웅"
+    chosenRank=v.rank or 1
+    venomFlag=v.venom==true
+    catalystFlag=v.catalyst==true
+    updateOptions()
+end
+trackButton:SetScript("OnClick",function()
+    filterMenu:Hide()
+    local c={}
+    for _,name in ipairs(tracks)do c[#c+1]={label=name,value=name}end
+    dropdown(trackButton,c,function(value)
+        chosenTrack=value
+        updateOptions()
+    end,273)
+end)
+rankButton:SetScript("OnClick",function()
+    filterMenu:Hide()
+    local c={}
+    for i=1,6 do c[#c+1]={label=i.."/6",value=i}end
+    dropdown(rankButton,c,function(value)
+        chosenRank=value
+        updateOptions()
+    end,273)
+end)
+venomCheck:SetScript("OnClick",function(self)venomFlag=self:GetChecked()==true end)
+catalystCheck:SetScript("OnClick",function(self)catalystFlag=self:GetChecked()==true end)
+local function registerItem()
+    local slot=selectedSlot or 1
+    local id=AP.GetItemIDFromText(itemEntry:GetText())
+    if not id then alert("전리품 목록에서 장비를 선택하세요.");return end
+    if not AP.LootCatalog or not AP.LootCatalog.MatchesSlot(id,slot) then
+        alert("선택한 슬롯과 장비 부위가 일치하지 않습니다.");return
+    end
+    local ok,reason=AP.AssignSlotTarget(slot,id)
+    if not ok then alert(reason or "등록 실패");return end
+    AP.SetSlotOptions(slot,{
+        track=chosenTrack,rank=chosenRank,venom=venomFlag,catalyst=catalystFlag})
+    alert(AP.LootCatalog.SlotLabel(slot).." 목표 등록 완료")
+    if AP.RefreshUI then AP.RefreshUI() end
+end
+button(right,"등록",151,710,245,24,registerItem)
+itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
+itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
+if type(ChatEdit_InsertLink)=="function" then
+    hooksecurefunc("ChatEdit_InsertLink",function(link)
+        if ROOT:IsShown() and type(link)=="string" and IsShiftKeyDown()
+            and AP.GetItemIDFromText(link) then itemEntry:SetText(link) end
+    end)
+end
+local function selectItem(item)
+    if not AP.LootCatalog.MatchesSlot(item.id,selectedSlot or 1) then
+        alert("선택한 부위와 일치하지 않는 장비입니다.");return
+    end
+    selectedItem=item
+    choiceIcon.icon:SetTexture(item.icon or (C_Item and C_Item.GetItemIconByID
+        and C_Item.GetItemIconByID(item.id)) or 134400)
+    selectedTitle:SetText(item.name or ("아이템 "..item.id))
+    selectedDetail:SetText(item.sourceText or "획득처 확인 중")
+    originalText:SetText("원본 장비: "..(item.name or ("아이템 "..item.id)))
+    itemEntry:SetText(tostring(item.id))
+    if refreshBrowser then refreshBrowser() end
 end
 refreshBrowser=function()
-    if not ROOT:IsShown() or not right:IsShown() then return end
-    if not AP.LootCatalog then return end
+    if not ROOT:IsShown() or not right:IsShown() or not AP.LootCatalog then return end
+    heading:SetText(AP.LootCatalog.SlotLabel(selectedSlot or 1))
     local catalog=AP.LootCatalog
     local sources,reason=catalog.Instances()
-    clear()
-    local y,n=0,0
+    clearRows()
+    local y,count=0,0
     local function add(h,depth,title,kind,fn,item)
-        if n>=170 then return end
-        makeRow(y,h,depth,title,kind,fn or function()end,item)
-        y=y+h+3
-        n=n+1
+        if count>=160 then return end
+        makeRow(y,h,depth,title,kind,fn,item)
+        y=y+h+3;count=count+1
     end
-    local function sourceAllowed(section)
-        return sourceFilterIndex==1
-            or (sourceFilterIndex==2 and section=="raid")
-            or (sourceFilterIndex==3 and section=="dungeon")
-            or (sourceFilterIndex==4 and section=="delve")
-            or (sourceFilterIndex==5 and section=="outdoor")
-    end
-    local function candidate(item)
-        return catalog.IsEquipment(item.id)
-            and (not selectedSlot or catalog.MatchesSlot(item.id,selectedSlot))
-    end
-    local function listItems(items,depth,emptyMessage,status)
+    local function listItems(items,status)
         local shown=0
         for _,item in ipairs(items or {}) do
-            if n>=170 then break end
-            if candidate(item) then
+            if count>=160 then break end
+            if catalog.IsEquipment(item.id) and catalog.MatchesSlot(item.id,selectedSlot or 1) then
                 shown=shown+1
-                add(49,depth,item.name,"item",function()selectItem(item)end,item)
+                add(53,12,item.name or ("아이템 "..item.id),"item",function()selectItem(item)end,item)
             end
         end
         if shown==0 then
-            local msg=status=="loading" and "전리품 불러오는 중 · 클릭해 새로고침"
-                or status=="filter-unavailable" and "전문화 필터 적용 실패"
-                or status=="unavailable" and "모험 안내서 연결 실패"
-                or emptyMessage or "선택 부위 전리품 없음"
-            add(27,depth,msg,"text",refreshBrowser)
+            local msg=status=="loading" and "전리품 불러오는 중"
+                or status=="filter-unavailable" and "전문화 전리품 필터 오류"
+                or "선택 부위의 장비가 없습니다"
+            add(28,10,msg,"text",refreshBrowser)
         end
     end
     if not sources then
-        add(38,0,reason or "모험 안내서를 불러올 수 없습니다.","group")
+        add(34,0,reason or "모험 안내서를 불러올 수 없습니다","group",refreshBrowser)
     else
+        local raids={}
         local names={
             {"맹독 심연",{"맹독 심연","The Venomous Abyss"}},
             {"님리사",{"해일결속 동굴","The Tidebound Grotto"}},
-            {"키식스",{"키식스 해방","The Unbinding of Kithix"}},
-        }
-        local ordered={}
+            {"키식스",{"키식스 해방","The Unbinding of Kithix"}}}
         local taken={}
-        for _,wanted in ipairs(names) do
-            for _,instance in ipairs(sources.raid or {}) do
-                local found=false
-                local actual=(instance.name or ""):lower()
-                for _,alias in ipairs(wanted[2]) do
-                    if actual:find(alias:lower(),1,true) then found=true;break end
-                end
-                if found and not taken[instance.id] then
-                    taken[instance.id]=true
-                    ordered[#ordered+1]={id=instance.id,name=wanted[1]}
-                    break
-                end
-            end
-        end
-        if sourceAllowed("raid") then
-        add(31,0,(expanded.raid and "[-]  " or "[+]  ").."공격대","group",function()
-            expanded.raid=not expanded.raid;refreshBrowser()
-        end)
-        if expanded.raid then
-            for _,instance in ipairs(ordered) do
-                if n>=170 then break end
-                local id=instance.id
-                local opened=openInstance[id]==true
-                add(30,8,(opened and "[-] " or "[+] ")..instance.name,
-                    "instance",function()
-                        openInstance[id]=not openInstance[id]
-                        refreshBrowser()
-                    end)
-                if opened then
-                    -- Raid section is one combined gear list, with boss source
-                    -- displayed on the second line of every item.
-                    local items,status=catalog.RaidLoot(id)
-                    listItems(items,14,"선택 부위 전리품 없음",status)
+        for _,wanted in ipairs(names)do
+            for _,v in ipairs(sources.raid or {})do
+                if not taken[v.id] then
+                    local actual=(v.name or ""):lower()
+                    local found=false
+                    for _,alias in ipairs(wanted[2])do
+                        if actual:find(alias:lower(),1,true) then found=true;break end
+                    end
+                    if found then
+                        raids[#raids+1]={id=v.id,name=wanted[1]}
+                        taken[v.id]=true
+                        break
+                    end
                 end
             end
         end
-        end
-        if sourceAllowed("dungeon") then
-        add(31,0,(expanded.dungeon and "[-]  " or "[+]  ").."쐐기돌 던전","group",function()
-            expanded.dungeon=not expanded.dungeon;refreshBrowser()
-        end)
-        if expanded.dungeon then
-            for _,instance in ipairs(sources.dungeon or {}) do
-                if n>=170 then break end
-                local title=instance.name or ""
-                -- EJ lists a virtual "Mythic+ Dungeons" instance; it must not
-                -- appear as another selectable dungeon under the category.
-                local lower=title:lower()
-                if title~="쐐기돌 던전" and lower~="mythic+ dungeons"
-                    and lower~="mythic dungeons" then
-                    local id=instance.id
-                    local opened=openInstance["d"..id]==true
-                    add(29,9,(opened and "[-] " or "[+] ")..title,"instance",function()
-                        openInstance["d"..id]=not openInstance["d"..id]
+        local function section(key,title,instances,lootFn)
+            if not filters[key] then return end
+            add(38,0,(expanded[key] and "[-] " or "[+] ")..title,"group",function()
+                expanded[key]=not expanded[key];refreshBrowser()
+            end)
+            if not expanded[key] then return end
+            for _,v in ipairs(instances or {}) do
+                if count>=160 then break end
+                local id=v.id
+                local opened=openInstance[key..tostring(id)]==true
+                local zoneName=v.name or ("지역 "..id)
+                if key~="dungeon" or
+                    (zoneName~="쐐기돌 던전" and zoneName:lower()~="mythic+ dungeons") then
+                    add(28,7,(opened and "[-] " or "[+] ")..zoneName,"instance",function()
+                        openInstance[key..tostring(id)]=not openInstance[key..tostring(id)]
                         refreshBrowser()
                     end)
                     if opened then
-                        local items,status=catalog.DungeonLoot(id)
-                        listItems(items,22,"선택 부위 전리품 없음",status)
+                        local items,status=lootFn(id)
+                        listItems(items,status)
                     end
                 end
             end
         end
-        end
-        -- Delve/outdoor source providers are unpopulated. Keep clean category
-        -- headers without repeating misleading "data preparation" rows.
-        for _,section in ipairs({{"delve","구렁"},{"outdoor","야외"}}) do
-            local key,title=section[1],section[2]
-            if sourceAllowed(key) then
-            add(31,0,(expanded[key] and "[-]  " or "[+]  ")..title,"group",function()
-                expanded[key]=not expanded[key];refreshBrowser()
-            end)
-            if expanded[key] then
-                for _,instance in ipairs(sources[key] or {}) do
-                    local id=instance.id
-                    local opened=openInstance[key..id]==true
-                    add(29,9,(opened and "[-] " or "[+] ")..instance.name,"instance",function()
-                        openInstance[key..id]=not openInstance[key..id];refreshBrowser()
-                    end)
-                    if opened and catalog.DungeonLoot then
-                        local items,status=catalog.DungeonLoot(id)
-                        listItems(items,22,"전리품 없음",status)
-                    end
-                end
-            end
-            end
-        end
+        section("raid","공격대",raids,function(id)return catalog.RaidLoot(id)end)
+        section("dungeon","던전",sources.dungeon,function(id)return catalog.DungeonLoot(id)end)
+        section("delve","구렁",sources.delve or {},function(id)return catalog.DungeonLoot(id)end)
+        section("outdoor","기타",sources.outdoor or {},function(id)return catalog.DungeonLoot(id)end)
     end
-    child:SetHeight(math.max(396,y))
+    child:SetHeight(math.max(387,y))
 end
-button(right,"새로고침",266,44,95,28,function()
-    if AP.LootCatalog then AP.LootCatalog.Invalidate() end
-    refreshBrowser()
-end)
+refreshOptions(1)
 local journalEvents=CreateFrame("Frame")
 journalEvents:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 journalEvents:RegisterEvent("EJ_LOOT_DATA_RECIEVED")
 journalEvents:SetScript("OnEvent",function()
-    if not ROOT:IsShown() or not right:IsShown() then return end
-    if C_Timer and C_Timer.After then
+    if ROOT:IsShown() and right:IsShown() and C_Timer and C_Timer.After then
         C_Timer.After(.35,function()
             if ROOT:IsShown() and right:IsShown() then refreshBrowser() end
         end)
@@ -613,7 +626,6 @@ function AP.RefreshUI()
         selectedSlot=1
         selectedItem=nil
         if itemEntry then itemEntry:SetText("") end
-        if choiceIcon then choiceIcon.icon:SetTexture(nil) end
         if refreshOptions then refreshOptions(1) end
         if refreshBrowser then refreshBrowser() end
     end
