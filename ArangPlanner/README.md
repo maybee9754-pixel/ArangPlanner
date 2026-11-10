@@ -1,15 +1,7 @@
-# ArangPlanner 1.4.2-alpha
+# ArangPlanner 1.5.0-alpha
 
-Black and gold three-column equipment dashboard built from original code and Blizzard native UI templates. Left: real target acquisition and player statistics; center: PlayerModel live character and actual equipped slots; right: real registered item IDs and equipped/bag statuses. Raid/boss acquisition integrations and simulation are **not yet implemented** and are explicitly labelled development-only.
+The independently authored black-and-gold UI now uses **Blizzard Encounter Journal** for collapsible Raid -> Instance -> Boss -> Loot lists and Dungeon -> Instance -> Boss -> Loot lists. Filtering for current specialization is applied where the API supports it. Click loot to fill the target registration field. Categories for Delve and Outdoor are present but await verified source mappings. No GearPlanner proprietary assets, source, or private loot history are used.
 
-Install release ZIP with the updater, fully restart WoW, use `/arang`. Shift-click item link while the addon is open to fill input. Enter item ID or link to register; click registered icon to remove. Current specialization targets are saved in `ArangPlannerDB`; original GearPlanner DB is untouched.
+Central DressUpModel removed, replaced with dim class specialization art supplied by WoW (fallback to spec icon), while actual equipped items remain visible. UI layout, AP logo, existing target records and compact mode preserved.
 
-The AP mark is an independently drawn golden icon from `tools/render_ap_logo.py`. Gold `#D4AF37` / black `#101014`. UI uses Blizzard native backdrop/dialog/button graphics, not copied GearPlanner assets.
-
-The web studio from 1.3 is an older visual reference until next implementation pass.
-
-## 1.4.1 fixes
-Safe gear refresh for WoW restricted item links, slot fallbacks rather than question marks, opaque black panels, DressUpModel fallback, and top-right compact/restore control. Game runtime testing is still required.
-
-## 1.4.2 camera and level correction
-Use Blizzard's full-body preset camera 1 (previous camera 0 was face portrait only), disable portrait zoom, and read upgraded item level using actual equipped link rather than plain item ID. Core scan and SavedVariables unchanged.
+Season providers `SeasonData.lua` and `LootCatalog.lua` are separate modules and can be replaced without rewriting UI. The currently active expansion journal tier is read from game data, rather than hard-coding season item IDs. Runtime API compatibility still requires in-game user verification.

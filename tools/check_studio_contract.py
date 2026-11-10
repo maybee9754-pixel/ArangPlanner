@@ -10,10 +10,11 @@ core=(root/"ArangPlanner/ArangPlanner.lua").read_text(encoding="utf-8")
 contract=(root/"ArangPlanner/UIContract.lua").read_text(encoding="utf-8")
 css=(root/"docs/ui-contract.css").read_text(encoding="utf-8")
 web=(root/"docs/index.html").read_text(encoding="utf-8")
-assert "## Version: 1.4.2-alpha" in toc
-assert "ArangPlanner.lua\nUIContract.lua\nUI.lua" in toc
+assert "## Version: 1.5.0-alpha" in toc
+assert "ArangPlanner.lua\nUIContract.lua\nSeasonData.lua\nLootCatalog.lua\nUI.lua" in toc
 assert "_G.ArangPlanner" in core and "GearPlannerDB" not in core
-assert "DressUpModel" in ui and "SetInventoryItem" in ui
+assert "specBacking" in ui and "SetInventoryItem" in ui
+assert "AP.LootCatalog.Instances" in ui and "AP.LootCatalog.Loot" in ui
 assert "AP.GetTargetRows" in ui and "AP.TargetCounts" in ui
 assert "AP.AddTarget" in ui and "AP.RemoveTarget" in ui
 assert "ChatEdit_InsertLink" in ui and "AP.ToggleUI" in ui

@@ -1,9 +1,11 @@
 ## Interface: 120105
 ## Title: 아랑플래너 | ArangPlanner Alpha
 ## Notes: Black-gold equipment dashboard using Blizzard native textures and independent targets
-## Version: 1.4.2-alpha
+## Version: 1.5.0-alpha
 ## SavedVariables: ArangPlannerDB
 
 ArangPlanner.lua
 UIContract.lua
+SeasonData.lua
+LootCatalog.lua
 UI.lua
