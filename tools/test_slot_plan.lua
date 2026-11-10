@@ -48,6 +48,7 @@ C_EncounterJournal={
             icon=134400,slot="Localized name"}
     end
 }
+SlashCmdList={}
 dofile("ArangPlanner/ArangPlanner.lua")
 dofile("ArangPlanner/SeasonData.lua")
 dofile("ArangPlanner/LootCatalog.lua")

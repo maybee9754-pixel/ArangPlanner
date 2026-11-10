@@ -81,8 +81,8 @@ jobs:
           ui=(root/'UI.lua').read_text(encoding='utf-8')
           assert 'ChatEdit_InsertLink' in ui
           assert 'specBacking' in ui
-          assert 'AP.TargetCounts' in ui
-          assert 'AP.GetTargetRows' in ui
+          assert 'AP.SlotTargetCounts' in ui
+          assert 'AP.GetSlotTargetRows' in ui
           assert 'button-active.tga' not in ui or True
           print('Validated UI and game skin assets')
           PY
