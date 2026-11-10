@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.3: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.4: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -175,11 +175,11 @@ local planSpec=nil
 function AP.SelectPlanSlot(slot)
     selectedSlot=slot
     selectedItem=nil
+    if choiceIcon then choiceIcon.icon:SetTexture(nil) end
     if itemEntry then itemEntry:SetText("") end
     if selectedTitle then selectedTitle:SetText("장비를 선택하세요.") end
     if selectedDetail then selectedDetail:SetText("선택 부위: "..AP.LootCatalog.SlotLabel(slot)) end
     if refreshOptions then refreshOptions(slot) end
-    if AP.SyncGearPlannerSlot then AP.SyncGearPlannerSlot(slot) end
     if AP.RefreshUI then AP.RefreshUI() end
     if refreshBrowser then refreshBrowser() end
 end
@@ -228,7 +228,7 @@ local help=label(mid,"빈 슬롯 클릭 → 전리품 선택 → 등급·강화 
 help:SetWidth(575)
 
 -- Raid / dungeon / delve / outdoor hierarchy, populated from WoW's journal.
-bar(right,"획득 장비 탐색")
+bar(right,"전리품 목록 · ".."")
 -- The independent ArangPlanner browser has a compact source filter above a
 -- scrollable loot list; the lower panel is dedicated to item configuration.
 local sourceFilters={"전체","공격대","쐐기돌","구렁","야외"}
@@ -254,12 +254,18 @@ local function clear()
 end
 local optionPane=pane(right,11,486,529,246)
 bar(optionPane,"선택 장비 · 등록 설정")
-selectedTitle=label(right,"장비를 선택하세요.",24,529,"GameFontNormal",GOLD)
-selectedTitle:SetWidth(494)
-selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",24,550,"GameFontHighlightSmall",MUTED)
-selectedDetail:SetWidth(493)
+local choiceIcon=newIcon(right,22,526,40,40)
+choiceIcon:EnableMouse(false)
+choiceIcon.icon:SetTexture(nil)
+selectedTitle=label(right,"장비를 선택하세요.",72,531,"GameFontNormal",GOLD)
+selectedTitle:SetWidth(434)
+selectedDetail=label(right,"획득처가 이곳에 표시됩니다.",72,553,"GameFontHighlightSmall",MUTED)
+selectedDetail:SetWidth(444)
 itemEntry=CreateFrame("EditBox",nil,right,"InputBoxTemplate")
-itemEntry:SetPoint("TOPLEFT",29,-576);itemEntry:SetSize(482,26)
+itemEntry:SetPoint("TOPLEFT",29,-578);itemEntry:SetSize(482,23)
+itemEntry:SetText("")
+local itemHelp=label(right,"아이템 ID 또는 Shift+클릭 아이템 링크",31,601,"GameFontHighlightSmall",MUTED)
+itemHelp:SetWidth(475)
 itemEntry:SetAutoFocus(false);itemEntry:SetMaxLetters(256);itemEntry:EnableMouse(true)
 
 -- Configuration is a saved *plan*, not evidence of an upgraded item.
@@ -268,18 +274,18 @@ local chosenTrack="영웅"
 local chosenRank=1
 local venomFlag=false
 local catalystFlag=false
-local trackLabel=label(right,"등급",26,611,"GameFontNormal",GOLD)
-local rankLabel=label(right,"강화 단계",26,649,"GameFontNormal",GOLD)
-local trackButton=button(right,"영웅 ▾",139,606,377,29,nil)
-local rankButton=button(right,"1/6 ▾",139,642,377,29,nil)
+local trackLabel=label(right,"등급",26,624,"GameFontNormal",GOLD)
+local rankLabel=label(right,"강화 단계",26,658,"GameFontNormal",GOLD)
+local trackButton=button(right,"영웅 ▾",139,618,377,29,nil)
+local rankButton=button(right,"1/6 ▾",139,652,377,29,nil)
 local venomCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-venomCheck:SetPoint("TOPLEFT",23,-675)
+venomCheck:SetPoint("TOPLEFT",23,-680)
 venomCheck:SetSize(27,27)
-label(right,"맹독석 (계획)",57,680,"GameFontHighlight",IVORY)
+label(right,"맹독석 (계획)",57,685,"GameFontHighlight",IVORY)
 local catalystCheck=CreateFrame("CheckButton",nil,right,"UICheckButtonTemplate")
-catalystCheck:SetPoint("TOPLEFT",272,-675)
+catalystCheck:SetPoint("TOPLEFT",272,-680)
 catalystCheck:SetSize(27,27)
-label(right,"티어 변환 (계획)",306,680,"GameFontHighlight",IVORY)
+label(right,"티어 변환 (계획)",306,685,"GameFontHighlight",IVORY)
 local canCatalyst={ [1]=true,[3]=true,[5]=true,[7]=true,[10]=true }
 refreshOptions=function(slot)
     local v=AP.GetSlotOptions(slot or 1)
@@ -331,7 +337,7 @@ local function registerItem()
     itemEntry:SetText("")
     if AP.RefreshUI then AP.RefreshUI() end
 end
-button(right,"선택 장비 등록",23,708,493,30,registerItem)
+button(right,"선택 장비 등록",23,707,493,30,registerItem)
 itemEntry:SetScript("OnEnterPressed",function(self)registerItem();self:ClearFocus()end)
 itemEntry:SetScript("OnEscapePressed",function(self)self:ClearFocus()end)
 if type(ChatEdit_InsertLink)=="function" then
@@ -351,6 +357,9 @@ local function selectItem(data)
         return
     end
     selectedItem=data
+    if refreshBrowser then refreshBrowser() end
+    choiceIcon.icon:SetTexture(data.icon or (C_Item and C_Item.GetItemIconByID
+        and C_Item.GetItemIconByID(data.id)) or 134400)
     selectedTitle:SetText(data.name or ("아이템 "..data.id))
     selectedDetail:SetText(AP.LootCatalog.SlotLabel(selectedSlot).." · "
         ..(data.sourceText or "획득처 확인 필요"))
@@ -372,6 +381,21 @@ local function makeRow(y,h,depth,title,kind,action,item)
     local textX=item and 48 or 12
     local name=label(f,title,textX,item and 6 or 7,
         "GameFontHighlightSmall",group and GOLD or IVORY)
+    if item and item.id then
+        local info=C_Item and C_Item.GetItemInfo or GetItemInfo
+        if type(info)=="function" then
+            local ok,_,__,quality=pcall(info,item.id)
+            if ok and type(quality)=="number" and ITEM_QUALITY_COLORS
+                and ITEM_QUALITY_COLORS[quality] then
+                local c=ITEM_QUALITY_COLORS[quality]
+                name:SetTextColor(c.r,c.g,c.b)
+            end
+        end
+        if selectedItem and selectedItem.id==item.id then
+            f:SetBackdropBorderColor(1,.82,.25,1)
+            f:SetBackdropColor(.22,.15,.055,1)
+        end
+    end
     name:SetWidth(f:GetWidth()-textX-7)
     name:SetWordWrap(false)
     if item then
@@ -588,6 +612,7 @@ function AP.RefreshUI()
         selectedSlot=1
         selectedItem=nil
         if itemEntry then itemEntry:SetText("") end
+        if choiceIcon then choiceIcon.icon:SetTexture(nil) end
         if refreshOptions then refreshOptions(1) end
         if refreshBrowser then refreshBrowser() end
     end
@@ -628,7 +653,7 @@ ROOT:SetScript("OnShow",function()
     if UIParent and UIParent.GetWidth and UIParent.GetHeight then
         local w,h=UIParent:GetWidth(),UIParent:GetHeight()
         if w and h and w>0 and h>0 then
-            ROOT:SetScale(math.min(1,(w-20)/1460,(h-20)/850))
+            ROOT:SetScale(math.min(1,(w-20)/1565,(h-20)/850))
         end
     end
     if AP.RefreshUI then AP.RefreshUI() end
@@ -646,7 +671,7 @@ local compactCount=label(compactFrame,"",27,121,"GameFontNormalLarge",GOLD)
 local compactHint=label(compactFrame,"현재 착용 및 가방 보유 기준 · 자세히 보기로 복원",27,161,"GameFontHighlightSmall",MUTED)
 compactHint:SetWidth(400)
 local compact=false
-local compactButton=button(top,"-",1331,16,38,31,nil)
+local compactButton=button(top,"-",1433,16,38,31,nil)
 local function saveCompact()
     if type(ArangPlannerDB)=="table" then
         ArangPlannerDB.settings=ArangPlannerDB.settings or {}
@@ -685,14 +710,6 @@ function AP.ToggleUI()
             for i=2,#content do content[i]:Hide() end
         end
         AP.RefreshUI()
-        if not compact then
-            refreshBrowser()
-            if AP.AttachGearPlannerPanel and AP.AttachGearPlannerPanel(ROOT,right) then
-                AP.SyncGearPlannerSlot(selectedSlot or 1)
-            end
-        end
+        if not compact then refreshBrowser() end
     end
 end
-ROOT:HookScript("OnHide",function()
-    if AP.DetachGearPlannerPanel then AP.DetachGearPlannerPanel() end
-end)
