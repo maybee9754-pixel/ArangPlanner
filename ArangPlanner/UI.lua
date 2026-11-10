@@ -274,7 +274,6 @@ filterMenu:SetBackdropColor(.035,.028,.035,.99)
 filterMenu:SetBackdropBorderColor(.67,.52,.2,1)
 filterMenu:EnableMouse(true)
 local filterCount=label(filterMenu,"표시할 획득처",12,8,"GameFontHighlightSmall",GOLD)
-local refreshBrowser
 local filterChecks={}
 for i,entry in ipairs(filterNames) do
     local cb=CreateFrame("CheckButton",nil,filterMenu,"UICheckButtonTemplate")
