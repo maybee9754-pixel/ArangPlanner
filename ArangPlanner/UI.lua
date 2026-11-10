@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.6: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.7: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -248,26 +248,48 @@ local popup
 local function closePopup()
     if popup then popup:Hide();popup=nil end
 end
-local function dropdown(anchor,choices,onChoose,width)
+-- Lightweight popup with original ArangPlanner artwork. The selected
+-- choice is highlighted without a red UIPanelButton, and the list opens
+-- upward to remain inside the main window's equipment settings section.
+local function dropdown(anchor,choices,onChoose,width,selected)
     if popup and popup.anchor==anchor then closePopup();return end
     closePopup()
     local frame=CreateFrame("Frame",nil,right,"BackdropTemplate")
     frame.anchor=anchor
-    frame:SetSize(width or anchor:GetWidth(),#choices*25+10)
-    frame:SetPoint("BOTTOMRIGHT",anchor,"TOPRIGHT",0,0)
-    frame:SetFrameStrata("DIALOG")
+    frame:SetSize(width or anchor:GetWidth(),#choices*24+8)
+    frame:SetPoint("BOTTOMRIGHT",anchor,"TOPRIGHT",0,3)
+    frame:SetFrameStrata("TOOLTIP")
     frame:SetFrameLevel(ROOT:GetFrameLevel()+95)
     frame:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",
         edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
-    frame:SetBackdropColor(.045,.035,.055,.98)
-    frame:SetBackdropBorderColor(.68,.52,.19,1)
+    frame:SetBackdropColor(.04,.035,.043,1)
+    frame:SetBackdropBorderColor(.54,.44,.24,1)
     frame:EnableMouse(true)
     for i,choice in ipairs(choices) do
-        local b=button(frame,choice.label,5,5+(i-1)*25,frame:GetWidth()-10,24,function()
+        local row=CreateFrame("Button",nil,frame,"BackdropTemplate")
+        row:SetPoint("TOPLEFT",frame,"TOPLEFT",4,-4-(i-1)*24)
+        row:SetSize(frame:GetWidth()-8,23)
+        row:SetFrameLevel(frame:GetFrameLevel()+1)
+        row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
+        row:SetBackdropColor(choice.value==selected and .18 or .055,
+            choice.value==selected and .15 or .05,
+            choice.value==selected and .09 or .06,1)
+        local mark=label(row,choice.value==selected and "●" or "○",
+            8,3,"GameFontHighlightSmall",choice.value==selected and GOLD or MUTED)
+        local title=label(row,choice.label,30,3,"GameFontHighlight",IVORY)
+        title:SetWidth(row:GetWidth()-38)
+        row:SetScript("OnEnter",function(self)
+            self:SetBackdropColor(.16,.13,.105,1)
+        end)
+        row:SetScript("OnLeave",function(self)
+            self:SetBackdropColor(choice.value==selected and .18 or .055,
+                choice.value==selected and .15 or .05,
+                choice.value==selected and .09 or .06,1)
+        end)
+        row:SetScript("OnClick",function()
             onChoose(choice.value)
             closePopup()
         end)
-        b:SetFrameLevel(frame:GetFrameLevel()+1)
     end
     popup=frame
 end
@@ -460,7 +482,7 @@ trackButton:SetScript("OnClick",function()
     dropdown(trackButton,c,function(value)
         chosenTrack=value
         updateOptions()
-    end,273)
+    end,225,chosenTrack)
 end)
 rankButton:SetScript("OnClick",function()
     filterMenu:Hide()
@@ -469,7 +491,7 @@ rankButton:SetScript("OnClick",function()
     dropdown(rankButton,c,function(value)
         chosenRank=value
         updateOptions()
-    end,273)
+    end,225,chosenRank)
 end)
 venomCheck:SetScript("OnClick",function(self)venomFlag=self:GetChecked()==true end)
 catalystCheck:SetScript("OnClick",function(self)catalystFlag=self:GetChecked()==true end)
