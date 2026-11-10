@@ -1,4 +1,4 @@
--- ArangPlanner 1.9.8: independently created black-and-gold equipment dashboard.
+-- ArangPlanner 1.9.9: independently created black-and-gold equipment dashboard.
 -- Uses Blizzard UI templates and built-in item/model APIs. No GearPlanner art/code.
 local AP=_G.ArangPlanner
 local GOLD={.96,.76,.22}
@@ -372,6 +372,7 @@ local function makeRow(y,h,depth,title,kind,action,item)
         edgeFile="Interface\\Buttons\\WHITE8X8",edgeSize=1})
     local main=(kind=="group")
     local region=(kind=="instance")
+    local boss=(kind=="boss")
     local active=item and selectedItem and selectedItem.id==item.id
     if main then
         f:SetBackdropColor(.07,.06,.11,1)
@@ -379,6 +380,9 @@ local function makeRow(y,h,depth,title,kind,action,item)
     elseif region then
         f:SetBackdropColor(.17,.13,.10,1)
         f:SetBackdropBorderColor(.30,.24,.17,1)
+    elseif boss then
+        f:SetBackdropColor(.20,.16,.14,1)
+        f:SetBackdropBorderColor(.28,.22,.19,1)
     elseif active then
         f:SetBackdropColor(.075,.19,.34,1)
         f:SetBackdropBorderColor(.34,.75,1,1)
@@ -392,10 +396,10 @@ local function makeRow(y,h,depth,title,kind,action,item)
         dot:SetSize(16,16)
         dot:SetTexture("Interface\\COMMON\\Indicator-Green")
     end
-    local tx=item and 50 or main and 35 or 12
+    local tx=item and 50 or main and 35 or boss and 18 or 12
     local txt=label(f,title,tx,item and 6 or 8,
-        main and "GameFontNormalLarge" or region and "GameFontNormal" or "GameFontHighlight",
-        main and GOLD or region and GOLD or IVORY)
+        main and "GameFontNormalLarge" or (region or boss) and "GameFontNormal" or "GameFontHighlight",
+        (main or region or boss) and GOLD or IVORY)
     txt:SetWidth(f:GetWidth()-tx-(item and 78 or 14))
     txt:SetWordWrap(false)
     if item then
@@ -561,11 +565,17 @@ refreshBrowser=function()
         makeRow(y,h,depth,title,kind,fn,item)
         y=y+h+3;count=count+1
     end
-    local function listItems(items,status)
+    local function listItems(items,status,withBossHeadings)
         local shown=0
+        local lastBoss=nil
         for _,item in ipairs(items or {}) do
             if count>=160 then break end
             if catalog.IsEquipment(item.id) and catalog.MatchesSlot(item.id,selectedSlot or 1) then
+                if withBossHeadings and type(item.sourceBoss)=="string"
+                    and item.sourceBoss~="" and item.sourceBoss~=lastBoss then
+                    lastBoss=item.sourceBoss
+                    add(23,13,item.sourceBoss,"boss",nil)
+                end
                 shown=shown+1
                 add(53,12,item.name or ("아이템 "..item.id),"item",function()selectItem(item)end,item)
             end
@@ -621,7 +631,7 @@ refreshBrowser=function()
                     end)
                     if opened then
                         local items,status=lootFn(id)
-                        listItems(items,status)
+                        listItems(items,status,key=="raid")
                     end
                 end
             end
